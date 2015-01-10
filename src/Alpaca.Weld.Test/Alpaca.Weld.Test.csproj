@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{23219D0D-C4EA-4A01-ABE3-7EB3C893506D}</ProjectGuid>
+    <ProjectGuid>{E46200FC-4B78-4E22-9972-B605A02FB21B}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Alpaca.Weld</RootNamespace>
-    <AssemblyName>Alpaca.Weld</AssemblyName>
+    <RootNamespace>Alpaca.Weld.Test</RootNamespace>
+    <AssemblyName>Alpaca.Weld.Test</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,8 +30,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Castle.Core">
-      <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -42,32 +42,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\AnyAttribute.cs" />
-    <Compile Include="Attributes\ConditionalOnMissingBeanAttribute.cs" />
-    <Compile Include="Attributes\ConfigurationAttribute.cs" />
-    <Compile Include="Attributes\DecoratorAttribute.cs" />
-    <Compile Include="Attributes\DefaultAttribute.cs" />
-    <Compile Include="Attributes\ImportAttribute.cs" />
-    <Compile Include="Attributes\InjectAttribute.cs" />
-    <Compile Include="Attributes\PostConstructAttribute.cs" />
-    <Compile Include="Attributes\PreDestroyAttribute.cs" />
-    <Compile Include="Attributes\ProducesAttribute.cs" />
-    <Compile Include="Attributes\QualifierAttribute.cs" />
-    <Compile Include="InvalidComponentException.cs" />
-    <Compile Include="Core\InjectionPoint.cs" />
-    <Compile Include="InjectionPointException.cs" />
-    <Compile Include="InstantiationError.cs" />
-    <Compile Include="NonProxiableTypeException.cs" />
-    <Compile Include="Core\WeldEngine.cs" />
-    <Compile Include="Utils\GenericUtils.cs" />
-    <Compile Include="WeldException.cs" />
+    <Compile Include="GenericMethodResolverTest.cs" />
+    <Compile Include="GenericTypeResolverTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\InjectionCriteria.cs" />
-    <Compile Include="Utils\TypeUtils.cs" />
-    <Compile Include="Utils\ScannerUtils.cs" />
+    <Compile Include="SpikeTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Alpaca.Weld\Alpaca.Weld.csproj">
+      <Project>{23219D0D-C4EA-4A01-ABE3-7EB3C893506D}</Project>
+      <Name>Alpaca.Weld</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
