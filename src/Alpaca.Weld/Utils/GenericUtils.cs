@@ -7,9 +7,20 @@ namespace Alpaca.Weld.Utils
 {
     public static class GenericUtils
     {
+        public static FieldInfo ResolveFieldToReturn(FieldInfo field, Type wantedReturnType)
+        {
+            var resolved = field;
+            return resolved;
+        }
+
+        public static PropertyInfo ResolvePropertyToReturn(PropertyInfo property, Type resolvedType)
+        {
+            throw new NotImplementedException();
+        }
+
         public static MethodInfo ResolveMethodToReturn(MethodInfo method, Type wantedReturnType)
         {
-            MethodInfo resolved = method;
+            var resolved = method;
             if (method.ReturnType.IsGenericTypeDefinition)
             {
                 var type = method.ReflectedType ?? method.DeclaringType;
@@ -22,7 +33,7 @@ namespace Alpaca.Weld.Utils
             if (method.IsGenericMethodDefinition || (method.ReflectedType??method.DeclaringType).IsGenericTypeDefinition)
                 return null;
 
-            return method;
+            return resolved;
         }
 
         public class Resolution
@@ -36,8 +47,10 @@ namespace Alpaca.Weld.Utils
             Type resolvedType = null;
             var typeTransations = new Dictionary<Type, Type>();
 
-            if (!component.ContainsGenericParameters && requestedType.IsAssignableFrom(component))
+            if (requestedType.IsAssignableFrom(component))
                 resolvedType = component;
+            else if (!component.ContainsGenericParameters)
+                return null;
             else
             {
                 var openRequestedType = OpenIfGeneric(requestedType);
@@ -45,7 +58,7 @@ namespace Alpaca.Weld.Utils
 
                 resolvedType = (from i in interfaces
                         where openRequestedType == OpenIfGeneric(i)
-                                 let closedType = CloseGenericType(component, i, requestedType, typeTransations)
+                        let closedType = CloseGenericType(i, requestedType, typeTransations)
                         where closedType != null
                         select closedType)
                         .FirstOrDefault();
@@ -61,38 +74,53 @@ namespace Alpaca.Weld.Utils
             };
         }
 
-        private static Type CloseGenericType(Type component, Type componentType, Type requestedBase, Dictionary<Type, Type> typeTransations)
+        private static Type CloseGenericType(Type componentType, Type requestedBase, Dictionary<Type, Type> typeTransations)
         {
-            Type closedComponent;
-            if (component.ContainsGenericParameters)
+            Type closedComponentType;
+            if (componentType.ContainsGenericParameters)
             {
-                var args = CloseGenericArguments(component, componentType, requestedBase, typeTransations).ToArray();
+                var args = CloseGenericArguments(componentType, requestedBase, typeTransations).ToArray();
                 if (args.Contains(null))
                     return null;
-                closedComponent = component.GetGenericTypeDefinition().MakeGenericType(args);
+                try
+                {
+                    closedComponentType = componentType.GetGenericTypeDefinition().MakeGenericType(args);
+                }
+                catch (ArgumentException)
+                {
+                    // Incomatible constraint
+                    closedComponentType = null;
+                }
             }
             else
             {
-                closedComponent = component;
+                closedComponentType = componentType;
             }
 
-            if (requestedBase.IsAssignableFrom(closedComponent))
-                return closedComponent;
+            if (requestedBase.IsAssignableFrom(closedComponentType))
+                return closedComponentType;
 
             return null;
         }
 
-        private static IEnumerable<Type> CloseGenericArguments(Type component, Type componentType, Type requestedType, Dictionary<Type, Type> typeTransations)
+        private static IEnumerable<Type> CloseGenericArguments(Type componentType, Type requestedType, Dictionary<Type, Type> typeTransations)
         {
-            foreach (var arg in component.GetGenericArguments())
+            var i = 0;
+            foreach (var arg in componentType.GetGenericArguments())
             {
-                if (!arg.IsGenericParameter && !arg.ContainsGenericParameters)
+                if (arg.IsGenericParameter)
+                    yield return SearchClosedArgument(arg, componentType, requestedType, typeTransations);
+                else if (arg.ContainsGenericParameters)
                 {
-                    yield return arg;
-                    continue;
+                    var argArgs = CloseGenericArguments(arg, requestedType.GetGenericArguments()[i], typeTransations).ToArray();
+                    if (argArgs.Contains(null))
+                        yield return null;
+                    else
+                        yield return arg.MakeGenericType(argArgs);
                 }
+                else yield return arg;
 
-                yield return SearchClosedArgument(arg, componentType, requestedType, typeTransations);
+                i++;
             }
         }
 

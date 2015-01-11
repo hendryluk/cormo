@@ -32,6 +32,9 @@ namespace Alpaca.Weld.Test
             public IDictionary<T, int> DictionaryTInt() { return null; }
         }
 
+        private interface IDisposableList<T> : IList<T> where T : IDisposable { }
+
+
         public Type Resolve<T>(string name)
         {
             var resolution = GenericUtils.ResolveGenericType(GetMethodType(name), typeof(T));
@@ -90,6 +93,13 @@ namespace Alpaca.Weld.Test
         {
             Assert.AreEqual(typeof (IList<string>),
                 Resolve<IEnumerable<object>>("ListString"));
+        }
+
+        [Test]
+        public void ResolveGenericArgumentWithRestrictiveConstraint()
+        {
+            var resolution = GenericUtils.ResolveGenericType(typeof(IDisposableList<>), GetMethodType("List"));
+            Assert.IsNotNull(resolution);
         }
     }
 }
