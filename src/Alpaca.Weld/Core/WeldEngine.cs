@@ -159,16 +159,16 @@ namespace Alpaca.Weld.Core
 
         private IComponentFactory BuildFactory(GenericUtils.Resolution typeResolution)
         {
-            //var containsGenericParameters = typeResolution.ResolvedType.ContainsGenericParameters;
+            var containsGenericParameters = typeResolution.ResolvedType.ContainsGenericParameters;
 
-            //var producer = Producer;
-            //if (!containsGenericParameters && producer != null)
-            //{
-            //    producer = GenericUtils.MakeGenericMember(producer, typeResolution.GenericParameterTranslations);
-            //    if (producer == null)
-            //        return null;
+            var producer = Producer;
+            if (!containsGenericParameters && producer != null)
+            {
+                producer = GenericUtils.TranslateMemberGenericArguments(producer, typeResolution.GenericParameterTranslations);
+                if (producer == null)
+                    return null;
 
-            //}
+            }
 
             //if (typeResolution.ResolvedType.ContainsGenericParameters)
             //{
@@ -181,38 +181,38 @@ namespace Alpaca.Weld.Core
 
         private IComponentFactory BuildProducerFactory(GenericUtils.Resolution typeResolution)
         {
-            var producerField = Producer as FieldInfo;
-            if (producerField != null)
-            {
-                producerField = GenericUtils.ResolveFieldToReturn(producerField, typeResolution.ResolvedType);
-                if (producerField != null)
-                {
-                    // TODO
-                    return null;
-                }
-            }
+            //var producerField = Producer as FieldInfo;
+            //if (producerField != null)
+            //{
+            //    producerField = GenericUtils.ResolveFieldToReturn(producerField, typeResolution.ResolvedType);
+            //    if (producerField != null)
+            //    {
+            //        // TODO
+            //        return null;
+            //    }
+            //}
 
-            var producerMethod = Producer as MethodInfo;
-            if (producerMethod != null)
-            {
-                producerMethod = GenericUtils.ResolveMethodToReturn(producerMethod, typeResolution.ResolvedType);
-                if (producerMethod != null)
-                {
-                    // TODO
-                    return null;
-                }
-            }
+            //var producerMethod = Producer as MethodInfo;
+            //if (producerMethod != null)
+            //{
+            //    producerMethod = GenericUtils.ResolveMethodToReturn(producerMethod, typeResolution.ResolvedType);
+            //    if (producerMethod != null)
+            //    {
+            //        // TODO
+            //        return null;
+            //    }
+            //}
 
-            var producerProperty = Producer as PropertyInfo;
-            if (producerProperty != null)
-            {
-                producerProperty = GenericUtils.ResolvePropertyToReturn(producerProperty, typeResolution.ResolvedType);
-                if (producerProperty != null)
-                {
-                    // TODO
-                    return null;
-                }
-            }
+            //var producerProperty = Producer as PropertyInfo;
+            //if (producerProperty != null)
+            //{
+            //    producerProperty = GenericUtils.ResolvePropertyToReturn(producerProperty, typeResolution.ResolvedType);
+            //    if (producerProperty != null)
+            //    {
+            //        // TODO
+            //        return null;
+            //    }
+            //}
 
             return null;
         }

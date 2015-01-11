@@ -42,7 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GenericMethodResolverTest.cs" />
+    <Compile Include="GenericMemberTranslationTest.cs" />
     <Compile Include="ClassGenericTypeResolverTest.cs" />
     <Compile Include="MemberGenericTypeResolverTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
