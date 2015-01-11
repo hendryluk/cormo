@@ -43,7 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GenericMethodResolverTest.cs" />
-    <Compile Include="GenericTypeResolverTest.cs" />
+    <Compile Include="ClassGenericTypeResolverTest.cs" />
+    <Compile Include="MemberGenericTypeResolverTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SpikeTest.cs" />
   </ItemGroup>

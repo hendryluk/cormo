@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Alpaca.Weld.Test
 {
-    public class GenericTypeResolverTest
+    public class MemberGenericTypeResolverTest
     {
         private interface IList2<T, U>: IEnumerable<T>
         {
@@ -30,12 +30,6 @@ namespace Alpaca.Weld.Test
             public IList<KeyValuePair<T, Y>> ListKeyValuePair<Y>() { return null; }
 
             public IDictionary<T, int> DictionaryTInt() { return null; }
-
-            public IDictionary<string, int> DictionaryStringInt() { return null; }
-
-            public IDictionary<string, object> DictionaryStringObject() { return null; }
-
-            public IList<KeyValuePair<string, int>> ListKeyValuePairStringInt() { return null; }
         }
 
         public Type Resolve<T>(string name)
@@ -58,20 +52,6 @@ namespace Alpaca.Weld.Test
         }
 
         [Test]
-        public void ResolveClosedGenerics()
-        {
-            Assert.AreEqual(typeof(IList<string>), Resolve<IEnumerable<string>>("ListString"));
-        }
-
-        [Test]
-        public void RejectIncompatibleClosedGenerics()
-        {
-            Assert.IsNull(Resolve<IEnumerable<int>>("ListString"));
-        }
-
-        
-
-        [Test]
         public void RejectComponentWithTooManyGenericArguments()
         {
             Assert.IsNull(Resolve<IEnumerable<string>>("List2"));
@@ -89,20 +69,6 @@ namespace Alpaca.Weld.Test
         {
             Assert.AreEqual(typeof (IDictionary<string, int>),
                 Resolve<IEnumerable<KeyValuePair<string, int>>>("Dictionary"));
-        }
-
-        [Test]
-        public void ResolveChildOfNestedClosedGenerics()
-        {
-            Assert.AreEqual(typeof(IDictionary<string, int>),
-                Resolve<IEnumerable<KeyValuePair<string, int>>>("DictionaryStringInt"));
-        }
-
-        [Test]
-        public void RejectIncompatibleChildOfNestedClosedGenerics()
-        {
-            Assert.IsNull(
-                Resolve<IEnumerable<KeyValuePair<string, int>>>("DictionaryStringObject"));
         }
 
         [Test]

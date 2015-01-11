@@ -143,30 +143,99 @@ namespace Alpaca.Weld.Core
     {
         public Type Component { get; set; }
         public HashSet<object> Qualifiers { get; set; }
-    }
+        public MemberInfo Producer { get; set; }
 
-    public abstract class ComponentFactory
-    {
-        private readonly Type _type;
-        private readonly object[] _qualifiers;
-
-        protected ComponentFactory(Type type, object[] qualifiers)
+        public virtual IComponentFactory CreateFactory(Type requestedType, object[] qualifiers)
         {
-            _type = type;
-            _qualifiers = qualifiers;
+            if (!qualifiers.All(Qualifiers.Contains))
+                return null;
+
+            var typeResolution = GenericUtils.ResolveGenericType(Component, requestedType);
+            if (typeResolution == null)
+                return null;
+
+            return BuildFactory(typeResolution);
         }
 
-        public virtual bool CanSatisfy(Type type, object[] qualifiers)
+        private IComponentFactory BuildFactory(GenericUtils.Resolution typeResolution)
         {
-            return _type.IsAssignableFrom(type) && qualifiers.All(_qualifiers.Contains);
+            //var containsGenericParameters = typeResolution.ResolvedType.ContainsGenericParameters;
+
+            //var producer = Producer;
+            //if (!containsGenericParameters && producer != null)
+            //{
+            //    producer = GenericUtils.MakeGenericMember(producer, typeResolution.GenericParameterTranslations);
+            //    if (producer == null)
+            //        return null;
+
+            //}
+
+            //if (typeResolution.ResolvedType.ContainsGenericParameters)
+            //{
+                
+            //}
+
+            //if(typeResolution.)
+            return null;
         }
 
-        public abstract object Construct();
+        private IComponentFactory BuildProducerFactory(GenericUtils.Resolution typeResolution)
+        {
+            var producerField = Producer as FieldInfo;
+            if (producerField != null)
+            {
+                producerField = GenericUtils.ResolveFieldToReturn(producerField, typeResolution.ResolvedType);
+                if (producerField != null)
+                {
+                    // TODO
+                    return null;
+                }
+            }
+
+            var producerMethod = Producer as MethodInfo;
+            if (producerMethod != null)
+            {
+                producerMethod = GenericUtils.ResolveMethodToReturn(producerMethod, typeResolution.ResolvedType);
+                if (producerMethod != null)
+                {
+                    // TODO
+                    return null;
+                }
+            }
+
+            var producerProperty = Producer as PropertyInfo;
+            if (producerProperty != null)
+            {
+                producerProperty = GenericUtils.ResolvePropertyToReturn(producerProperty, typeResolution.ResolvedType);
+                if (producerProperty != null)
+                {
+                    // TODO
+                    return null;
+                }
+            }
+
+            return null;
+        }
     }
 
-    public class ActivatorComponentFactory
+    public interface IComponentFactory
     {
-        
+        object CreateComponent(Type requestedType);
+    }
+
+    public class ActivatorComponentFactory: IComponentFactory
+    {
+        private readonly GenericUtils.Resolution _typeResolution;
+
+        public ActivatorComponentFactory(GenericUtils.Resolution typeResolution)
+        {
+            _typeResolution = typeResolution;
+        }
+
+        public object CreateComponent(Type requestedType)
+        {
+            return null;
+        }
     }
 
     public class WeldEngine
