@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AmbiguousDependencyException.cs" />
     <Compile Include="Attributes\AnyAttribute.cs" />
     <Compile Include="Attributes\ConditionalOnMissingBeanAttribute.cs" />
     <Compile Include="Attributes\ConfigurationAttribute.cs" />
@@ -59,6 +60,7 @@
     <Compile Include="InstantiationError.cs" />
     <Compile Include="NonProxiableTypeException.cs" />
     <Compile Include="Core\WeldEngine.cs" />
+    <Compile Include="UnsatisfiedDependencyException.cs" />
     <Compile Include="Utils\GenericUtils.cs" />
     <Compile Include="WeldException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

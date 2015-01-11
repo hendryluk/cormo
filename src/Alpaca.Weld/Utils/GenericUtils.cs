@@ -85,7 +85,7 @@ namespace Alpaca.Weld.Utils
         public static MemberInfo TranslateMemberGenericArguments(MemberInfo member, IDictionary<Type, Type> typeTranslations)
         {
             var type = TranslateGenericArguments(member.ReflectedType, typeTranslations);
-            if (type == null || type.ContainsGenericParameters)
+            if (type == null)
                 return null;
 
             var method = member as MethodInfo;
@@ -111,7 +111,19 @@ namespace Alpaca.Weld.Utils
             return null;
         }
 
-        public static MethodInfo TranslateMethodGenericArguments(Type translatedType, MethodInfo method, IDictionary<Type, Type> typeTranslations)
+        public static bool MemberContainsGenericArguments(MemberInfo member)
+        {
+            if (member.ReflectedType.ContainsGenericParameters)
+                return true;
+            var method = member as MethodInfo;
+            if (method != null)
+            {
+                return method.ContainsGenericParameters;
+            }
+            return false;
+        }
+
+        private static MethodInfo TranslateMethodGenericArguments(Type translatedType, MethodInfo method, IDictionary<Type, Type> typeTranslations)
         {
             var translatedMethodParameters = method.GetParameters().Select(x => TranslateGenericArgument(x.ParameterType, typeTranslations)).ToArray();
 
@@ -124,13 +136,10 @@ namespace Alpaca.Weld.Utils
                 return method.GetGenericMethodDefinition().MakeGenericMethod(translatedMethodGenericArgs.ToArray());
             }
 
-            if (method.ContainsGenericParameters)
-                return null;
-
             return method;
         }
 
-        public static FieldInfo TranslateFieldType(Type translatedType, FieldInfo field)
+        private static FieldInfo TranslateFieldType(Type translatedType, FieldInfo field)
         {
             var flag = (field.IsStatic ? BindingFlags.Static : BindingFlags.Instance);
             flag |= (field.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic);
@@ -138,7 +147,7 @@ namespace Alpaca.Weld.Utils
             return translatedType.GetField(field.Name, flag);
         }
 
-        public static PropertyInfo TranslatePropertyType(Type translatedType, PropertyInfo property, IDictionary<Type, Type> typeTranslations)
+        private static PropertyInfo TranslatePropertyType(Type translatedType, PropertyInfo property, IDictionary<Type, Type> typeTranslations)
         {
             return translatedType.GetProperty(property.Name, 
                 TranslateGenericArgument(property.PropertyType, typeTranslations),

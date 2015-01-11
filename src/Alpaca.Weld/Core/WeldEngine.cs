@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Alpaca.Weld.Attributes;
 using Alpaca.Weld.Utils;
+using Castle.Components.DictionaryAdapter.Xml;
 
 namespace Alpaca.Weld.Core
 {
@@ -66,8 +70,13 @@ namespace Alpaca.Weld.Core
             foreach (var component in _components)
                 catalog.RegisterComponent(component, GetQualifiers(component));
 
-            foreach (var member in _injects)
-                catalog.RegisterInject(member, GetQualifiers(member));
+            foreach (var field in _injects.OfType<FieldInfo>())
+                catalog.RegisterInject(field, GetQualifiers(field));
+            foreach (var method in _injects.OfType<MethodInfo>())
+                foreach(var param in method.GetParameters())
+                catalog.RegisterInject(param, GetQualifiers(param));
+            foreach (var property in _injects.OfType<PropertyInfo>())
+                catalog.RegisterInject(property, GetQualifiers(property));
 
             return catalog;
         }
@@ -99,7 +108,7 @@ namespace Alpaca.Weld.Core
             }
             qualifierSet.Add(AnyAttributeInstance);
 
-            _components.Add(new ComponentRegistration
+            _components.Add(new ClassComponentRegistration
             {
                 Component = component,
                 Qualifiers = qualifierSet,
@@ -115,12 +124,33 @@ namespace Alpaca.Weld.Core
             _configurations.AddRange(configurations);
         }
 
-        public void RegisterInject(MemberInfo member, object[] qualifiers)
+        private object[] SetQualifierDefaults(object[] qualifiers)
         {
-            InjectionCriteria.Validate(member);
             if (!qualifiers.Any())
-                qualifiers = new object[] {DefaultAttributeInstance};
-            _injectionPoints.Add(new InjectionPoint(member, qualifiers));
+                return new object[] { DefaultAttributeInstance };
+
+            return qualifiers;
+        }
+
+        public void RegisterInject(FieldInfo field, object[] qualifiers)
+        {
+            InjectionCriteria.Validate(field);
+            qualifiers = SetQualifierDefaults(qualifiers);
+            _injectionPoints.Add(new InjectionPoint(field.FieldType, field, qualifiers));
+        }
+
+        public void RegisterInject(ParameterInfo parameter, object[] qualifiers)
+        {
+            InjectionCriteria.Validate((MethodBase)parameter.Member);
+            qualifiers = SetQualifierDefaults(qualifiers);
+            _injectionPoints.Add(new InjectionPoint(parameter.ParameterType, parameter.Member, qualifiers){Index = parameter.Position});
+        }
+
+        public void RegisterInject(PropertyInfo property, object[] qualifiers)
+        {
+            InjectionCriteria.Validate(property);
+            qualifiers = SetQualifierDefaults(qualifiers);
+            _injectionPoints.Add(new InjectionPoint(property.PropertyType, property, qualifiers));
         }
 
         public IEnumerable<Type> Configurations
@@ -139,80 +169,79 @@ namespace Alpaca.Weld.Core
         }
     }
 
-    public class ComponentRegistration
+    public abstract class ComponentRegistration
     {
         public Type Component { get; set; }
         public HashSet<object> Qualifiers { get; set; }
-        public MemberInfo Producer { get; set; }
-
-        public virtual IComponentFactory CreateFactory(Type requestedType, object[] qualifiers)
+        
+        public virtual bool? CanSatisfy(LookupSpec spec)
         {
-            if (!qualifiers.All(Qualifiers.Contains))
+            return spec.Qualifiers.All(Qualifiers.Contains)? CanSatisfy(spec.Type): false;
+        }
+
+        protected abstract bool? CanSatisfy(Type requestedType);
+        public abstract IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec);
+    }
+
+    public class ClassComponentRegistration : ComponentRegistration
+    {
+        protected override bool? CanSatisfy(Type requestedType)
+        {
+            var resolution = ResolveType(requestedType);
+            if (resolution == null)
+                return false;
+            if (resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
+                return null;
+            return true;
+        }
+
+        private GenericUtils.Resolution ResolveType(Type requestedType)
+        {
+            return GenericUtils.ResolveGenericType(Component, requestedType);
+        }
+
+        public override IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec)
+        {
+            var resolution = ResolveType(spec.Type);
+            if(resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                 return null;
 
+            return new ActivatorComponentFactory(engine, resolution.ResolvedType);
+        }
+    }
+
+    public class ProducerRegistration: ComponentRegistration
+    {
+        public MemberInfo Producer { get; set; }
+
+        protected override bool? CanSatisfy(Type requestedType)
+        {
+            var producer = ResolveProducer(requestedType);
+            if (producer == null)
+                return false;
+            if (GenericUtils.MemberContainsGenericArguments(producer))
+                return null;
+            return true;
+        }
+
+        private MemberInfo ResolveProducer(Type requestedType)
+        {
             var typeResolution = GenericUtils.ResolveGenericType(Component, requestedType);
             if (typeResolution == null)
                 return null;
-
-            return BuildFactory(typeResolution);
-        }
-
-        private IComponentFactory BuildFactory(GenericUtils.Resolution typeResolution)
-        {
-            var containsGenericParameters = typeResolution.ResolvedType.ContainsGenericParameters;
-
-            var producer = Producer;
-            if (!containsGenericParameters && producer != null)
-            {
-                producer = GenericUtils.TranslateMemberGenericArguments(producer, typeResolution.GenericParameterTranslations);
-                if (producer == null)
-                    return null;
-
-            }
-
-            //if (typeResolution.ResolvedType.ContainsGenericParameters)
-            //{
                 
-            //}
-
-            //if(typeResolution.)
-            return null;
+            return GenericUtils.TranslateMemberGenericArguments(Producer, typeResolution.GenericParameterTranslations);
         }
 
-        private IComponentFactory BuildProducerFactory(GenericUtils.Resolution typeResolution)
+        public override IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec)
         {
-            //var producerField = Producer as FieldInfo;
-            //if (producerField != null)
-            //{
-            //    producerField = GenericUtils.ResolveFieldToReturn(producerField, typeResolution.ResolvedType);
-            //    if (producerField != null)
-            //    {
-            //        // TODO
-            //        return null;
-            //    }
-            //}
+            var resolvedProducer = ResolveProducer(spec.Type);
+            if (GenericUtils.MemberContainsGenericArguments(resolvedProducer))
+                return null;
 
-            //var producerMethod = Producer as MethodInfo;
-            //if (producerMethod != null)
-            //{
-            //    producerMethod = GenericUtils.ResolveMethodToReturn(producerMethod, typeResolution.ResolvedType);
-            //    if (producerMethod != null)
-            //    {
-            //        // TODO
-            //        return null;
-            //    }
-            //}
-
-            //var producerProperty = Producer as PropertyInfo;
-            //if (producerProperty != null)
-            //{
-            //    producerProperty = GenericUtils.ResolvePropertyToReturn(producerProperty, typeResolution.ResolvedType);
-            //    if (producerProperty != null)
-            //    {
-            //        // TODO
-            //        return null;
-            //    }
-            //}
+            var method = resolvedProducer as MethodInfo;
+            if (method != null)
+                return new ProducerMethodComponentFactory(engine, method);
 
             return null;
         }
@@ -221,26 +250,209 @@ namespace Alpaca.Weld.Core
     public interface IComponentFactory
     {
         object CreateComponent(Type requestedType);
+        bool GuarantesResult { get; }
     }
 
-    public class ActivatorComponentFactory: IComponentFactory
+    public class ProducerMethodComponentFactory : IComponentFactory
     {
-        private readonly GenericUtils.Resolution _typeResolution;
+        private readonly WeldEngine _engine;
+        private readonly MethodInfo _producer;
 
-        public ActivatorComponentFactory(GenericUtils.Resolution typeResolution)
+        public ProducerMethodComponentFactory(WeldEngine engine, MethodInfo producer)
         {
-            _typeResolution = typeResolution;
+            _engine = engine;
+            _producer = producer;
         }
 
         public object CreateComponent(Type requestedType)
         {
-            return null;
+            throw new NotImplementedException();
+            //return engine.Execute(_producer);
+        }
+
+        public bool GuarantesResult { get { return true; } }
+    }
+
+    public class ActivatorComponentFactory: IComponentFactory
+    {
+        private readonly WeldEngine _engine;
+        private readonly Type _type;
+        private Lazy<DependencyInjector[]> _dependencies;
+        private Func<object> _constructor;
+
+        public ActivatorComponentFactory(WeldEngine engine, Type type)
+        {
+            _engine = engine;
+            _type = type;
+            _dependencies = new Lazy<DependencyInjector[]>(LoadDependencies);
+        }
+
+        private DependencyInjector[] LoadDependencies()
+        {
+            var dependencies = _engine.GetDependenciesOf(_type);
+            var constructors = dependencies.Where(x => x.IsConstructor).ToArray();
+
+            if (constructors.Length > 1)
+            {
+                throw new InvalidComponentException(_type, "Multiple [Inject] constructors");
+            }
+            if (constructors.Length == 1)
+            {
+                var ctr = constructors[0];
+                _constructor = () => ctr.Inject(null);
+            }
+            else
+            {
+                _constructor = () => Activator.CreateInstance(_type, true);
+            }
+
+            return dependencies.Where(x => !x.IsConstructor).ToArray();
+        }
+
+        public object CreateComponent(Type requestedType)
+        {
+            var dependencies = _dependencies.Value;
+            var obj = _constructor();
+            _engine.InjectDependencies(obj, dependencies);
+            return obj;
+        }
+
+        public bool GuarantesResult { get { return true; } }
+    }
+
+    public struct LookupSpec
+    {
+        public LookupSpec(Type type, IEnumerable<object> qualifiers): this()
+        {
+            Type = type;
+            Qualifiers = qualifiers;
+        }
+
+        public Type Type { get; private set; }
+        public IEnumerable<object> Qualifiers { get; private set; }
+    }
+
+    public static class MemberVisitor
+    {
+        public static T VisitInject<T>(MemberInfo member, 
+            Func<MethodBase, T> onMethod,
+            Func<FieldInfo, T> onField,
+            Func<PropertyInfo, T> onProperty)
+        {
+            var method = member as MethodBase;
+            if (method != null)
+                onMethod(method);
+            var field = member as FieldInfo;
+            if (field != null)
+                onField(field);
+            var property = member as PropertyInfo;
+            if (property != null)
+                onProperty(property);
+
+            return default(T);
+        }
+    }
+
+    public abstract class DependencyInjector
+    {
+        protected readonly WeldEngine Engine;
+        private readonly IDictionary<int, ComponentRegistration[]> _registrations;
+
+        protected DependencyInjector(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations)
+        {
+            Engine = engine;
+            _registrations = registrations;
+        }
+
+        protected virtual object GetDependency()
+        {
+            return Engine.GetInstance(_registrations[0]);
+        }
+
+        public abstract object Inject(object target);
+        public abstract bool IsConstructor { get; }
+        
+        public static DependencyInjector Create(WeldEngine engine, MemberInfo member, IDictionary<int, ComponentRegistration[]> registrations)
+        {
+            return MemberVisitor.VisitInject<DependencyInjector>(member,
+                method => new ToMethod(engine, registrations, method), 
+                field => new ToField(engine, registrations, field),
+                property=> new ToProperty(engine, registrations, property));
+        }
+
+        public class ToMethod : DependencyInjector
+        {
+            private readonly MethodBase _method;
+
+            public ToMethod(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, MethodBase method)
+                : base(engine, registrations)
+            {
+                _method = method;
+            }
+
+            public override object Inject(object target)
+            {
+                return Engine.Execute(target, _method, _registrations);
+            }
+
+            public override bool IsConstructor
+            {
+                get { return _method is ConstructorInfo; }
+            }
+        }
+
+        public class ToField : DependencyInjector
+        {
+            private readonly FieldInfo _field;
+
+            public ToField(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, FieldInfo field)
+                : base(engine, registrations)
+            {
+                _field = field;
+            }
+
+            public override object Inject(object target)
+            {
+                var value = GetDependency();
+                _field.SetValue(target, value);
+                return value;
+            }
+
+            public override bool IsConstructor
+            {
+                get { return false; }
+            }
+        }
+
+        public class ToProperty : DependencyInjector
+        {
+            private readonly PropertyInfo _property;
+
+            public ToProperty(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, PropertyInfo property)
+                : base(engine, registrations)
+            {
+                _property = property;
+            }
+
+            public override object Inject(object target)
+            {
+                var value = GetDependency();
+                _property.SetValue(target, value); 
+                return value;
+            }
+
+            public override bool IsConstructor
+            {
+                get { return false; }
+            }
         }
     }
 
     public class WeldEngine
     {
         private readonly WeldCatalog _catalog;
+        private Dictionary<Type, DependencyInjector[]> _typeDependencies;
+        private Dictionary<ComponentRegistration, object> _componentValues = new Dictionary<ComponentRegistration, object>();
 
         public WeldEngine(WeldCatalog catalog)
         {
@@ -255,36 +467,118 @@ namespace Alpaca.Weld.Core
 
         private void LoadCatalog()
         {
-            LoadComponents();
             ResolveInjections();
-        }
-
-        void LoadComponents()
-        {
-            //var components = from reg in _catalog.Components
-            //                 select new 
         }
 
         void ResolveInjections()
         {
-            //var x  = from injection in _catalog.InjectionPoints
-            //         _catalog.SatisfyInjection(injection)
+            var resolves = (from inject in _catalog.InjectionPoints
+                            let satisfyingComponents = SatisfyInjection(inject)
+                            let isGeneric = inject.RequestedType.ContainsGenericParameters
+                            select new {inject.MemberInfo, inject.Index, satisfyingComponents, isGeneric}).ToArray();
+            
+            var groupByMember = (from resolve in resolves
+                                where !resolve.isGeneric
+                                group new {resolve.Index, resolve.satisfyingComponents} by resolve.MemberInfo into byMembers
+                                let dependencies = byMembers
+                                    .GroupBy(x=> x.Index, x=> x.satisfyingComponents)
+                                    .ToDictionary(x=> x.Key, x=> x.SelectMany(_=> _).ToArray())
+                                let member = byMembers.Key
+                                select new { member, dependency = DependencyInjector.Create(this, member, dependencies) });
+
+            _typeDependencies = groupByMember.GroupBy(x=> x.member.ReflectedType, x=> x.dependency)
+                                    .ToDictionary(g=> g.Key, g=> g.ToArray());
+
+            // TODO: generics
         }
 
+        private ComponentRegistration[] SatisfyInjection(InjectionPoint inject)
+        {
+            var matches = (from component in _catalog.Components
+                          let canSatisfy = component.CanSatisfy(new LookupSpec(inject.RequestedType, inject.Qualifiers.ToArray()))
+                          where canSatisfy != false
+                          select new {component, maybe = !canSatisfy.HasValue}).ToArray();
+
+            if(!matches.Any())
+                throw new UnsatisfiedDependencyException(inject);
+
+            var hasValues = matches.Where(x => !x.maybe).ToArray();
+            if (hasValues.Length > 1)
+            {
+                throw new AmbiguousDependencyException(inject, hasValues.Select(x => x.component).ToArray());
+            }
+
+            return matches.Select(x => x.component).ToArray();
+        }
 
         private void Configure()
         {
             foreach (var config in _catalog.Configurations)
             {
-                var configInstance = GetInstance(config, typeof(AnyAttribute));
             }
         }
 
-        private object GetInstance(Type type, params Type[] qualifiers)
+        private void ExecuteConfig(Type config)
         {
+            var configInstance = CreateComponent(config, new ActivatorComponentFactory(this, config));
+            
+        }
+
+        private object CreateComponent(Type type, IComponentFactory factory)
+        {
+            var component = factory.CreateComponent(type);
+            InvokePostConstruct(component);
+            return component;
+        }
+
+        private void InvokePostConstruct(object component)
+        {
+            // TODO
+        }
+
+        public object Execute(object target, MethodBase method, IDictionary<int, ComponentRegistration[]> registrations)
+        {
+            if (method.IsStatic)
+            {
+                target = null;
+            }
+
+            registrations.ToDictionary(x => x.Key, x =>
+            {
+                var param = method.GetParameters()[x.Key];
+                return GetInstance(x.Value);
+            });
+
+            // TODO
             return null;
         }
 
-        
+        private object GetInstance(ComponentRegistration registration)
+        {
+            // TODO
+            return null;
+        }
+
+        public object GetInstance(ComponentRegistration[] registrations)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DependencyInjector[] GetDependenciesOf(Type type)
+        {
+            DependencyInjector[] dependencies;
+            if(!_typeDependencies.TryGetValue(type, out dependencies))
+                return new DependencyInjector[0];
+
+            return dependencies;
+        }
+
+        public void InjectDependencies(object target, DependencyInjector[] dependencies)
+        {
+            foreach (var dependency in dependencies.Where(x=> !x.IsConstructor))
+            {
+                // TODO
+            }
+        }
     }
 }

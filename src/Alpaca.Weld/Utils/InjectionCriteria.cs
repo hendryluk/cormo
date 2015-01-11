@@ -13,11 +13,21 @@ namespace Alpaca.Weld.Utils
         {
             return AttributesUtil.HasAttribute<InjectAttribute>(provider);
         }
-       
-        public static void Validate(MemberInfo member)
+        public static void Validate(FieldInfo field)
         {
-            var property = member as PropertyInfo;
-            if (property != null && property.SetMethod == null)
+        }
+
+        public static void Validate(MethodBase method)
+        {
+            if (method.IsGenericMethodDefinition)
+            {
+                throw new InjectionPointException(method, "Cannot inject into a generic method");
+            }
+        }
+       
+        public static void Validate(PropertyInfo property)
+        {
+            if (property.SetMethod == null)
             {
                 throw new InjectionPointException(property, "Injection property must have a setter");
             }
@@ -33,6 +43,8 @@ namespace Alpaca.Weld.Utils
 
         public static void Validate(Type type)
         {
+            if(type.ContainsGenericParameters)
+                throw new InvalidComponentException(type, "Configuration class cannot contain generic parameters");
             ComponentCriteria.Validate(type);
         }
     }
