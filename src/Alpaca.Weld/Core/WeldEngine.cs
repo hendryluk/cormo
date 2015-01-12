@@ -105,7 +105,7 @@ namespace Alpaca.Weld.Core
 
         private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
         private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
-        public void RegisterComponent(Type component, object[] qualifiers)
+        public void RegisterComponent(Type component, params object[] qualifiers)
         {
             ComponentCriteria.Validate(component);
 
@@ -134,7 +134,7 @@ namespace Alpaca.Weld.Core
                 _configurations.Add(new ClassComponentRegistration(config, new object[]{AnyAttributeInstance, DefaultAttributeInstance}));
         }
 
-        public void RegisterInject(FieldInfo field, object[] qualifiers)
+        public void RegisterInject(FieldInfo field, params object[] qualifiers)
         {
             InjectionCriteria.Validate(field);
             _injectRegistrations.Add(new InjectRegistration(field, field.FieldType, qualifiers));
