@@ -25,8 +25,10 @@ namespace Alpaca.Weld.Core
 
         public WeldCatalog AutoScan()
         {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName();
+
             var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
-                      where !assembly.FullName.StartsWith("System.")
+                      where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
                       from type in assembly.GetLoadableTypes()
                       where type.IsPublic && type.IsClass && !type.IsPrimitive
                       select type).ToArray();
