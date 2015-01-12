@@ -70,7 +70,7 @@ namespace Alpaca.Weld.Core
             var catalog = new WeldCatalog();
             catalog.RegisterConfigurations(configurations);
             
-            foreach (var component in components)
+            foreach (var component in components.Except(configurations))
                 catalog.RegisterComponent(component, GetQualifiers(component));
 
             foreach (var field in injects.OfType<FieldInfo>())
@@ -99,7 +99,7 @@ namespace Alpaca.Weld.Core
     public class WeldCatalog
     {
         private readonly List<ComponentRegistration> _components = new List<ComponentRegistration>();
-        private readonly List<Type> _configurations = new List<Type>();
+        private readonly List<ComponentRegistration> _configurations = new List<ComponentRegistration>();
         private readonly List<InjectRegistration> _injectRegistrations = new List<InjectRegistration>();
         private readonly List<MethodInfo> _postConstructs = new List<MethodInfo>();
 
@@ -130,10 +130,9 @@ namespace Alpaca.Weld.Core
             {
                 ConfigurationCriteria.Validate(config);
             }
-            _configurations.AddRange(configurations);
+            foreach(var config in configurations)
+                _configurations.Add(new ClassComponentRegistration(config, new object[]{AnyAttributeInstance, DefaultAttributeInstance}));
         }
-
-        
 
         public void RegisterInject(FieldInfo field, object[] qualifiers)
         {
@@ -162,7 +161,7 @@ namespace Alpaca.Weld.Core
             }
         }
 
-        public IEnumerable<Type> Configurations
+        public IEnumerable<ComponentRegistration> Configurations
         {
             get { return _configurations; }
         }
@@ -215,6 +214,7 @@ namespace Alpaca.Weld.Core
     }
 
     public delegate object BuildPlan();
+    public delegate object InjectPlan(object target);
 
     public class InstanceComponentRegistration : ComponentRegistration
     {
@@ -438,13 +438,13 @@ namespace Alpaca.Weld.Core
         {
             var method = member as MethodBase;
             if (method != null)
-                onMethod(method);
+                return onMethod(method);
             var field = member as FieldInfo;
             if (field != null)
-                onField(field);
+                return onField(field);
             var property = member as PropertyInfo;
             if (property != null)
-                onProperty(property);
+                return onProperty(property);
 
             return default(T);
         }
@@ -626,7 +626,7 @@ namespace Alpaca.Weld.Core
         
         void BuildDependencyGraph()
         {
-            var components = _catalog.Components.Where(x => !x.Type.IsGenericTypeDefinition).ToArray();
+            var components = _catalog.Components.Union(_catalog.Configurations).ToArray();
             _regIndex = (from component in components
                          from type in TypeUtils.GetComponentTypes(component.Type)
                          group component by type)
@@ -722,7 +722,7 @@ namespace Alpaca.Weld.Core
             
             if (!_regIndex.TryGetValue(spec.Type, out registrations))
             {
-                if (spec.Type.ContainsGenericParameters)
+                if (spec.Type.IsGenericType)
                 {
                     if (_regIndex.TryGetValue(spec.Type.GetGenericTypeDefinition(), out registrations))
                     {
@@ -795,26 +795,9 @@ namespace Alpaca.Weld.Core
         {
             foreach (var config in _catalog.Configurations)
             {
-                ExecuteConfig(config);
+                // Load Imports
+                GetInstance(config);
             }
-        }
-
-        private void ExecuteConfig(Type config)
-        {
-            var configInstance = CreateComponent(config, new ClassComponentRegistration(config, new object[0]));
-            
-        }
-
-        private object CreateComponent(Type type, ClassComponentRegistration reg)
-        {
-            var component = GetInstance(reg);
-            InvokePostConstruct(component);
-            return component;
-        }
-
-        private void InvokePostConstruct(object component)
-        {
-            // TODO
         }
 
         public object Execute(object target, MethodBase method, ComponentRegistration[][] registrations)
@@ -845,36 +828,69 @@ namespace Alpaca.Weld.Core
         public BuildPlan MakeConstructorBuildPlan(ComponentRegistration registration)
         {
             var node = _nodeIndex[registration];
-            var injects = node.Dependencies.Where(x => x.Key is ConstructorInfo).ToArray();
+            var injectCtors = node.Dependencies.Where(x => x.Key is ConstructorInfo).ToArray();
             var postConstructs = GetPostConstructs(registration.Type);
 
             BuildPlan construction;
-            if (injects.Any())
+            if (injectCtors.Any())
             {
-                var inject = injects.First();
-                construction = MakeExecutionPlan(null, (MethodBase)inject.Key, inject.Value);
+                var inject = injectCtors.First();
+                construction = ()=> MakeExecutionPlan((MethodBase)inject.Key, inject.Value)(null);
             }
             else
             {
                 construction = () => Activator.CreateInstance(registration.Type, true);
             }
 
+            var injectPlans = node.Dependencies.Except(injectCtors).Select(x=> MakeInjectionPlan(x.Key, x.Value)).ToArray();
+
             return () =>
             {
                 var obj = construction();
+                foreach (var inject in injectPlans)
+                    inject(obj);
                 foreach (var post in postConstructs)
                     post.Invoke(obj, null);
                 return obj;
             };
         }
 
-        public BuildPlan MakeExecutionPlan(object target, MethodBase method, DependencyLink[] dependencies)
+        public InjectPlan MakeInjectionPlan(MemberInfo member, DependencyLink[] dependencies)
         {
-            var components = dependencies.Select(x => x.Components.First().Registration).ToArray();
-            return () =>
+            return MemberVisitor.VisitInject(member,
+                method => MakeExecutionPlan(method, dependencies),
+                field => MakeExecutionPlan(field, dependencies.First().Components.First().Registration),
+                property => MakeExecutionPlan(property, dependencies.First().Components.First().Registration)
+                );
+        }
+
+        public InjectPlan MakeExecutionPlan(FieldInfo field, ComponentRegistration reg)
+        {
+            return o =>
             {
-                var args = components.Select(GetInstance).ToArray();
-                return method.Invoke(target, args);
+                var val = GetInstance(reg);
+                field.SetValue(o, val);
+                return val;
+            };
+        }
+
+        public InjectPlan MakeExecutionPlan(PropertyInfo property, ComponentRegistration reg)
+        {
+            return o =>
+            {
+                var val = GetInstance(reg);
+                property.SetValue(o, val);
+                return val;
+            };
+        }
+
+        public InjectPlan MakeExecutionPlan(MethodBase method, DependencyLink[] dependencies)
+        {
+            var regs = dependencies.Select(x => x.Components.First().Registration).ToArray();
+            return o =>
+            {
+                var args = regs.Select(GetInstance).ToArray();
+                return method.Invoke(o, args);
             };
         }
 

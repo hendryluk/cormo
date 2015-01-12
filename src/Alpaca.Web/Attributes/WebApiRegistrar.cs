@@ -8,7 +8,7 @@ namespace Alpaca.Web.Attributes
     public class WebApiRegistrar
     {
         [Inject] IAppBuilder _appBuilder;
-        [Inject] HttpConfiguration _httpConfiguration;
+        //[Inject] HttpConfiguration _httpConfiguration;
 
         [Produces]
         [ConditionalOnMissingBean]
@@ -20,7 +20,7 @@ namespace Alpaca.Web.Attributes
         [PostConstruct]
         public virtual void Init()
         {
-            _appBuilder.UseWebApi(_httpConfiguration);
+            //_appBuilder.UseWebApi(_httpConfiguration);
         }
     }
 }
