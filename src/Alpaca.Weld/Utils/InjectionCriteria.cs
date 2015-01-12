@@ -60,4 +60,17 @@ namespace Alpaca.Weld.Utils
                 throw new InvalidComponentException(type, "Class has multiple [Inject] constructors");
         }
     }
+
+    public static class PostConstructCriteria
+    {
+        public static void Validate(MethodInfo method)
+        {
+            if (method.IsGenericMethod)
+                throw new InvalidComponentException(method.ReflectedType, string.Format("PostConstruct method must not be generic: [{0}]", method));
+
+            if (method.GetParameters().Any())
+                throw new InvalidComponentException(method.ReflectedType, string.Format("PostConstruct method must not have any parameter: [{0}]", method));
+
+        }
+    }
 }

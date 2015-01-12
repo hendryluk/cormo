@@ -13,6 +13,16 @@ namespace Alpaca.Weld.Utils
             public IDictionary<Type, Type> GenericParameterTranslations { get; set; } 
         }
 
+        public static IDictionary<Type, Type> CreateGenericTranslactions(Type type)
+        {
+            var args = type.GetGenericArguments();
+            var openType = type.GetGenericTypeDefinition();
+
+            return openType.GetGenericArguments()
+                .Select((x, i) => new {x,i})
+                .ToDictionary(x => x.x, x => args[x.i]);
+        }
+
         public static Resolution ResolveGenericType(Type component, Type requestedType)
         {
             Type resolvedType;

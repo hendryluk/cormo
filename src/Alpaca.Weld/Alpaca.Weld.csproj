@@ -55,7 +55,7 @@
     <Compile Include="Attributes\ProducesAttribute.cs" />
     <Compile Include="Attributes\QualifierAttribute.cs" />
     <Compile Include="InvalidComponentException.cs" />
-    <Compile Include="Core\InjectionPoint.cs" />
+    <Compile Include="Core\InjectRegistration.cs" />
     <Compile Include="InjectionPointException.cs" />
     <Compile Include="InstantiationError.cs" />
     <Compile Include="NonProxiableTypeException.cs" />

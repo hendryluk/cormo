@@ -13,8 +13,8 @@ namespace Alpaca.Weld.Utils
     {
         public static bool IsComponent(Type type)
         {
-            return type.IsClass
-                   && !(type.IsSealed && type.IsAbstract) // static classes
+            return //type.IsClass &&  // Already checked at scanner level
+                    !(type.IsSealed && type.IsAbstract) // static classes
                    && (!type.IsAbstract || type.HasAttribute<DecoratorAttribute>())
                    && HasInjectableConstructor(type);
         }
@@ -81,7 +81,7 @@ namespace Alpaca.Weld.Utils
 
         public static IEnumerable<Type> GetComponentTypes(Type type)
         {
-            for(var t = type; t != null; t=type.BaseType)
+            for(var t = type; t != null; t=t.BaseType)
             {
                 yield return t;
             }

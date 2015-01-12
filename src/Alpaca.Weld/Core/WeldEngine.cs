@@ -2,13 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Common;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Alpaca.Weld.Attributes;
 using Alpaca.Weld.Utils;
-using Castle.Components.DictionaryAdapter.Xml;
 
 namespace Alpaca.Weld.Core
 {
@@ -16,27 +14,28 @@ namespace Alpaca.Weld.Core
     {
         private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
        
-        private Type[] _types;
-        private Type[] _configurations;
-        private IEnumerable<MethodInfo> _producesFields;
-        private IEnumerable<MethodInfo> _producesMethods;
-        private IEnumerable<PropertyInfo> _producesProperties;
-        private IEnumerable<PropertyInfo> _propertyInjects;
-        private MemberInfo[] _injects;
-        private IEnumerable<Type> _components;
+        //private Type[] _types;
+        //private Type[] _configurations;
+        //private IEnumerable<FieldInfo> _producesFields;
+        //private IEnumerable<MethodInfo> _producesMethods;
+        //private IEnumerable<PropertyInfo> _producesProperties;
+        //private IEnumerable<PropertyInfo> _propertyInjects;
+        //private MemberInfo[] _injects;
+        //private IEnumerable<Type> _components;
 
-        public void AutoScan()
+        public WeldCatalog AutoScan()
         {
-            _types = (from assembly in AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies()
-                         from type in assembly.GetLoadableTypes()
-                         where !type.IsEnum && !type.IsPrimitive
-                         select type).ToArray();
+            var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
+                      where !assembly.FullName.StartsWith("System.")
+                      from type in assembly.GetLoadableTypes()
+                      where type.IsPublic && type.IsClass && !type.IsPrimitive
+                      select type).ToArray();
 
-            _components = _types.Where(TypeUtils.IsComponent);
-             
-            _configurations = _types.Where(ConfigurationCriteria.ScanPredicate).ToArray();
+            var components = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
 
-            _injects = (from type in _types
+            var configurations = types.AsParallel().Where(ConfigurationCriteria.ScanPredicate).ToArray();
+
+            var injects = (from type in types.AsParallel()
                         where !type.IsInterface && !type.IsAbstract
                         let methods = type.GetMethods(AllBindingFlags)
                         let properties = type.GetProperties(AllBindingFlags).Where(x => x.SetMethod == null || !x.SetMethod.IsAbstract)
@@ -46,37 +45,43 @@ namespace Alpaca.Weld.Core
                         where InjectionCriteria.ScanPredicate(member)
                         select member).ToArray();
 
-            _producesFields = (from type in _types
-                               from field in type.GetMethods(AllBindingFlags)
+            var producesFields = (from type in types.AsParallel()
+                               from field in type.GetFields(AllBindingFlags)
                                where field.HasAttribute<ProducesAttribute>()
-                               select field);
+                               select field).ToArray();
 
-            _producesMethods = (from type in _types
+            var producesMethods = (from type in types.AsParallel()
                                 from method in type.GetMethods(AllBindingFlags)
                                 where method.HasAttribute<ProducesAttribute>()
-                                select method);
+                                select method).ToArray();
 
-            _producesProperties = (from type in _types
-                                from property in type.GetProperties(AllBindingFlags)
-                                where property.HasAttribute<ProducesAttribute>()
-                                select property);
-        }
+            var producesProperties = (from type in types.AsParallel()
+                                   from property in type.GetProperties(AllBindingFlags)
+                                   where property.HasAttribute<ProducesAttribute>()
+                                   select property).ToArray();
 
-        public WeldCatalog BuildCatalog()
-        {
+            var postConstructs = (from type in types.AsParallel()
+                                   from method in type.GetMethods(AllBindingFlags)
+                                   where method.HasAttribute<PostConstructAttribute>()
+                                   select method).ToArray();
+
             var catalog = new WeldCatalog();
-            catalog.RegisterConfigurations(_configurations);
+            catalog.RegisterConfigurations(configurations);
             
-            foreach (var component in _components)
+            foreach (var component in components)
                 catalog.RegisterComponent(component, GetQualifiers(component));
 
-            foreach (var field in _injects.OfType<FieldInfo>())
+            foreach (var field in injects.OfType<FieldInfo>())
                 catalog.RegisterInject(field, GetQualifiers(field));
-            foreach (var method in _injects.OfType<MethodInfo>())
-                foreach(var param in method.GetParameters())
-                catalog.RegisterInject(param, GetQualifiers(param));
-            foreach (var property in _injects.OfType<PropertyInfo>())
+            foreach (var method in injects.OfType<MethodBase>())
+            {
+                var seeks = method.GetParameters().Select(x => new SeekSpec(x.ParameterType, GetQualifiers(x)));
+                catalog.RegisterInject(method, seeks.ToArray());
+            }
+            foreach (var property in injects.OfType<PropertyInfo>())
                 catalog.RegisterInject(property, GetQualifiers(property));
+
+            catalog.RegisterPostConstructs(postConstructs);
 
             return catalog;
         }
@@ -93,7 +98,8 @@ namespace Alpaca.Weld.Core
     {
         private readonly List<ComponentRegistration> _components = new List<ComponentRegistration>();
         private readonly List<Type> _configurations = new List<Type>();
-        private readonly List<InjectionPoint> _injectionPoints = new List<InjectionPoint>();
+        private readonly List<InjectRegistration> _injectRegistrations = new List<InjectRegistration>();
+        private readonly List<MethodInfo> _postConstructs = new List<MethodInfo>();
 
         private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
         private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
@@ -108,11 +114,12 @@ namespace Alpaca.Weld.Core
             }
             qualifierSet.Add(AnyAttributeInstance);
 
-            _components.Add(new ClassComponentRegistration
-            {
-                Component = component,
-                Qualifiers = qualifierSet,
-            });
+            _components.Add(new ClassComponentRegistration(component, qualifierSet));
+        }
+
+        public void RegisterComponentInstance(object instance, params object[] qualifiers)
+        {
+            _components.Add(new InstanceComponentRegistration(instance, instance.GetType(), qualifiers));
         }
 
         public void RegisterConfigurations(params Type[] configurations)
@@ -124,33 +131,33 @@ namespace Alpaca.Weld.Core
             _configurations.AddRange(configurations);
         }
 
-        private object[] SetQualifierDefaults(object[] qualifiers)
-        {
-            if (!qualifiers.Any())
-                return new object[] { DefaultAttributeInstance };
-
-            return qualifiers;
-        }
+        
 
         public void RegisterInject(FieldInfo field, object[] qualifiers)
         {
             InjectionCriteria.Validate(field);
-            qualifiers = SetQualifierDefaults(qualifiers);
-            _injectionPoints.Add(new InjectionPoint(field.FieldType, field, qualifiers));
+            _injectRegistrations.Add(new InjectRegistration(field, field.FieldType, qualifiers));
         }
 
-        public void RegisterInject(ParameterInfo parameter, object[] qualifiers)
+        public void RegisterInject(MethodBase method, SeekSpec[] spec)
         {
-            InjectionCriteria.Validate((MethodBase)parameter.Member);
-            qualifiers = SetQualifierDefaults(qualifiers);
-            _injectionPoints.Add(new InjectionPoint(parameter.ParameterType, parameter.Member, qualifiers){Index = parameter.Position});
+            InjectionCriteria.Validate(method);
+            _injectRegistrations.Add(new InjectRegistration(method, spec));
         }
 
         public void RegisterInject(PropertyInfo property, object[] qualifiers)
         {
             InjectionCriteria.Validate(property);
-            qualifiers = SetQualifierDefaults(qualifiers);
-            _injectionPoints.Add(new InjectionPoint(property.PropertyType, property, qualifiers));
+            _injectRegistrations.Add(new InjectRegistration(property, property.PropertyType, qualifiers));
+        }
+
+        public void RegisterPostConstructs(params MethodInfo[] postConstructs)
+        {
+            foreach (var post in postConstructs)
+            {
+                PostConstructCriteria.Validate(post);
+                _postConstructs.Add(post);
+            }
         }
 
         public IEnumerable<Type> Configurations
@@ -163,171 +170,259 @@ namespace Alpaca.Weld.Core
             get { return _components; }
         }
 
-        public IEnumerable<InjectionPoint> InjectionPoints
+        public IEnumerable<InjectRegistration> InjectRegistrations
         {
-            get { return _injectionPoints;  }
+            get { return _injectRegistrations;  }
+        }
+
+        public IEnumerable<MethodInfo> PostConstructs
+        {
+            get { return _postConstructs; }
         }
     }
 
     public abstract class ComponentRegistration
     {
-        public Type Component { get; set; }
-        public HashSet<object> Qualifiers { get; set; }
-        
-        public virtual bool? CanSatisfy(LookupSpec spec)
+        protected ComponentRegistration(Type type, IEnumerable<object> qualifiers)
         {
-            return spec.Qualifiers.All(Qualifiers.Contains)? CanSatisfy(spec.Type): false;
+            Type = type;
+            Qualifiers = new HashSet<object>(qualifiers);
         }
 
-        protected abstract bool? CanSatisfy(Type requestedType);
-        public abstract IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec);
+        public Type Type { get; set; }
+        public HashSet<object> Qualifiers { get; set; }
+        
+        public virtual bool CanSatisfy(SeekSpec spec)
+        {
+            return CanSatisfy(spec.Qualifiers) && CanSatisfy(spec.Type);
+        }
+
+        private bool CanSatisfy(IEnumerable<object> qualifiers)
+        {
+            return qualifiers.All(Qualifiers.Contains);
+        }
+
+        protected bool CanSatisfy(Type requestedType)
+        {
+            return requestedType.IsAssignableFrom(Type);
+        }
+
+        public abstract BuildPlan GetBuildPlan(WeldEngine engine);
+        //public abstract IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec);
+        public abstract ComponentRegistration ChangeType(Type requestedType);
+    }
+
+    public delegate object BuildPlan();
+
+    public class InstanceComponentRegistration : ComponentRegistration
+    {
+        private readonly object _instance;
+
+        public InstanceComponentRegistration(object instance, Type type, IEnumerable<object> qualifiers)
+            : base(type, qualifiers)
+        {
+            _instance = instance;
+        }
+
+        public override BuildPlan GetBuildPlan(WeldEngine engine)
+        {
+            return () => _instance;
+        }
+
+        public override ComponentRegistration ChangeType(Type requestedType)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     public class ClassComponentRegistration : ComponentRegistration
     {
-        protected override bool? CanSatisfy(Type requestedType)
+        public ClassComponentRegistration(Type type, IEnumerable<object> qualifiers)
+            : base(type, qualifiers)
         {
-            var resolution = ResolveType(requestedType);
-            if (resolution == null)
-                return false;
-            if (resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
-                return null;
-            return true;
+            
+        }
+        //protected override bool CanSatisfy(Type requestedType)
+        //{
+        //    var resolution = ResolveType(requestedType);
+        //    if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
+        //        return false;
+        //    return true;
+        //}
+
+        //private GenericUtils.Resolution ResolveType(Type requestedType)
+        //{
+        //    return GenericUtils.ResolveGenericType(Type, requestedType);
+        //}
+
+        //public override IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec)
+        //{
+        //    var resolution = ResolveType(spec.Type);
+        //    if(resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
+        //        return null;
+
+        //    return new ActivatorComponentFactory(engine, resolution.ResolvedType);
+        //}
+
+        public override BuildPlan GetBuildPlan(WeldEngine engine)
+        {
+            return engine.MakeConstructorBuildPlan(this);
         }
 
-        private GenericUtils.Resolution ResolveType(Type requestedType)
+        public override ComponentRegistration ChangeType(Type requestedType)
         {
-            return GenericUtils.ResolveGenericType(Component, requestedType);
-        }
-
-        public override IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec)
-        {
-            var resolution = ResolveType(spec.Type);
-            if(resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
-                return null;
-
-            return new ActivatorComponentFactory(engine, resolution.ResolvedType);
+            return new ClassComponentRegistration(requestedType, Qualifiers);
         }
     }
 
     public class ProducerRegistration: ComponentRegistration
     {
+        public ProducerRegistration(Type type, IEnumerable<object> qualifiers, MemberInfo producer)
+            : base(type, qualifiers)
+        {
+            Producer = producer;
+        }
+
         public MemberInfo Producer { get; set; }
 
-        protected override bool? CanSatisfy(Type requestedType)
-        {
-            var producer = ResolveProducer(requestedType);
-            if (producer == null)
-                return false;
-            if (GenericUtils.MemberContainsGenericArguments(producer))
-                return null;
-            return true;
-        }
+        //protected override bool CanSatisfy(Type requestedType)
+        //{
+        //    var producer = ResolveProducer(requestedType);
+        //    if (producer == null || GenericUtils.MemberContainsGenericArguments(producer))
+        //        return false;
+        //    return true;
+        //}
 
-        private MemberInfo ResolveProducer(Type requestedType)
-        {
-            var typeResolution = GenericUtils.ResolveGenericType(Component, requestedType);
-            if (typeResolution == null)
-                return null;
+        //private MemberInfo ResolveProducer(Type requestedType)
+        //{
+        //    var typeResolution = GenericUtils.ResolveGenericType(Type, requestedType);
+        //    if (typeResolution == null)
+        //        return null;
                 
-            return GenericUtils.TranslateMemberGenericArguments(Producer, typeResolution.GenericParameterTranslations);
-        }
+        //    return GenericUtils.TranslateMemberGenericArguments(Producer, typeResolution.GenericParameterTranslations);
+        //}
 
-        public override IComponentFactory GetFactory(WeldEngine engine, LookupSpec spec)
+        //public override IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec)
+        //{
+        //    var resolvedProducer = ResolveProducer(spec.Type);
+        //    if (GenericUtils.MemberContainsGenericArguments(resolvedProducer))
+        //        return null;
+
+        //    var method = resolvedProducer as MethodInfo;
+        //    if (method != null)
+        //        return new ProducerMethodComponentFactory(engine, method);
+
+        //    return null;
+        //}
+
+        public override BuildPlan GetBuildPlan(WeldEngine engine)
         {
-            var resolvedProducer = ResolveProducer(spec.Type);
-            if (GenericUtils.MemberContainsGenericArguments(resolvedProducer))
-                return null;
-
-            var method = resolvedProducer as MethodInfo;
-            if (method != null)
-                return new ProducerMethodComponentFactory(engine, method);
-
+            // TODO
             return null;
+            //return engine.MakeExecutionPlan(Producer);
+        }
+
+        public override ComponentRegistration ChangeType(Type type)
+        {
+            var translations = GenericUtils.CreateGenericTranslactions(type);
+            var producer = GenericUtils.TranslateMemberGenericArguments(Producer, translations);
+
+            return new ProducerRegistration(type, Qualifiers, producer);
         }
     }
 
-    public interface IComponentFactory
+    //public interface IComponentFactory
+    //{
+    //    object CreateComponent(Type requestedType);
+    //    bool GuarantesResult { get; }
+    //}
+
+    //public class ProducerMethodComponentFactory : IComponentFactory
+    //{
+    //    private readonly WeldEngine _engine;
+    //    private readonly MethodInfo _producer;
+
+    //    public ProducerMethodComponentFactory(WeldEngine engine, MethodInfo producer)
+    //    {
+    //        _engine = engine;
+    //        _producer = producer;
+    //    }
+
+    //    public object CreateComponent(Type requestedType)
+    //    {
+    //        throw new NotImplementedException();
+    //        //return engine.Execute(_producer);
+    //    }
+
+    //    public bool GuarantesResult { get { return true; } }
+    //}
+
+    //public class ActivatorComponentFactory: IComponentFactory
+    //{
+    //    private readonly WeldEngine _engine;
+    //    private readonly Type _type;
+    //    private Lazy<DependencyInjector[]> _dependencies;
+    //    private Func<object> _constructor;
+
+    //    public ActivatorComponentFactory(WeldEngine engine, Type type)
+    //    {
+    //        _engine = engine;
+    //        _type = type;
+    //        _dependencies = new Lazy<DependencyInjector[]>(LoadDependencies);
+    //    }
+
+    //    private DependencyInjector[] LoadDependencies()
+    //    {
+    //        var dependencies = _engine.GetDependenciesOf(_type);
+    //        var constructors = dependencies.Where(x => x.IsConstructor).ToArray();
+
+    //        if (constructors.Length > 1)
+    //        {
+    //            throw new InvalidComponentException(_type, "Multiple [Inject] constructors");
+    //        }
+    //        if (constructors.Length == 1)
+    //        {
+    //            var ctr = constructors[0];
+    //            _constructor = () => ctr.Inject(null);
+    //        }
+    //        else
+    //        {
+    //            _constructor = () => Activator.CreateInstance(_type, true);
+    //        }
+
+    //        return dependencies.Where(x => !x.IsConstructor).ToArray();
+    //    }
+
+    //    public object CreateComponent(Type requestedType)
+    //    {
+    //        var dependencies = _dependencies.Value;
+    //        var obj = _constructor();
+    //        _engine.InjectDependencies(obj, dependencies);
+    //        return obj;
+    //    }
+
+    //    public bool GuarantesResult { get { return true; } }
+    //}
+
+    public struct SeekSpec
     {
-        object CreateComponent(Type requestedType);
-        bool GuarantesResult { get; }
-    }
-
-    public class ProducerMethodComponentFactory : IComponentFactory
-    {
-        private readonly WeldEngine _engine;
-        private readonly MethodInfo _producer;
-
-        public ProducerMethodComponentFactory(WeldEngine engine, MethodInfo producer)
-        {
-            _engine = engine;
-            _producer = producer;
-        }
-
-        public object CreateComponent(Type requestedType)
-        {
-            throw new NotImplementedException();
-            //return engine.Execute(_producer);
-        }
-
-        public bool GuarantesResult { get { return true; } }
-    }
-
-    public class ActivatorComponentFactory: IComponentFactory
-    {
-        private readonly WeldEngine _engine;
-        private readonly Type _type;
-        private Lazy<DependencyInjector[]> _dependencies;
-        private Func<object> _constructor;
-
-        public ActivatorComponentFactory(WeldEngine engine, Type type)
-        {
-            _engine = engine;
-            _type = type;
-            _dependencies = new Lazy<DependencyInjector[]>(LoadDependencies);
-        }
-
-        private DependencyInjector[] LoadDependencies()
-        {
-            var dependencies = _engine.GetDependenciesOf(_type);
-            var constructors = dependencies.Where(x => x.IsConstructor).ToArray();
-
-            if (constructors.Length > 1)
-            {
-                throw new InvalidComponentException(_type, "Multiple [Inject] constructors");
-            }
-            if (constructors.Length == 1)
-            {
-                var ctr = constructors[0];
-                _constructor = () => ctr.Inject(null);
-            }
-            else
-            {
-                _constructor = () => Activator.CreateInstance(_type, true);
-            }
-
-            return dependencies.Where(x => !x.IsConstructor).ToArray();
-        }
-
-        public object CreateComponent(Type requestedType)
-        {
-            var dependencies = _dependencies.Value;
-            var obj = _constructor();
-            _engine.InjectDependencies(obj, dependencies);
-            return obj;
-        }
-
-        public bool GuarantesResult { get { return true; } }
-    }
-
-    public struct LookupSpec
-    {
-        public LookupSpec(Type type, IEnumerable<object> qualifiers): this()
+        private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
+        public SeekSpec(Type type, object[] qualifiers)
+            : this()
         {
             Type = type;
-            Qualifiers = qualifiers;
+            Qualifiers = SetQualifierDefaults(qualifiers);
         }
 
+        private object[] SetQualifierDefaults(object[] qualifiers)
+        {
+            if (!qualifiers.Any())
+                return new object[] { DefaultAttributeInstance };
+
+            return qualifiers;
+        }
+
+        public bool Multiple { get; private set; }
         public Type Type { get; private set; }
         public IEnumerable<object> Qualifiers { get; private set; }
     }
@@ -353,105 +448,105 @@ namespace Alpaca.Weld.Core
         }
     }
 
-    public abstract class DependencyInjector
-    {
-        protected readonly WeldEngine Engine;
-        private readonly IDictionary<int, ComponentRegistration[]> _registrations;
+    //public abstract class DependencyInjector
+    //{
+    //    protected readonly WeldEngine Engine;
+    //    private readonly ComponentRegistration[][] _registrations;
 
-        protected DependencyInjector(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations)
-        {
-            Engine = engine;
-            _registrations = registrations;
-        }
+    //    protected DependencyInjector(WeldEngine engine, ComponentRegistration[][] registrations)
+    //    {
+    //        Engine = engine;
+    //        _registrations = registrations;
+    //    }
 
-        protected virtual object GetDependency()
-        {
-            return Engine.GetInstance(_registrations[0]);
-        }
+    //    protected virtual object GetDependency()
+    //    {
+    //        return Engine.GetInstance(_registrations[0]);
+    //    }
 
-        public abstract object Inject(object target);
-        public abstract bool IsConstructor { get; }
+    //    public abstract object Inject(object target);
+    //    public abstract bool IsConstructor { get; }
         
-        public static DependencyInjector Create(WeldEngine engine, MemberInfo member, IDictionary<int, ComponentRegistration[]> registrations)
-        {
-            return MemberVisitor.VisitInject<DependencyInjector>(member,
-                method => new ToMethod(engine, registrations, method), 
-                field => new ToField(engine, registrations, field),
-                property=> new ToProperty(engine, registrations, property));
-        }
+    //    public static DependencyInjector Create(WeldEngine engine, MemberInfo member, ComponentRegistration[][] registrations)
+    //    {
+    //        return MemberVisitor.VisitInject<DependencyInjector>(member,
+    //            method => new ToMethod(engine, registrations, method), 
+    //            field => new ToField(engine, registrations, field),
+    //            property=> new ToProperty(engine, registrations, property));
+    //    }
 
-        public class ToMethod : DependencyInjector
-        {
-            private readonly MethodBase _method;
+    //    public class ToMethod : DependencyInjector
+    //    {
+    //        private readonly MethodBase _method;
 
-            public ToMethod(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, MethodBase method)
-                : base(engine, registrations)
-            {
-                _method = method;
-            }
+    //        public ToMethod(WeldEngine engine, ComponentRegistration[][] registrations, MethodBase method)
+    //            : base(engine, registrations)
+    //        {
+    //            _method = method;
+    //        }
 
-            public override object Inject(object target)
-            {
-                return Engine.Execute(target, _method, _registrations);
-            }
+    //        public override object Inject(object target)
+    //        {
+    //            return Engine.Execute(target, _method, _registrations);
+    //        }
 
-            public override bool IsConstructor
-            {
-                get { return _method is ConstructorInfo; }
-            }
-        }
+    //        public override bool IsConstructor
+    //        {
+    //            get { return _method is ConstructorInfo; }
+    //        }
+    //    }
 
-        public class ToField : DependencyInjector
-        {
-            private readonly FieldInfo _field;
+    //    public class ToField : DependencyInjector
+    //    {
+    //        private readonly FieldInfo _field;
 
-            public ToField(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, FieldInfo field)
-                : base(engine, registrations)
-            {
-                _field = field;
-            }
+    //        public ToField(WeldEngine engine, ComponentRegistration[][] registrations, FieldInfo field)
+    //            : base(engine, registrations)
+    //        {
+    //            _field = field;
+    //        }
 
-            public override object Inject(object target)
-            {
-                var value = GetDependency();
-                _field.SetValue(target, value);
-                return value;
-            }
+    //        public override object Inject(object target)
+    //        {
+    //            var value = GetDependency();
+    //            _field.SetValue(target, value);
+    //            return value;
+    //        }
 
-            public override bool IsConstructor
-            {
-                get { return false; }
-            }
-        }
+    //        public override bool IsConstructor
+    //        {
+    //            get { return false; }
+    //        }
+    //    }
 
-        public class ToProperty : DependencyInjector
-        {
-            private readonly PropertyInfo _property;
+    //    public class ToProperty : DependencyInjector
+    //    {
+    //        private readonly PropertyInfo _property;
 
-            public ToProperty(WeldEngine engine, IDictionary<int, ComponentRegistration[]> registrations, PropertyInfo property)
-                : base(engine, registrations)
-            {
-                _property = property;
-            }
+    //        public ToProperty(WeldEngine engine, ComponentRegistration[][] registrations, PropertyInfo property)
+    //            : base(engine, registrations)
+    //        {
+    //            _property = property;
+    //        }
 
-            public override object Inject(object target)
-            {
-                var value = GetDependency();
-                _property.SetValue(target, value); 
-                return value;
-            }
+    //        public override object Inject(object target)
+    //        {
+    //            var value = GetDependency();
+    //            _property.SetValue(target, value); 
+    //            return value;
+    //        }
 
-            public override bool IsConstructor
-            {
-                get { return false; }
-            }
-        }
-    }
+    //        public override bool IsConstructor
+    //        {
+    //            get { return false; }
+    //        }
+    //    }
+    //}
 
     public class WeldEngine
     {
         private readonly WeldCatalog _catalog;
-        private Dictionary<Type, DependencyInjector[]> _typeDependencies;
+        //private Dictionary<Type, DependencyInjector[]> _typeDependencies;
         private Dictionary<ComponentRegistration, object> _componentValues = new Dictionary<ComponentRegistration, object>();
 
         public WeldEngine(WeldCatalog catalog)
@@ -461,72 +556,256 @@ namespace Alpaca.Weld.Core
 
         public void Run()
         {
-            LoadCatalog();
+            BuildIndex();
+            BuildDependencyGraph();
             Configure();
         }
 
-        private void LoadCatalog()
+        public class InjectionPoint
         {
-            ResolveInjections();
-        }
+            public MemberInfo Member { get; private set; }
+            public Type RequestedType { get; private set; }
+            public IEnumerable<object> Qualifiers { get; private set; }
 
-        void ResolveInjections()
-        {
-            var resolves = (from inject in _catalog.InjectionPoints
-                            let satisfyingComponents = SatisfyInjection(inject)
-                            let isGeneric = inject.RequestedType.ContainsGenericParameters
-                            select new {inject.MemberInfo, inject.Index, satisfyingComponents, isGeneric}).ToArray();
-            
-            var groupByMember = (from resolve in resolves
-                                where !resolve.isGeneric
-                                group new {resolve.Index, resolve.satisfyingComponents} by resolve.MemberInfo into byMembers
-                                let dependencies = byMembers
-                                    .GroupBy(x=> x.Index, x=> x.satisfyingComponents)
-                                    .ToDictionary(x=> x.Key, x=> x.SelectMany(_=> _).ToArray())
-                                let member = byMembers.Key
-                                select new { member, dependency = DependencyInjector.Create(this, member, dependencies) });
-
-            _typeDependencies = groupByMember.GroupBy(x=> x.member.ReflectedType, x=> x.dependency)
-                                    .ToDictionary(g=> g.Key, g=> g.ToArray());
-
-            // TODO: generics
-        }
-
-        private ComponentRegistration[] SatisfyInjection(InjectionPoint inject)
-        {
-            var matches = (from component in _catalog.Components
-                          let canSatisfy = component.CanSatisfy(new LookupSpec(inject.RequestedType, inject.Qualifiers.ToArray()))
-                          where canSatisfy != false
-                          select new {component, maybe = !canSatisfy.HasValue}).ToArray();
-
-            if(!matches.Any())
-                throw new UnsatisfiedDependencyException(inject);
-
-            var hasValues = matches.Where(x => !x.maybe).ToArray();
-            if (hasValues.Length > 1)
+            public InjectionPoint(MemberInfo member, Type requestedType, IEnumerable<object> qualifiers)
             {
-                throw new AmbiguousDependencyException(inject, hasValues.Select(x => x.component).ToArray());
+                Member = member;
+                RequestedType = requestedType;
+                Qualifiers = qualifiers; 
             }
 
-            return matches.Select(x => x.component).ToArray();
+            public override string ToString()
+            {
+                return string.Format("type [{0}] with qualifiers [{1}] at injection point [{2}]",
+                    RequestedType, string.Join(",", Qualifiers.Select(x => x.GetType().Name)), Member);
+            }
         }
+
+        IDictionary<Type, MethodInfo[]> _postConstructs;
+        Dictionary<ComponentRegistration, ComponentGraphNode> _nodeIndex = new Dictionary<ComponentRegistration, ComponentGraphNode>();
+        Dictionary<Type, ComponentRegistration[]> _regIndex;
+        Dictionary<Type, InjectRegistration[]> _injectIndex;
+        List<ComponentRegistration> _unprocessedRegistrations;
+
+        void BuildIndex()
+        {
+            _postConstructs = _catalog.PostConstructs.GroupBy(x => x.ReflectedType).ToDictionary(x => x.Key, x => x.ToArray());
+        }
+
+        // GRAPH
+        public class DependencyLink
+        {
+            public bool AllowMultiple { get; set; }
+            public List<ComponentGraphNode> Components = new List<ComponentGraphNode>();
+            public InjectionPoint InjectionPoint { get; set; }
+
+            public void AddAll(ComponentGraphNode[] nodes)
+            {
+                Components.AddRange(nodes);
+                foreach (var node in nodes)
+                {
+                    node.Dependents.Add(this);
+                }
+            }
+        }
+
+        public class ComponentGraphNode
+        {
+            public ComponentRegistration Registration { get; private set; }
+            public ConcurrentBag<DependencyLink> Dependents = new ConcurrentBag<DependencyLink>();
+
+            public ComponentGraphNode(ComponentRegistration reg)
+            {
+                Registration = reg;
+            }
+
+            public IDictionary<MemberInfo, DependencyLink[]> Dependencies { get; set; }
+        }
+        
+        void BuildDependencyGraph()
+        {
+            var components = _catalog.Components.Where(x => !x.Type.IsGenericTypeDefinition).ToArray();
+            _regIndex = (from component in components
+                         from type in TypeUtils.GetComponentTypes(component.Type)
+                         group component by type)
+                         .ToDictionary(x => x.Key, x => x.ToArray());
+            _injectIndex = _catalog.InjectRegistrations.GroupBy(x => x.MemberInfo.ReflectedType).ToDictionary(x=> x.Key, x=> x.ToArray());
+
+            _nodeIndex = components.ToDictionary(x => x, x => new ComponentGraphNode(x));
+
+            var processing = components;
+            while (processing.Any())
+            {
+                _unprocessedRegistrations = new List<ComponentRegistration>();
+                
+                foreach (var reg in processing)
+                {
+                    var node = _nodeIndex[reg];
+                    
+                    var injects = GetTypeInjects(reg.Type);
+                    node.Dependencies = injects.ToDictionary(x => x.MemberInfo, x => x.Dependencies.Select(y => ResolveDependency(x.MemberInfo, y)).ToArray());
+                }
+                processing = _unprocessedRegistrations.ToArray();
+            }
+            
+        }
+
+        private InjectRegistration[] GetTypeInjects(Type type)
+        {
+            InjectRegistration[] injects;
+            if (!_injectIndex.TryGetValue(type, out injects))
+            {
+                if (type.IsGenericType)
+                {
+                    var translations = GenericUtils.CreateGenericTranslactions(type);
+
+                    InjectRegistration[] genericInjects;
+                    if (!_injectIndex.TryGetValue(type.GetGenericTypeDefinition(), out genericInjects))
+                        genericInjects = new InjectRegistration[0];
+
+                    genericInjects = genericInjects.Select(x =>
+                    {
+                        var resolvedMethod = GenericUtils.TranslateMemberGenericArguments(x.MemberInfo, translations);
+                        return new InjectRegistration(resolvedMethod, x.Dependencies);
+                    }).ToArray();
+
+                    _injectIndex[type] = injects = genericInjects;
+                }
+                else
+                    injects = new InjectRegistration[0];
+            }
+
+
+            ValidateInjects(type, injects);
+            return injects;
+        }
+
+        private MethodInfo[] GetPostConstructs(Type type)
+        {
+            MethodInfo[] postConstructs;
+            if (_postConstructs.TryGetValue(type, out postConstructs))
+                return postConstructs;
+
+            if (type.IsGenericType)
+            {
+                if (_postConstructs.TryGetValue(type, out postConstructs))
+                {
+                    var translations = GenericUtils.CreateGenericTranslactions(type);
+                    postConstructs = postConstructs.Select(x=> GenericUtils.TranslateMemberGenericArguments(x, translations)).Cast<MethodInfo>().ToArray();
+                    return postConstructs;
+                }
+            }
+
+            return new MethodInfo[0];
+        }
+
+        private void ValidateInjects(Type type, InjectRegistration[] injects)
+        {
+            object[] ctors = injects.Select(x => x.MemberInfo).OfType<ConstructorInfo>().ToArray();
+            if (ctors.Length > 2)
+            {
+                throw new InvalidComponentException(type, string.Format("Multiple [Inject] constructors: [{0}]", string.Join(",", ctors)));
+            }
+        }
+
+        private DependencyLink ResolveDependency(MemberInfo member, SeekSpec spec)
+        {
+            var link = new DependencyLink
+            {
+                InjectionPoint = new InjectionPoint(member, spec.Type, spec.Qualifiers),
+                AllowMultiple = spec.Multiple
+            };
+
+            ComponentRegistration[] registrations;
+            
+            if (!_regIndex.TryGetValue(spec.Type, out registrations))
+            {
+                if (spec.Type.ContainsGenericParameters)
+                {
+                    if (_regIndex.TryGetValue(spec.Type.GetGenericTypeDefinition(), out registrations))
+                    {
+                        registrations = registrations.Select(x => CloseRegistrationGenerics(x, spec.Type)).ToArray();
+                    }
+                }
+            }
+
+            if (registrations == null || !registrations.Any())
+            {
+                if (!link.AllowMultiple)
+                    throw new UnsatisfiedDependencyException(link.InjectionPoint);
+            }
+            else
+            {
+                var matched = registrations.Where(x => x.CanSatisfy(spec)).ToArray();
+                link.AddAll(matched.Select(x=> _nodeIndex[x]).ToArray());
+            }
+
+            return link;
+        }
+
+        private ComponentRegistration CloseRegistrationGenerics(ComponentRegistration reg, Type type)
+        {
+            var registration = reg.ChangeType(type);
+            _unprocessedRegistrations.Add(registration);
+            _nodeIndex.Add(registration, new ComponentGraphNode(registration));
+            return registration;
+        }
+
+        // \GRAPH
+
+        //void ResolveInjections()
+        //{
+        //    var resolves = (from inject in _catalog.InjectRegistrations
+        //                    let satisfyingComponents = inject.Dependencies.Select(SatisfyInjection).ToArray()
+        //                    let isGeneric = GenericUtils.MemberContainsGenericArguments(inject.MemberInfo)
+        //                    select new {inject.MemberInfo, satisfyingComponents, isGeneric}).ToArray();
+            
+        //    var groupByMember = (from resolve in resolves
+        //                        where !resolve.isGeneric
+        //                        select new { resolve.MemberInfo, dependency = DependencyInjector.Create(this, resolve.MemberInfo, resolve.satisfyingComponents) });
+
+        //    _typeDependencies = groupByMember.GroupBy(x=> x.MemberInfo.ReflectedType, x=> x.dependency)
+        //                            .ToDictionary(g=> g.Key, g=> g.ToArray());
+
+        //    // TODO: generics
+        //}
+
+        //private ComponentRegistration[] SatisfyInjection(SeekSpec seek)
+        //{
+        //    var matches = (from component in _catalog.Components
+        //                   let canSatisfy = component.CanSatisfy(seek)
+        //                  where canSatisfy != false
+        //                  select new {component, maybe = !canSatisfy.HasValue}).ToArray();
+
+        //    if(!matches.Any())
+        //        throw new UnsatisfiedDependencyException(seek);
+
+        //    var hasValues = matches.Where(x => !x.maybe).ToArray();
+        //    if (hasValues.Length > 1)
+        //    {
+        //        throw new AmbiguousDependencyException(seek, hasValues.Select(x => x.component).ToArray());
+        //    }
+
+        //    return matches.Select(x => x.component).ToArray();
+        //}
 
         private void Configure()
         {
             foreach (var config in _catalog.Configurations)
             {
+                ExecuteConfig(config);
             }
         }
 
         private void ExecuteConfig(Type config)
         {
-            var configInstance = CreateComponent(config, new ActivatorComponentFactory(this, config));
+            var configInstance = CreateComponent(config, new ClassComponentRegistration(config, new object[0]));
             
         }
 
-        private object CreateComponent(Type type, IComponentFactory factory)
+        private object CreateComponent(Type type, ClassComponentRegistration reg)
         {
-            var component = factory.CreateComponent(type);
+            var component = GetInstance(reg);
             InvokePostConstruct(component);
             return component;
         }
@@ -536,49 +815,89 @@ namespace Alpaca.Weld.Core
             // TODO
         }
 
-        public object Execute(object target, MethodBase method, IDictionary<int, ComponentRegistration[]> registrations)
+        public object Execute(object target, MethodBase method, ComponentRegistration[][] registrations)
         {
             if (method.IsStatic)
             {
                 target = null;
             }
 
-            registrations.ToDictionary(x => x.Key, x =>
-            {
-                var param = method.GetParameters()[x.Key];
-                return GetInstance(x.Value);
-            });
-
             // TODO
             return null;
         }
 
+        private readonly ConcurrentDictionary<ComponentRegistration, BuildPlan> _buildPlans = new ConcurrentDictionary<ComponentRegistration, BuildPlan>(); // temporary quick implementation
+        
+        private readonly ConcurrentDictionary<ComponentRegistration, object> _singletonInstances = new ConcurrentDictionary<ComponentRegistration, object>(); // temporary quick implementation
         private object GetInstance(ComponentRegistration registration)
         {
-            // TODO
-            return null;
+            return _singletonInstances.GetOrAdd(registration, BuildComponent);
         }
 
-        public object GetInstance(ComponentRegistration[] registrations)
+        private object BuildComponent(ComponentRegistration registration)
         {
-            throw new NotImplementedException();
+            var buildPlan = _buildPlans.GetOrAdd(registration, r=> r.GetBuildPlan(this));
+            return buildPlan();
         }
 
-        public DependencyInjector[] GetDependenciesOf(Type type)
+        public BuildPlan MakeConstructorBuildPlan(ComponentRegistration registration)
         {
-            DependencyInjector[] dependencies;
-            if(!_typeDependencies.TryGetValue(type, out dependencies))
-                return new DependencyInjector[0];
+            var node = _nodeIndex[registration];
+            var injects = node.Dependencies.Where(x => x.Key is ConstructorInfo).ToArray();
+            var postConstructs = GetPostConstructs(registration.Type);
 
-            return dependencies;
-        }
-
-        public void InjectDependencies(object target, DependencyInjector[] dependencies)
-        {
-            foreach (var dependency in dependencies.Where(x=> !x.IsConstructor))
+            BuildPlan construction;
+            if (injects.Any())
             {
-                // TODO
+                var inject = injects.First();
+                construction = MakeExecutionPlan(null, (MethodBase)inject.Key, inject.Value);
             }
+            else
+            {
+                construction = () => Activator.CreateInstance(registration.Type, true);
+            }
+
+            return () =>
+            {
+                var obj = construction();
+                foreach (var post in postConstructs)
+                    post.Invoke(obj, null);
+                return obj;
+            };
         }
+
+        public BuildPlan MakeExecutionPlan(object target, MethodBase method, DependencyLink[] dependencies)
+        {
+            var components = dependencies.Select(x => x.Components.First().Registration).ToArray();
+            return () =>
+            {
+                var args = components.Select(GetInstance).ToArray();
+                return method.Invoke(target, args);
+            };
+        }
+
+        //public object GetInstance(ComponentRegistration[] registrations)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        //public DependencyInjector[] GetDependenciesOf(Type type)
+        //{
+        //    DependencyInjector[] dependencies;
+        //    if(!_typeDependencies.TryGetValue(type, out dependencies))
+        //        return new DependencyInjector[0];
+
+        //    return dependencies;
+        //}
+
+        //public void InjectDependencies(object target, DependencyInjector[] dependencies)
+        //{
+        //    foreach (var dependency in dependencies.Where(x=> !x.IsConstructor))
+        //    {
+        //        // TODO
+        //    }
+        //}
+
+        
     }
 }

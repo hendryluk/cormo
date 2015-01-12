@@ -30,14 +30,26 @@ namespace Alpaca.Weld.Utils
 
         public static IEnumerable<Attribute> GetAttributes(this ICustomAttributeProvider attributeProvider)
         {
-            var attributes = attributeProvider.GetCustomAttributes(true);
-            foreach (var attribute in attributes.OfType<Attribute>())
+            var attributes = new HashSet<Attribute>();
+            var list = new LinkedList<ICustomAttributeProvider>();
+            list.AddLast(attributeProvider);
+
+            for(var node= list.First; node!=null; node = node.Next)
+            foreach (var attribute in node.Value.GetCustomAttributes(true).OfType<Attribute>())
             {
-                yield return attribute;
-                foreach (var chainedAttribute in GetAttributes(attribute.GetType()))
+                try
                 {
-                    yield return chainedAttribute;
+                    if (!attributes.Add(attribute)) // Sometimes GetHashCode may throw exception
+                        continue;
                 }
+                catch (Exception)
+                {
+                    continue;
+                }
+
+                yield return attribute;
+                list.AddLast(attribute.GetType());
+                
             }
         } 
     }
