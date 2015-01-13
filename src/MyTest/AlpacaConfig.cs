@@ -7,7 +7,7 @@ namespace MyTest
     public class AlpacaConfig
     {
         [Inject]
-        IRepository<int> Blah;
+        IRepository<string> Blah;
 
         [PostConstruct]
         public void blah()
@@ -21,7 +21,7 @@ namespace MyTest
         
     }
 
-    public class Repository<T>: IRepository<T>
+    public class HendersRepository: IRepository<int>
     {
         
     }

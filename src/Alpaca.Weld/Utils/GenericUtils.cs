@@ -236,7 +236,7 @@ namespace Alpaca.Weld.Utils
             return null;
         }
 
-        private static Type OpenIfGeneric(Type type)
+        public static Type OpenIfGeneric(Type type)
         {
             if (!type.IsGenericType)
                 return type;

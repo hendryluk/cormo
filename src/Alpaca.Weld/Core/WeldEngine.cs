@@ -105,7 +105,7 @@ namespace Alpaca.Weld.Core
 
         private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
         private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
-        public void RegisterComponent(Type component, params object[] qualifiers)
+        public ComponentRegistration RegisterComponent(Type component, params object[] qualifiers)
         {
             ComponentCriteria.Validate(component);
 
@@ -116,7 +116,9 @@ namespace Alpaca.Weld.Core
             }
             qualifierSet.Add(AnyAttributeInstance);
 
-            _components.Add(new ClassComponentRegistration(component, qualifierSet));
+            var reg = new ClassComponentRegistration(component, qualifierSet);
+            _components.Add(reg);
+            return reg;
         }
 
         public void RegisterComponentInstance(object instance, params object[] qualifiers)
@@ -192,10 +194,12 @@ namespace Alpaca.Weld.Core
 
         public Type Type { get; set; }
         public HashSet<object> Qualifiers { get; set; }
-        
-        public virtual bool CanSatisfy(SeekSpec spec)
+
+        public virtual ComponentRegistration CanSatisfy(SeekSpec spec)
         {
-            return CanSatisfy(spec.Qualifiers) && CanSatisfy(spec.Type);
+            if (!CanSatisfy(spec.Qualifiers))
+                return null;
+            return CanSatisfy(spec.Type);
         }
 
         private bool CanSatisfy(IEnumerable<object> qualifiers)
@@ -203,14 +207,11 @@ namespace Alpaca.Weld.Core
             return qualifiers.All(Qualifiers.Contains);
         }
 
-        protected bool CanSatisfy(Type requestedType)
-        {
-            return requestedType.IsAssignableFrom(Type);
-        }
+        public abstract ComponentRegistration CanSatisfy(Type requestedType);
 
         public abstract BuildPlan GetBuildPlan(WeldEngine engine);
         //public abstract IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec);
-        public abstract ComponentRegistration ChangeType(Type requestedType);
+        //public abstract ComponentRegistration ChangeType(Type requestedType);
     }
 
     public delegate object BuildPlan();
@@ -226,23 +227,27 @@ namespace Alpaca.Weld.Core
             _instance = instance;
         }
 
+        public override ComponentRegistration CanSatisfy(Type requestedType)
+        {
+            if (requestedType.IsInstanceOfType(_instance))
+                return this;
+            return null;
+        }
+
         public override BuildPlan GetBuildPlan(WeldEngine engine)
         {
             return () => _instance;
-        }
-
-        public override ComponentRegistration ChangeType(Type requestedType)
-        {
-            throw new NotSupportedException();
         }
     }
 
     public class ClassComponentRegistration : ComponentRegistration
     {
+        private readonly bool _containsGenericParameters;
+
         public ClassComponentRegistration(Type type, IEnumerable<object> qualifiers)
             : base(type, qualifiers)
         {
-            
+            _containsGenericParameters = Type.ContainsGenericParameters;
         }
         //protected override bool CanSatisfy(Type requestedType)
         //{
@@ -266,23 +271,33 @@ namespace Alpaca.Weld.Core
         //    return new ActivatorComponentFactory(engine, resolution.ResolvedType);
         //}
 
+        public override ComponentRegistration CanSatisfy(Type requestedType)
+        {
+            if (!_containsGenericParameters)
+                return this;
+
+            var resolution = GenericUtils.ResolveGenericType(Type, requestedType);
+            if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
+                return null;
+            
+            return new ClassComponentRegistration(resolution.ResolvedType, Qualifiers);
+        }
+
         public override BuildPlan GetBuildPlan(WeldEngine engine)
         {
             return engine.MakeConstructorBuildPlan(this);
-        }
-
-        public override ComponentRegistration ChangeType(Type requestedType)
-        {
-            return new ClassComponentRegistration(requestedType, Qualifiers);
         }
     }
 
     public class ProducerRegistration: ComponentRegistration
     {
+        private readonly bool _containsGenericParameters;
+
         public ProducerRegistration(Type type, IEnumerable<object> qualifiers, MemberInfo producer)
             : base(type, qualifiers)
         {
             Producer = producer;
+            _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(producer);
         }
 
         public MemberInfo Producer { get; set; }
@@ -295,16 +310,7 @@ namespace Alpaca.Weld.Core
         //    return true;
         //}
 
-        //private MemberInfo ResolveProducer(Type requestedType)
-        //{
-        //    var typeResolution = GenericUtils.ResolveGenericType(Type, requestedType);
-        //    if (typeResolution == null)
-        //        return null;
-                
-        //    return GenericUtils.TranslateMemberGenericArguments(Producer, typeResolution.GenericParameterTranslations);
-        //}
-
-        //public override IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec)
+       //public override IComponentFactory GetFactory(WeldEngine engine, SeekSpec spec)
         //{
         //    var resolvedProducer = ResolveProducer(spec.Type);
         //    if (GenericUtils.MemberContainsGenericArguments(resolvedProducer))
@@ -317,19 +323,31 @@ namespace Alpaca.Weld.Core
         //    return null;
         //}
 
+        public override ComponentRegistration CanSatisfy(Type requestedType)
+        {
+            if (!_containsGenericParameters)
+                return this;
+
+            var typeResolution = GenericUtils.ResolveGenericType(Type, requestedType);
+            if (typeResolution == null || typeResolution.ResolvedType == null || typeResolution.ResolvedType.ContainsGenericParameters)
+                return null;
+
+            var resolvedProducer = GenericUtils.TranslateMemberGenericArguments(Producer, typeResolution.GenericParameterTranslations);
+            if (GenericUtils.MemberContainsGenericArguments(resolvedProducer))
+                return null;
+
+            var method = resolvedProducer as MethodInfo;
+            if (method != null)
+                return new ProducerRegistration(typeResolution.ResolvedType, Qualifiers, resolvedProducer);
+
+            return null;
+        }
+
         public override BuildPlan GetBuildPlan(WeldEngine engine)
         {
             // TODO
             return null;
             //return engine.MakeExecutionPlan(Producer);
-        }
-
-        public override ComponentRegistration ChangeType(Type type)
-        {
-            var translations = GenericUtils.CreateGenericTranslactions(type);
-            var producer = GenericUtils.TranslateMemberGenericArguments(Producer, translations);
-
-            return new ProducerRegistration(type, Qualifiers, producer);
         }
     }
 
@@ -629,7 +647,8 @@ namespace Alpaca.Weld.Core
             var components = _catalog.Components.Union(_catalog.Configurations).ToArray();
             _regIndex = (from component in components
                          from type in TypeUtils.GetComponentTypes(component.Type)
-                         group component by type)
+                         let openType = type.ContainsGenericParameters? type.GetGenericTypeDefinition(): type
+                         group component by openType)
                          .ToDictionary(x => x.Key, x => x.ToArray());
             _injectIndex = _catalog.InjectRegistrations.GroupBy(x => x.MemberInfo.ReflectedType).ToDictionary(x=> x.Key, x=> x.ToArray());
 
@@ -726,7 +745,9 @@ namespace Alpaca.Weld.Core
                 {
                     if (_regIndex.TryGetValue(spec.Type.GetGenericTypeDefinition(), out registrations))
                     {
-                        registrations = registrations.Select(x => CloseRegistrationGenerics(x, spec.Type)).ToArray();
+                        registrations = registrations
+                            .SelectMany(x => CloseRegistrationGenerics(x, spec.Type))
+                            .ToArray();
                     }
                 }
             }
@@ -738,19 +759,22 @@ namespace Alpaca.Weld.Core
             }
             else
             {
-                var matched = registrations.Where(x => x.CanSatisfy(spec)).ToArray();
+                var matched = registrations.Select(x => x.CanSatisfy(spec)).Where(x=> x!=null).ToArray();
                 link.AddAll(matched.Select(x=> _nodeIndex[x]).ToArray());
             }
 
             return link;
         }
 
-        private ComponentRegistration CloseRegistrationGenerics(ComponentRegistration reg, Type type)
+        private IEnumerable<ComponentRegistration> CloseRegistrationGenerics(ComponentRegistration reg, Type type)
         {
-            var registration = reg.ChangeType(type);
-            _unprocessedRegistrations.Add(registration);
-            _nodeIndex.Add(registration, new ComponentGraphNode(registration));
-            return registration;
+            var registration = reg.CanSatisfy(type);
+            if (registration != null)
+            {
+                _unprocessedRegistrations.Add(registration);
+                _nodeIndex.Add(registration, new ComponentGraphNode(registration));
+                yield return registration;
+            }
         }
 
         // \GRAPH
@@ -814,7 +838,7 @@ namespace Alpaca.Weld.Core
         private readonly ConcurrentDictionary<ComponentRegistration, BuildPlan> _buildPlans = new ConcurrentDictionary<ComponentRegistration, BuildPlan>(); // temporary quick implementation
         
         private readonly ConcurrentDictionary<ComponentRegistration, object> _singletonInstances = new ConcurrentDictionary<ComponentRegistration, object>(); // temporary quick implementation
-        private object GetInstance(ComponentRegistration registration)
+        public object GetInstance(ComponentRegistration registration)
         {
             return _singletonInstances.GetOrAdd(registration, BuildComponent);
         }
