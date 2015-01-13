@@ -54,6 +54,13 @@
     <Compile Include="Attributes\PreDestroyAttribute.cs" />
     <Compile Include="Attributes\ProducesAttribute.cs" />
     <Compile Include="Attributes\QualifierAttribute.cs" />
+    <Compile Include="Core\BuildPlan.cs" />
+    <Compile Include="Core\ComponentRegistration.cs" />
+    <Compile Include="Core\InjectPlan.cs" />
+    <Compile Include="Core\MemberInfoVisitor.cs" />
+    <Compile Include="Core\Scanner.cs" />
+    <Compile Include="Core\SeekSpec.cs" />
+    <Compile Include="Core\WeldCatalog.cs" />
     <Compile Include="InvalidComponentException.cs" />
     <Compile Include="Core\InjectRegistration.cs" />
     <Compile Include="InjectionPointException.cs" />
