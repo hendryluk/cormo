@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using Alpaca.Weld.Utils;
 using NUnit.Framework;
 

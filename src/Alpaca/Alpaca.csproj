@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{60518361-AE9D-46B9-AFC2-5294052DA3B1}</ProjectGuid>
+    <ProjectGuid>{CB79F052-C541-4D8F-B112-6419DF2B2FE4}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Alpaca.Web</RootNamespace>
-    <AssemblyName>Alpaca.Web</AssemblyName>
+    <RootNamespace>Alpaca</RootNamespace>
+    <AssemblyName>Alpaca</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,33 +30,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Owin">
-      <HintPath>..\packages\Microsoft.Owin.3.0.0\lib\net45\Microsoft.Owin.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Host.SystemWeb">
-      <HintPath>..\packages\Microsoft.Owin.Host.SystemWeb.3.0.0\lib\net45\Microsoft.Owin.Host.SystemWeb.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Owin">
-      <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Net.Http.Formatting, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.2\lib\net45\System.Web.Http.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.Http.Owin">
-      <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.2\lib\net45\System.Web.Http.Owin.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -64,24 +42,43 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlpacaOwinStartup.cs" />
-    <Compile Include="Attributes\EnableWebApiAttribute.cs" />
-    <Compile Include="Attributes\WebApiRegistrar.cs" />
+    <Compile Include="Inject\Exceptions\AmbiguousResolutionException.cs" />
+    <Compile Include="Inject\AnyAttribute.cs" />
+    <Compile Include="Inject\ConditionalOnMissingBeanAttribute.cs" />
+    <Compile Include="Inject\ConfigurationAttribute.cs" />
+    <Compile Include="Inject\DecoratorAttribute.cs" />
+    <Compile Include="Inject\DefaultAttribute.cs" />
+    <Compile Include="Inject\ImportAttribute.cs" />
+    <Compile Include="Inject\InjectAttribute.cs" />
+    <Compile Include="Inject\Exceptions\InjectionPointException.cs" />
+    <Compile Include="Inject\Exceptions\CreationException.cs" />
+    <Compile Include="Inject\Exceptions\InvalidComponentException.cs" />
+    <Compile Include="Inject\Exceptions\NonProxiableTypeException.cs" />
+    <Compile Include="Inject\PostConstructAttribute.cs" />
+    <Compile Include="Inject\PreDestroyAttribute.cs" />
+    <Compile Include="Inject\ProducesAttribute.cs" />
+    <Compile Include="Inject\QualifierAttribute.cs" />
+    <Compile Include="Inject\Exceptions\UnsatisfiedDependencyException.cs" />
+    <Compile Include="Inject\Exceptions\InjectionException.cs" />
+    <Compile Include="Weld\AttributeScannerCatalogFactory.cs" />
+    <Compile Include="Weld\BuildPlan.cs" />
+    <Compile Include="Weld\ComponentRegistration.cs" />
+    <Compile Include="Weld\InjectPlan.cs" />
+    <Compile Include="Weld\InjectRegistration.cs" />
+    <Compile Include="Weld\MemberInfoVisitor.cs" />
+    <Compile Include="Weld\SeekSpec.cs" />
+    <Compile Include="Weld\Utils\GenericUtils.cs" />
+    <Compile Include="Weld\Utils\InjectionCriteria.cs" />
+    <Compile Include="Weld\Utils\ScannerUtils.cs" />
+    <Compile Include="Weld\Utils\TypeUtils.cs" />
+    <Compile Include="Weld\WeldCatalog.cs" />
+    <Compile Include="Weld\WeldEngine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="WebApi\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Alpaca\Alpaca.csproj">
-      <Project>{cb79f052-c541-4d8f-b112-6419df2b2fe4}</Project>
-      <Name>Alpaca</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

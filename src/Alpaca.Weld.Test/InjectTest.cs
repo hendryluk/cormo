@@ -1,6 +1,5 @@
-﻿using System;
-using Alpaca.Weld.Attributes;
-using Alpaca.Weld.Core;
+﻿using Alpaca.Inject;
+using Alpaca.Inject.Exceptions;
 using NUnit.Framework;
 
 namespace Alpaca.Weld.Test

@@ -53,9 +53,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Alpaca.Weld\Alpaca.Weld.csproj">
-      <Project>{23219D0D-C4EA-4A01-ABE3-7EB3C893506D}</Project>
-      <Name>Alpaca.Weld</Name>
+    <ProjectReference Include="..\Alpaca\Alpaca.csproj">
+      <Project>{CB79F052-C541-4D8F-B112-6419DF2B2FE4}</Project>
+      <Name>Alpaca</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

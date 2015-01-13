@@ -1,6 +1,5 @@
 ﻿using System.Web.Http;
-using Alpaca.Weld;
-using Alpaca.Weld.Attributes;
+using Alpaca.Inject;
 using Owin;
 
 namespace Alpaca.Web.Attributes
