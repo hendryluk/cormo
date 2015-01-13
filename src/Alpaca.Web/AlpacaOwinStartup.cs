@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Alpaca.Web;
+using Alpaca.Web.Weld;
 using Alpaca.Weld;
 using Microsoft.Owin;
 using Owin;
@@ -11,14 +12,8 @@ namespace Alpaca.Web
     {
         public void Configuration(IAppBuilder app)
         {
-            var scanner = new AttributeScannerCatalogFactory();
-            Debug.WriteLine("=============Scanning");
-            var catalog = scanner.AutoScan();
-            catalog.RegisterComponentInstance(app);
-            Debug.WriteLine("============Done scanning. Running!!");
-            var engine = new WeldEngine(catalog);
-            engine.Run();
-            Debug.WriteLine("============DONE!!");
+            var alpaca = AlpacaApplication.Configure();
+            alpaca.Engine.AddContext(new RequestScopeContext());
         }
     }
 }

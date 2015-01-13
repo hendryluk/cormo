@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Alpaca.Context;
 using Alpaca.Inject.Exceptions;
 using Alpaca.Weld.Utils;
 
@@ -247,6 +248,8 @@ namespace Alpaca.Weld
         private readonly ConcurrentDictionary<ComponentRegistration, BuildPlan> _buildPlans = new ConcurrentDictionary<ComponentRegistration, BuildPlan>(); // temporary quick implementation
         
         private readonly ConcurrentDictionary<ComponentRegistration, object> _singletonInstances = new ConcurrentDictionary<ComponentRegistration, object>(); // temporary quick implementation
+        private readonly IDictionary<Type, IContext> _contexts = new Dictionary<Type, IContext>();
+
         public object GetInstance(ComponentRegistration registration)
         {
             return _singletonInstances.GetOrAdd(registration, BuildComponent);
@@ -325,6 +328,11 @@ namespace Alpaca.Weld
                 var args = regs.Select(GetInstance).ToArray();
                 return method.Invoke(o, args);
             };
+        }
+
+        public void AddContext(IContext context)
+        {
+            _contexts.Add(context.Scope, context);
         }
     }
 }

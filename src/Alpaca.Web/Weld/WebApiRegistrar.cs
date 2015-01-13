@@ -2,7 +2,7 @@
 using Alpaca.Inject;
 using Owin;
 
-namespace Alpaca.Web.Attributes
+namespace Alpaca.Web.Weld
 {
     public class WebApiRegistrar
     {

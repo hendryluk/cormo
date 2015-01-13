@@ -65,17 +65,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaOwinStartup.cs" />
-    <Compile Include="Attributes\EnableWebApiAttribute.cs" />
-    <Compile Include="Attributes\WebApiRegistrar.cs" />
+    <Compile Include="Contexts\RequestScopedAttribute.cs" />
+    <Compile Include="Contexts\SessionScopedAttribute.cs" />
+    <Compile Include="WebApi\EnableWebApiAttribute.cs" />
+    <Compile Include="Weld\RequestScopeContext.cs" />
+    <Compile Include="Weld\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="WebApi\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\Alpaca\Alpaca.csproj">
       <Project>{cb79f052-c541-4d8f-b112-6419df2b2fe4}</Project>

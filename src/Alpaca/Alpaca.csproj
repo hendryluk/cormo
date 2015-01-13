@@ -42,6 +42,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlpacaApplication.cs" />
+    <Compile Include="Context\Context.cs" />
+    <Compile Include="Context\NormalScopeAttribute.cs" />
     <Compile Include="Inject\Exceptions\AmbiguousResolutionException.cs" />
     <Compile Include="Inject\AnyAttribute.cs" />
     <Compile Include="Inject\ConditionalOnMissingBeanAttribute.cs" />
