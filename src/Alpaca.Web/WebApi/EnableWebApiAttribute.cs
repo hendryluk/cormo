@@ -1,5 +1,5 @@
 ﻿using System;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Web.Weld;
 
 namespace Alpaca.Web.WebApi

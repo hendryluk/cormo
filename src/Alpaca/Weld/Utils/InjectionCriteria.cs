@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Inject;
-using Alpaca.Inject.Exceptions;
+using Alpaca.Injects;
+using Alpaca.Injects.Exceptions;
 using Alpaca.Weld.Utils;
 using Castle.Core.Internal;
 

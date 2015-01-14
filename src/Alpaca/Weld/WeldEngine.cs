@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Context;
-using Alpaca.Inject.Exceptions;
+using Alpaca.Contexts;
+using Alpaca.Injects.Exceptions;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld

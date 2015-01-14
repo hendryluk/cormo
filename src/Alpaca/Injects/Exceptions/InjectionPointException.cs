@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace Alpaca.Inject.Exceptions
+namespace Alpaca.Injects.Exceptions
 {
     public class InjectionPointException: InjectionException
     {

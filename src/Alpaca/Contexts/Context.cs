@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alpaca.Context
+namespace Alpaca.Contexts
 {
     public interface IContext
     {

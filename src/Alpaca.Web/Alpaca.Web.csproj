@@ -65,10 +65,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaOwinStartup.cs" />
-    <Compile Include="Contexts\RequestScopedAttribute.cs" />
-    <Compile Include="Contexts\SessionScopedAttribute.cs" />
     <Compile Include="WebApi\EnableWebApiAttribute.cs" />
-    <Compile Include="Weld\RequestScopeContext.cs" />
+    <Compile Include="Weld\Context\HttpRequestContext.cs" />
+    <Compile Include="Weld\HttpContextLifecycle.cs" />
     <Compile Include="Weld\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

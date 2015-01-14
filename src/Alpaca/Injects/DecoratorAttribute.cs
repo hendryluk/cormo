@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Alpaca.Context
+namespace Alpaca.Injects
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class NormalScopeAttribute: Attribute
+    public class DecoratorAttribute: Attribute
     {
          
     }

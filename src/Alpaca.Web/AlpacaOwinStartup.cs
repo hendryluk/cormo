@@ -2,6 +2,7 @@
 using Alpaca.Web;
 using Alpaca.Web.Weld;
 using Alpaca.Weld;
+using Alpaca.Weld.Context;
 using Microsoft.Owin;
 using Owin;
 
@@ -13,7 +14,7 @@ namespace Alpaca.Web
         public void Configuration(IAppBuilder app)
         {
             var alpaca = AlpacaApplication.Configure();
-            alpaca.Engine.AddContext(new RequestScopeContext());
+            alpaca.Engine.AddContext(new RequestContext());
         }
     }
 }

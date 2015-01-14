@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alpaca.Inject
+namespace Alpaca.Injects
 {
     [Qualifier]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Parameter)]

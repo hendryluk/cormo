@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Alpaca.Weld;
 
-namespace Alpaca.Inject.Exceptions
+namespace Alpaca.Injects.Exceptions
 {
     public class AmbiguousResolutionException: InjectionException
     {

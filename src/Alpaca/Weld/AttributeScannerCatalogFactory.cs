@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld
