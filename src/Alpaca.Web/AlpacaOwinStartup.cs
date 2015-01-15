@@ -14,7 +14,7 @@ namespace Alpaca.Web
         public void Configuration(IAppBuilder app)
         {
             var alpaca = AlpacaApplication.Configure();
-            alpaca.Engine.AddContext(new RequestContext());
+            //alpaca.Engine.AddContext(new RequestContext());
         }
     }
 }

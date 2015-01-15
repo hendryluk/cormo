@@ -13,7 +13,7 @@ namespace Alpaca.Injects
     {
         IComponent DeclaringComponent { get; }
         MemberInfo Member { get; }
-        Type Type { get; }
+        Type ComponentType { get; }
         IEnumerable<Attribute> Qualifiers { get; }
     }
 
@@ -26,6 +26,7 @@ namespace Alpaca.Injects
     {
         IComponent GetComponents(IInjectionPoint injectionPoint);
         object GetReference(IComponent component);
+        object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component);
     }
 }
 
@@ -46,7 +47,7 @@ namespace Alpaca.Weld
         {
             DeclaringComponent = declaringComponent;
             Member = member;
-            Type = type;
+            ComponentType = type;
             Qualifiers = qualifiers;
             IsCacheable = IsCacheableType(type);
             _lazyInjectPlan = new Lazy<InjectPlan>(BuildInjectPlan);
@@ -59,7 +60,7 @@ namespace Alpaca.Weld
 
         public MemberInfo Member { get; private set; }
         public IComponent DeclaringComponent { get; private set; }
-        public Type Type { get; private set; }
+        public Type ComponentType { get; private set; }
         public IEnumerable<Attribute> Qualifiers { get; private set; }
         public abstract IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         protected abstract InjectPlan BuildInjectPlan();
@@ -310,6 +311,11 @@ namespace Alpaca.Weld
         }
 
         public object GetReference(IComponent component)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component)
         {
             throw new NotImplementedException();
         }
