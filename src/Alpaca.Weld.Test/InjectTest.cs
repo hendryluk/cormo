@@ -70,6 +70,8 @@ namespace Alpaca.Weld.Test
             var target = CreateComponent(typeof(IRepository<>));
             _env.AddComponent(target);
             target.AddInjectionPoints(new FieldInjectionPoint(target, typeof(Target).GetField("_repo"), new Attribute[0]));
+
+            Assert.IsInstanceOf<IntRepository>(GetInstance<Target>(target)._repo);
         }
 
         [Test]
