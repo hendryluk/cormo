@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Alpaca.Injects;
+using Alpaca.Web.Weld.Context;
 using Alpaca.Weld.Context;
 using Microsoft.Owin;
 using Microsoft.Owin.Extensions;
@@ -11,7 +12,7 @@ namespace Alpaca.Web.Weld
     [Configuration]
     public class HttpContextLifecycle
     {
-        [Inject] RequestContext _requestContext;
+        [Inject] HttpRequestContext _requestContext;
 
         [Inject]
         void PostConstruct(IAppBuilder appBuilder)
@@ -22,7 +23,9 @@ namespace Alpaca.Web.Weld
 
         public Task Middleware(IOwinContext context, Func<Task> next)
         {
-            _requestContext
+            // TODO
+            return null;
+            //_requestContext
         }
     }
 }

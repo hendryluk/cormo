@@ -8,11 +8,17 @@ using Castle.Core.Internal;
 
 namespace Alpaca.Weld.Utils
 {
-    public static class InjectionCriteria
+    public static class InjectionValidator
     {
         public static bool ScanPredicate(ICustomAttributeProvider provider)
         {
             return AttributesUtil.HasAttribute<InjectAttribute>(provider);
+        }
+
+        public static bool ScanPredicate(PropertyInfo property)
+        {
+            return ScanPredicate((ICustomAttributeProvider) property) &&
+                   (property.SetMethod == null || property.SetMethod.IsAbstract);
         }
         public static void Validate(FieldInfo field)
         {
@@ -67,10 +73,23 @@ namespace Alpaca.Weld.Utils
         public static void Validate(MethodInfo method)
         {
             if (method.IsGenericMethod)
-                throw new InvalidComponentException(method.ReflectedType, string.Format("PostConstruct method must not be generic: [{0}]", method));
+                throw new InvalidMethodSignatureException(method, "PostConstruct method must not be generic");
 
             if (method.GetParameters().Any())
-                throw new InvalidComponentException(method.ReflectedType, string.Format("PostConstruct method must not have any parameter: [{0}]", method));
+                throw new InvalidMethodSignatureException(method, "PostConstruct method must not have any parameter");
+
+        }
+    }
+
+    public static class PreDestroyCriteria
+    {
+        public static void Validate(MethodInfo method)
+        {
+            if (method.IsGenericMethod)
+                throw new InvalidMethodSignatureException(method, "PreDestroy method must not be generic");
+
+            if (method.GetParameters().Any())
+                throw new InvalidMethodSignatureException(method, "PreDestroy method must not have any parameter");
 
         }
     }

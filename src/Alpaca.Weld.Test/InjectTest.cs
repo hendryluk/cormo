@@ -30,7 +30,7 @@ namespace Alpaca.Weld.Test
         [Test]
         public void TestInjectionOfOpenGenericComponent()
         {
-            var catalog = new WeldCatalog();
+            var catalog = new WeldEnvironment();
             catalog.RegisterComponent(typeof(Repository<>));
             var reg = catalog.RegisterComponent(typeof(Target));
             catalog.RegisterInject(typeof(Target).GetField("_repo"));
@@ -38,17 +38,17 @@ namespace Alpaca.Weld.Test
             Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>(catalog, reg)._repo);
         }
 
-        private static T GetInstance<T>(WeldCatalog catalog, ComponentRegistration reg)
+        private static T GetInstance<T>(WeldEnvironment environment, AbstractComponent reg)
         {
-            var weldEngine = new WeldEngine(catalog);
-            weldEngine.Run();
-            return (T)weldEngine.GetInstance(reg);
+            var manager = new WeldDeprecatedEngine(environment);
+            manager.Run();
+            return (T)manager.GetInstance(reg);
         }
 
         [Test]
         public void TestInjectionOfClosedGenericComponent()
         {
-            var catalog = new WeldCatalog();
+            var catalog = new WeldEnvironment();
             catalog.RegisterComponent(typeof(IntRepository));
             var reg = catalog.RegisterComponent(typeof(Target));
             catalog.RegisterInject(typeof(Target).GetField("_repo"));
@@ -60,14 +60,14 @@ namespace Alpaca.Weld.Test
         [ExpectedException(typeof(UnsatisfiedDependencyException))]
         public void TestMismatchWithClosedGenericComponent()
         {
-            var catalog = new WeldCatalog();
+            var catalog = new WeldEnvironment();
             catalog.RegisterComponent(typeof(StringRepository));
             var reg = catalog.RegisterComponent(typeof(Target));
             catalog.RegisterInject(typeof(Target).GetField("_repo"));
 
             try
             {
-                new WeldEngine(catalog).Run();
+                new WeldDeprecatedEngine(catalog).Run();
             }
             catch (UnsatisfiedDependencyException e)
             {
