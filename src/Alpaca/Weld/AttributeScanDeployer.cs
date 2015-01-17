@@ -298,6 +298,8 @@ namespace Alpaca.Weld
             foreach (var c in components)
             {
                 _environment.AddComponent(c);
+                if (c.Type.HasAttribute<ConfigurationAttribute>())
+                    _environment.AddConfiguration(c);
             }
         }
 
@@ -305,28 +307,34 @@ namespace Alpaca.Weld
         {
             var component = MakeComponent(type);
             _environment.AddComponent(component);
+            
+            if (type.HasAttribute<ConfigurationAttribute>())
+                _environment.AddConfiguration(component);    
+            
             return component;
         }
 
         public IWeldComponent MakeComponent(Type type)
         {
-            var methods = type.GetMethods(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var properties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var ctors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var fields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var methods = type.GetMethods(AllBindingFlags).ToArray();
+
+            var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
+            var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var iFields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var postConstructs = methods.Where(x => x.HasAttribute<PostConstructAttribute>()).ToArray();
             var preDestroys = methods.Where(x => x.HasAttribute<PreDestroyAttribute>()).ToArray();
             var scopes = type.GetRecursiveAttributes<ScopeAttribute>().ToArray();
 
-            if (ctors.Length > 1)
+            if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
 
             var scope = scopes.FirstOrDefault() ?? new DependentAttribute();
             var component = new ClassComponent(type, type.GetQualifiers(), scope, _manager, postConstructs, preDestroys);
-            var methodInjects = methods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
-            var ctorInjects = ctors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
-            var fieldInjects = fields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
-            var propertyInjects = properties.Select(p => new PropertyInjectionPoint(component, p, p.GetQualifiers())).ToArray();
+            var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
+            var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
+            var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
+            var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetQualifiers())).ToArray();
 
             foreach (var inject in methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects))
                 component.AddInjectionPoints(inject);
@@ -350,13 +358,20 @@ namespace Alpaca.Weld
     {
         private ConcurrentBag<IWeldComponent> _unresolvedComponents;
         private ConcurrentBag<IWeldComponent> _allComponents;
+        private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
+
+        private IEnumerable<IWeldComponent> GetComponentsForType(Type type)
+        {
+            return _typeComponents.GetOrAdd(type, t => 
+                _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
+        }
 
         public IComponent GetComponent(IInjectionPoint injectionPoint)
         {
             var unwrappedType = UnwrapType(injectionPoint.ComponentType);
             var isWrapped = unwrappedType != injectionPoint.ComponentType;
 
-            var resolved = _allComponents.Select(x => x.Resolve(unwrappedType, injectionPoint.Qualifiers)).Where(x => x != null).ToArray();
+            var resolved = GetComponentsForType(unwrappedType).Where(x=> x.CanSatisfy(injectionPoint.Qualifiers)).ToArray();
             if (!isWrapped)
             {
                 if (resolved.Length > 1)
@@ -388,9 +403,18 @@ namespace Alpaca.Weld
         {
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
             _unresolvedComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Where(x=> x.IsConcrete));
+            
             while (_unresolvedComponents.Any())
-            {
                 ResolveComponents();
+
+            ResolveConfigurations(environment);
+        }
+
+        private void ResolveConfigurations(WeldEnvironment environment)
+        {
+            foreach (var config in environment.Configurations)
+            {
+                GetReference(config);
             }
         }
 

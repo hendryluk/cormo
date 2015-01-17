@@ -32,7 +32,9 @@ namespace Alpaca.Weld
 
     public interface IWeldComponent : IComponent
     {
-        IWeldComponent Resolve(Type type, IEnumerable<QualifierAttribute> qualifiers);
+        IWeldComponent Resolve(Type type);
+        bool CanSatisfy(IEnumerable<QualifierAttribute> qualifiers);
+
         bool IsProxyRequired { get; }
         bool IsConcrete { get; }
         object Build();
@@ -68,21 +70,21 @@ namespace Alpaca.Weld
         private readonly Lazy<BuildPlan> _lazyBuildPlan;
         private readonly ISet<IWeldInjetionPoint> _injectionPoints = new HashSet<IWeldInjetionPoint>();
 
-        public virtual IWeldComponent Resolve(Type type, IEnumerable<QualifierAttribute> qualifiers)
-        {
-            if (!CanSatisfy(Qualifiers))
-                return null;
-            return CanSatisfy(type);
-        }
+        //public virtual IWeldComponent Resolve(Type type, IEnumerable<QualifierAttribute> qualifiers)
+        //{
+        //    if (!CanSatisfy(Qualifiers))
+        //        return null;
+        //    return CanSatisfy(type);
+        //}
 
         public bool IsProxyRequired { get; private set; }
 
-        private bool CanSatisfy(IEnumerable<object> qualifiers)
+        public bool CanSatisfy(IEnumerable<QualifierAttribute> qualifiers)
         {
             return qualifiers.All(Qualifiers.Contains);
         }
 
-        public abstract IWeldComponent CanSatisfy(Type requestedType);
+        public abstract IWeldComponent Resolve(Type requestedType);
 
         public object Build()
         {
@@ -117,7 +119,7 @@ namespace Alpaca.Weld
             get { return true; }
         }
 
-        public override IWeldComponent CanSatisfy(Type requestedType)
+        public override IWeldComponent Resolve(Type requestedType)
         {
             if (requestedType.IsInstanceOfType(_instance))
                 return this;
@@ -163,7 +165,7 @@ namespace Alpaca.Weld
             get { return !_containsGenericParameters; }
         }
 
-        public override IWeldComponent CanSatisfy(Type requestedType)
+        public override IWeldComponent Resolve(Type requestedType)
         {
             if (!_containsGenericParameters)
                 return requestedType.IsAssignableFrom(Type)? this: null;
@@ -235,7 +237,7 @@ namespace Alpaca.Weld
             get { return !_containsGenericParameters; }
         }
 
-        public override IWeldComponent CanSatisfy(Type requestedType)
+        public override IWeldComponent Resolve(Type requestedType)
         {
             if (!_containsGenericParameters)
                 return requestedType.IsAssignableFrom(Type)? this: null;

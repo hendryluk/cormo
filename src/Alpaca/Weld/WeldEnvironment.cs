@@ -11,6 +11,7 @@ namespace Alpaca.Weld
     public class WeldEnvironment
     {
         private readonly List<IWeldComponent> _components = new List<IWeldComponent>();
+        private readonly List<IWeldComponent> _configurations = new List<IWeldComponent>();
         //private readonly List<AbstractComponent> _configurations = new List<AbstractComponent>();
         //private readonly List<InjectRegistration> _injectRegistrations = new List<InjectRegistration>();
         //private readonly List<MethodInfo> _postConstructs = new List<MethodInfo>();
@@ -18,6 +19,7 @@ namespace Alpaca.Weld
         private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
         private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
         public IEnumerable<IWeldComponent> Components { get { return _components; } }
+        public IEnumerable<IWeldComponent> Configurations { get { return _configurations; } }
 
         //public AbstractComponent RegisterComponent(Type component, params object[] qualifiers)
         //{
@@ -100,6 +102,11 @@ namespace Alpaca.Weld
         public void AddComponent(IWeldComponent component)
         {
             _components.Add(component);
+        }
+
+        public void AddConfiguration(IWeldComponent component)
+        {
+            _configurations.Add(component);
         }
     }
 }
