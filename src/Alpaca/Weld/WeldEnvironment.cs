@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -16,6 +17,8 @@ namespace Alpaca.Weld
 
         private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
         private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
+        public IEnumerable<IWeldComponent> Components { get { return _components; } }
+
         //public AbstractComponent RegisterComponent(Type component, params object[] qualifiers)
         //{
         //    ComponentCriteria.Validate(component);
@@ -53,7 +56,7 @@ namespace Alpaca.Weld
         //    _injectRegistrations.Add(new InjectRegistration(field, field.FieldType, qualifiers));
         //}
 
-        //public void RegisterInject(MethodBase method, SeekSpec[] spec)
+        //public void RegisterInject(MethodBase method, ResolveSpec[] spec)
         //{
         //    InjectionValidator.Validate(method);
         //    _injectRegistrations.Add(new InjectRegistration(method, spec));

@@ -46,6 +46,10 @@ namespace Alpaca.Weld.Test
         [Test]
         public void Haha2()
         {
+            IList<int> al;
+            
+            Assert.IsTrue(typeof(IList<>).ContainsGenericParameters);
+            Assert.IsFalse(typeof(IList<int>).ContainsGenericParameters);
             //var a = typeof (Xxx<>).GetMethod("Blah").ReturnType;
             //var ae = a.GetInterface(typeof (IEnumerable<>).FullName);
 

@@ -2,8 +2,8 @@
 
 namespace Alpaca.Injects
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public sealed class QualifierAttribute: Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Parameter)]
+    public abstract class QualifierAttribute: Attribute
     {
     }
 }

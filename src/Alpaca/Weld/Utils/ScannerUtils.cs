@@ -54,12 +54,11 @@ namespace Alpaca.Weld.Utils
             }
         }
 
-        public static ISet<Attribute> GetQualifiers(this ICustomAttributeProvider attributeProvider)
+        public static QualifierAttribute[] GetQualifiers(this ICustomAttributeProvider attributeProvider)
         {
-            return new HashSet<Attribute>(
-                from attribute in attributeProvider.GetRecursiveAttributes()
-                where attribute.GetType().HasAttribute<QualifierAttribute>()
-                select attribute);
+            return (
+                from attribute in attributeProvider.GetRecursiveAttributes<QualifierAttribute>()
+                select attribute).ToArray();
         }
     }
 }

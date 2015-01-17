@@ -175,7 +175,7 @@
 //            }
 //        }
 
-//        private DependencyLink ResolveDependency(MemberInfo member, SeekSpec spec)
+//        private DependencyLink ResolveDependency(MemberInfo member, ResolveSpec spec)
 //        {
 //            var link = new DependencyLink
 //            {
@@ -205,7 +205,7 @@
 //            }
 //            else
 //            {
-//                var matched = registrations.Select(x => x.CanSatisfy(spec)).Where(x=> x!=null).ToArray();
+//                var matched = registrations.Select(x => x.Resolve(spec)).Where(x=> x!=null).ToArray();
 //                link.AddAll(matched.Select(x=> _nodeIndex[x]).ToArray());
 //            }
 
@@ -214,7 +214,7 @@
 
 //        private IEnumerable<AbstractComponent> CloseRegistrationGenerics(AbstractComponent reg, Type type)
 //        {
-//            var registration = reg.CanSatisfy(type);
+//            var registration = reg.Resolve(type);
 //            if (registration != null)
 //            {
 //                _unprocessedRegistrations.Add(registration);

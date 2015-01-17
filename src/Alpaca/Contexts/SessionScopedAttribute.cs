@@ -2,8 +2,7 @@
 
 namespace Alpaca.Contexts
 {
-    [NormalScope]
-    public class SessionScopedAttribute: Attribute
+    public class SessionScopedAttribute: NormalScopeAttribute
     {
          
     }

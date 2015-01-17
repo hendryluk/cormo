@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Weld;
@@ -9,12 +11,17 @@ using Alpaca.Weld.Utils;
 
 namespace Alpaca.Injects
 {
+    public class DependentAttribute : ScopeAttribute
+    {
+        
+    }
+
     public interface IInjectionPoint
     {
         IComponent DeclaringComponent { get; }
         MemberInfo Member { get; }
         Type ComponentType { get; }
-        IEnumerable<Attribute> Qualifiers { get; }
+        IEnumerable<QualifierAttribute> Qualifiers { get; }
     }
 
     public interface IInstance<T>
@@ -24,7 +31,7 @@ namespace Alpaca.Injects
 
     public interface IComponentManager
     {
-        IComponent GetComponents(IInjectionPoint injectionPoint);
+        IComponent GetComponent(IInjectionPoint injectionPoint);
         object GetReference(IComponent component);
         object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component);
     }
@@ -36,21 +43,22 @@ namespace Alpaca.Weld
     {
         IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         void Inject(object target);
+        IComponent Component { get; }
     }
 
     public abstract class AbstractInjectionPoint : IWeldInjetionPoint
     {
         protected readonly bool IsCacheable;
-        private readonly Lazy<InjectPlan> _lazyInjectPlan; 
-
-        protected AbstractInjectionPoint(IComponent declaringComponent, MemberInfo member, Type type, IEnumerable<Attribute> qualifiers)
+        
+        protected AbstractInjectionPoint(IComponent declaringComponent, MemberInfo member, Type type, QualifierAttribute[] qualifiers)
         {
             DeclaringComponent = declaringComponent;
             Member = member;
             ComponentType = type;
             Qualifiers = qualifiers;
             IsCacheable = IsCacheableType(type);
-            _lazyInjectPlan = new Lazy<InjectPlan>(BuildInjectPlan);
+            _lazyComponents = new Lazy<IComponent>(ResolveComponents);
+            _lazyInjectPlan = new Lazy<InjectPlan>(()=> BuildInjectPlan(Component));
         }
 
         private static bool IsCacheableType(Type type)
@@ -60,10 +68,22 @@ namespace Alpaca.Weld
 
         public MemberInfo Member { get; private set; }
         public IComponent DeclaringComponent { get; private set; }
-        public Type ComponentType { get; private set; }
-        public IEnumerable<Attribute> Qualifiers { get; private set; }
+        public Type ComponentType { get; set; }
+        public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
         public abstract IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
-        protected abstract InjectPlan BuildInjectPlan();
+        protected abstract InjectPlan BuildInjectPlan(IComponent components);
+        private readonly Lazy<InjectPlan> _lazyInjectPlan;
+        private readonly Lazy<IComponent> _lazyComponents;
+
+        private IComponent ResolveComponents()
+        {
+            return DeclaringComponent.Manager.GetComponent(this);
+        }
+
+        public IComponent Component
+        {
+            get { return _lazyComponents.Value; }    
+        }
 
         public void Inject(object target)
         {
@@ -74,8 +94,8 @@ namespace Alpaca.Weld
     public class MethodParameterInjectionPoint : AbstractInjectionPoint
     {
         private readonly ParameterInfo _param;
-        private Lazy<BuildPlan> _lazyGetValuePlan = new Lazy<BuildPlan>(); 
-        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, IEnumerable<Attribute> qualifiers) 
+        private readonly Lazy<BuildPlan> _lazyGetValuePlan = new Lazy<BuildPlan>(); 
+        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, QualifierAttribute[] qualifiers) 
             : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, qualifiers)
         {
             _param = paramInfo;
@@ -86,14 +106,14 @@ namespace Alpaca.Weld
         private BuildPlan BuildGetValuePlan()
         {
             var manager = DeclaringComponent.Manager;
-            var components = manager.GetComponents(this);
+            var component = Component;
             if (IsCacheable)
             {
-                var instance = manager.GetReference(components);
+                var instance = manager.GetReference(component);
                 return () => instance;
             }
 
-            return () => manager.GetReference(components);
+            return () => manager.GetReference(component);
         }
 
         public bool IsConstructor { get; private set; }
@@ -106,18 +126,18 @@ namespace Alpaca.Weld
                 var ctor = (ConstructorInfo) _param.Member;
                 ctor = GenericUtils.TranslateConstructorGenericArguments(ctor, translations);
                 var param = ctor.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Qualifiers);
+                return new MethodParameterInjectionPoint(component, param, Qualifiers.ToArray());
             }
             else
             {
                 var method = (MethodInfo)_param.Member;
                 method = GenericUtils.TranslateMethodGenericArguments(method, translations);
                 var param = method.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Qualifiers);
+                return new MethodParameterInjectionPoint(component, param, Qualifiers.ToArray());
             }
         }
 
-        protected override InjectPlan BuildInjectPlan()
+        protected override InjectPlan BuildInjectPlan(IComponent component)
         {
             throw new NotSupportedException();
         }
@@ -138,7 +158,7 @@ namespace Alpaca.Weld
     {
         private readonly FieldInfo _field;
 
-        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, IEnumerable<Attribute> qualifiers) :
+        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, QualifierAttribute[] qualifiers) :
             base(declaringComponent, field, field.FieldType, qualifiers)
         {
             InjectionValidator.Validate(field);
@@ -148,22 +168,21 @@ namespace Alpaca.Weld
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
             var field = GenericUtils.TranslateFieldType(_field, translations);
-            return new FieldInjectionPoint(component, field, Qualifiers);
+            return new FieldInjectionPoint(component, field, Qualifiers.ToArray());
         }
 
-        protected override InjectPlan BuildInjectPlan()
+        protected override InjectPlan BuildInjectPlan(IComponent component)
         {
             var manager = DeclaringComponent.Manager;
-            var components = manager.GetComponents(this);
             if (IsCacheable)
             {
-                var instance = manager.GetReference(components);
+                var instance = manager.GetReference(component);
                 return target => SetValue(target, instance);
             }
 
             return target =>
             {
-                var instance = manager.GetReference(components);
+                var instance = manager.GetReference(component);
                 return SetValue(target, instance);
             };
         }
@@ -185,7 +204,7 @@ namespace Alpaca.Weld
     {
         private readonly PropertyInfo _property;
 
-        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IEnumerable<Attribute> qualifiers):
+        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, QualifierAttribute[] qualifiers):
             base(declaringComponent, property, property.PropertyType, qualifiers)
         {
             InjectionValidator.Validate(property);
@@ -195,22 +214,21 @@ namespace Alpaca.Weld
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
             var property = GenericUtils.TranslatePropertyType(_property, translations);
-            return new PropertyInjectionPoint(component, property, Qualifiers);
+            return new PropertyInjectionPoint(component, property, Qualifiers.ToArray());
         }
 
-        protected override InjectPlan BuildInjectPlan()
+        protected override InjectPlan BuildInjectPlan(IComponent component)
         {
             var manager = DeclaringComponent.Manager;
-            var components = manager.GetComponents(this);
             if (IsCacheable)
             {
-                var instance = manager.GetReference(components);
+                var instance = manager.GetReference(component);
                 return target => SetValue(target, instance);
             }
 
             return target =>
             {
-                var instance = manager.GetReference(components);
+                var instance = manager.GetReference(component);
                 return SetValue(target, instance);
             };
         }
@@ -228,11 +246,19 @@ namespace Alpaca.Weld
         }
     }
 
-    public class AttributeScannerCatalogFactory
+    public class AttributeScanDeployer
     {
+        private readonly WeldComponentManager _manager;
+        private readonly WeldEnvironment _environment;
         private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-       
-        public WeldEnvironment AutoScan(IComponentManager manager)
+
+        public AttributeScanDeployer(WeldComponentManager manager, WeldEnvironment environment)
+        {
+            _manager = manager;
+            _environment = environment;
+        }
+
+        public void AutoScan()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
@@ -246,18 +272,7 @@ namespace Alpaca.Weld
 
             //var configurations = types.AsParallel().Where(ConfigurationCriteria.ScanPredicate).ToArray();
 
-            var classComponents = (
-                from type in types.AsParallel().Where(TypeUtils.IsComponent).AsParallel()
-                let methods = type.GetMethods(AllBindingFlags).Where(InjectionValidator.ScanPredicate)
-                let properties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray()
-                let ctors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray()
-                let fields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray()
-                let postConstructs = methods.Where(x=> x.HasAttribute<PostConstructAttribute>()).ToArray()
-                let preDestroys = methods.Where(x => x.HasAttribute<PreDestroyAttribute>()).ToArray()
-                select new { type,
-                             injects = new { methods, properties, ctors, fields }, 
-                             postConstructs, preDestroys }).ToArray();
-
+            var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
             var producesFields = (from type in types.AsParallel()
                 from field in type.GetFields(AllBindingFlags)
                 where field.HasAttribute<ProducesAttribute>()
@@ -273,27 +288,50 @@ namespace Alpaca.Weld
                 where property.HasAttribute<ProducesAttribute>()
                 select property).ToArray();
 
-            var environment = new WeldEnvironment();
-            //catalog.RegisterConfigurations(configurations);
+            AddTypes(componentTypes);
+        }
 
-            foreach (var c in classComponents)
+        public void AddTypes(Type[] types)
+        {
+            var components = types.AsParallel().Select(MakeComponent).ToArray();
+
+            foreach (var c in components)
             {
-                if(c.injects.ctors.Length > 1)
-                    throw new InvalidComponentException(c.type, "Multiple [Inject] constructors");
-
-                var component = new ClassComponent(c.type, c.type.GetQualifiers(), manager, c.postConstructs, c.preDestroys);
-                var methodInjects = c.injects.methods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
-                var ctorInjects = c.injects.ctors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
-                var fieldInjects = c.injects.fields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
-                var propertyInjects = c.injects.fields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
-
-                foreach (var inject in methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects))
-                    component.AddInjectionPoints(inject);    
-                
-                environment.AddComponent(component);
+                _environment.AddComponent(c);
             }
-                
-            return environment;
+        }
+
+        public IWeldComponent AddType(Type type)
+        {
+            var component = MakeComponent(type);
+            _environment.AddComponent(component);
+            return component;
+        }
+
+        public IWeldComponent MakeComponent(Type type)
+        {
+            var methods = type.GetMethods(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var properties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var ctors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var fields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var postConstructs = methods.Where(x => x.HasAttribute<PostConstructAttribute>()).ToArray();
+            var preDestroys = methods.Where(x => x.HasAttribute<PreDestroyAttribute>()).ToArray();
+            var scopes = type.GetRecursiveAttributes<ScopeAttribute>().ToArray();
+
+            if (ctors.Length > 1)
+                throw new InvalidComponentException(type, "Multiple [Inject] constructors");
+
+            var scope = scopes.FirstOrDefault() ?? new DependentAttribute();
+            var component = new ClassComponent(type, type.GetQualifiers(), scope, _manager, postConstructs, preDestroys);
+            var methodInjects = methods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
+            var ctorInjects = ctors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
+            var fieldInjects = fields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
+            var propertyInjects = properties.Select(p => new PropertyInjectionPoint(component, p, p.GetQualifiers())).ToArray();
+
+            foreach (var inject in methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects))
+                component.AddInjectionPoints(inject);
+
+            return component;
         }
 
         private IEnumerable<IWeldInjetionPoint> ToMethodInjections(IComponent component, MethodBase method)
@@ -301,28 +339,94 @@ namespace Alpaca.Weld
             var parameters = method.GetParameters();
             return parameters.Select(p => new MethodParameterInjectionPoint(component, p, p.GetQualifiers()));
         }
+
+        public void Deploy()
+        {
+            _manager.Deploy(_environment);
+        }
     }
 
     public class WeldComponentManager : IComponentManager
     {
-        public IComponent GetComponents(IInjectionPoint injectionPoint)
+        private ConcurrentBag<IWeldComponent> _unresolvedComponents;
+        private ConcurrentBag<IWeldComponent> _allComponents;
+
+        public IComponent GetComponent(IInjectionPoint injectionPoint)
         {
-            throw new NotImplementedException();
+            var unwrappedType = UnwrapType(injectionPoint.ComponentType);
+            var isWrapped = unwrappedType != injectionPoint.ComponentType;
+
+            var resolved = _allComponents.Select(x => x.Resolve(unwrappedType, injectionPoint.Qualifiers)).Where(x => x != null).ToArray();
+            if (!isWrapped)
+            {
+                if (resolved.Length > 1)
+                {
+                    throw new AmbiguousResolutionException(injectionPoint, resolved.Cast<IComponent>().ToArray());
+                }
+                if (!resolved.Any())
+                {
+                    throw new UnsatisfiedDependencyException(injectionPoint);
+                }
+
+                return resolved.Single();
+            }
+
+            return resolved.Single();
         }
 
         public object GetReference(IComponent component)
         {
-            throw new NotImplementedException();
+            return ((IWeldComponent) component).Build();
         }
 
         public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component)
         {
-            throw new NotImplementedException();
+            return GetReference(component);
         }
 
         public void Deploy(WeldEnvironment environment)
         {
-            throw new NotImplementedException();
+            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
+            _unresolvedComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Where(x=> x.IsConcrete));
+            while (_unresolvedComponents.Any())
+            {
+                ResolveComponents();
+            }
         }
+
+        private void ResolveComponents()
+        {
+            var toBeResolved = _unresolvedComponents;
+            _unresolvedComponents = new ConcurrentBag<IWeldComponent>();
+            foreach (var component in toBeResolved)
+            {
+                var _ = component.InjectionPoints.OfType<IWeldInjetionPoint>().Select(x => x.Component).ToArray();
+            }
+        }
+
+        public bool IsWrappedType(Type type)
+        {
+            return type.IsGenericType && typeof (IInstance<>).IsAssignableFrom(type.GetGenericTypeDefinition());
+        }
+
+        public Type UnwrapType(Type type)
+        {
+            return IsWrappedType(type) ? type.GetGenericArguments()[0] : type;
+        }
+
+        public bool IsProxyRequired(IComponent component)
+        {
+            return IsNormalScope(component.Scope);
+        }
+
+        private bool IsNormalScope(Attribute scope)
+        {
+            return scope is NormalScopeAttribute;
+        }
+    }
+
+    public class ComponentResolver
+    {
+
     }
 }
