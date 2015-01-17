@@ -2,8 +2,7 @@
 
 namespace Alpaca.Contexts
 {
-    [NormalScope]
-    public sealed class RequestScopedAttribute:Attribute
+    public sealed class RequestScopedAttribute:NormalScopeAttribute
     {
     }
 }

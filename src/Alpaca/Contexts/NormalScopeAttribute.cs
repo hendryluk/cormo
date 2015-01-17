@@ -2,8 +2,13 @@
 
 namespace Alpaca.Contexts
 {
-    [AttributeUsage(AttributeTargets.Class)]
-    public sealed class NormalScopeAttribute: Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Parameter | AttributeTargets.Field)]
+    public abstract class ScopeAttribute : Attribute
+    {
+        
+    }
+
+    public abstract class NormalScopeAttribute : ScopeAttribute
     {
          
     }

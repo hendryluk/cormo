@@ -4,12 +4,12 @@ namespace Alpaca.Injects.Exceptions
 {
     public class UnsatisfiedDependencyException: InjectionException
     {
-        public WeldEngine.InjectionPoint InjectRegistration { get; private set; }
+        public IInjectionPoint InjectionPoint { get; private set; }
 
-        public UnsatisfiedDependencyException(WeldEngine.InjectionPoint inject):
+        public UnsatisfiedDependencyException(IInjectionPoint inject) :
             base(string.Format("Unsatisfied depdendency for {0}", inject))
         {
-            InjectRegistration = inject;
+            InjectionPoint = inject;
         }
     }
 }

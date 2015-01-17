@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Alpaca.Injects;
 
 namespace Alpaca.Weld.Utils
 {
@@ -21,14 +22,14 @@ namespace Alpaca.Weld.Utils
 
         public static bool HasAttribute<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
         {
-            return GetAttributes<T>(attributeProvider).Any();
+            return GetRecursiveAttributes<T>(attributeProvider).Any();
         }
-        public static IEnumerable<T> GetAttributes<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
+        public static IEnumerable<T> GetRecursiveAttributes<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
         {
-            return GetAttributes(attributeProvider).OfType<T>();
+            return GetRecursiveAttributes(attributeProvider).OfType<T>();
         }
 
-        public static IEnumerable<Attribute> GetAttributes(this ICustomAttributeProvider attributeProvider)
+        public static IEnumerable<Attribute> GetRecursiveAttributes(this ICustomAttributeProvider attributeProvider)
         {
             var attributes = new HashSet<Attribute>();
             var list = new LinkedList<ICustomAttributeProvider>();
@@ -51,6 +52,13 @@ namespace Alpaca.Weld.Utils
                 list.AddLast(attribute.GetType());
                 
             }
-        } 
+        }
+
+        public static QualifierAttribute[] GetQualifiers(this ICustomAttributeProvider attributeProvider)
+        {
+            return (
+                from attribute in attributeProvider.GetRecursiveAttributes<QualifierAttribute>()
+                select attribute).ToArray();
+        }
     }
 }

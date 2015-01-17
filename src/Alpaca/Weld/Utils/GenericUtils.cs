@@ -92,34 +92,34 @@ namespace Alpaca.Weld.Utils
             return arg;
         }
 
-        public static MemberInfo TranslateMemberGenericArguments(MemberInfo member, IDictionary<Type, Type> typeTranslations)
-        {
-            var type = TranslateGenericArguments(member.ReflectedType, typeTranslations);
-            if (type == null)
-                return null;
+        //public static MemberInfo TranslateMemberGenericArguments(MemberInfo member, IDictionary<Type, Type> typeTranslations)
+        //{
+        //    var type = TranslateGenericArguments(member.ReflectedType, typeTranslations);
+        //    if (type == null)
+        //        return null;
 
-            var method = member as MethodInfo;
-            if (method != null)
-            {
-                if (!method.ContainsGenericParameters && method.ReflectedType == type)
-                    return method;
+        //    var method = member as MethodInfo;
+        //    if (method != null)
+        //    {
+        //        if (!method.ContainsGenericParameters && method.ReflectedType == type)
+        //            return method;
 
-                return TranslateMethodGenericArguments(type, method, typeTranslations);
-            }
+        //        return TranslateMethodGenericArguments(type, method, typeTranslations);
+        //    }
 
-            if (type == member.ReflectedType)
-                return member;
+        //    if (type == member.ReflectedType)
+        //        return member;
 
-            var field = member as FieldInfo;
-            if (field != null)
-                return TranslateFieldType(type, field);
+        //    var field = member as FieldInfo;
+        //    if (field != null)
+        //        return TranslateFieldType(type, field);
 
-            var property = member as PropertyInfo;
-            if (property != null)
-                return TranslatePropertyType(type, property, typeTranslations);
+        //    var property = member as PropertyInfo;
+        //    if (property != null)
+        //        return TranslatePropertyType(type, property, typeTranslations);
 
-            return null;
-        }
+        //    return null;
+        //}
 
         public static bool MemberContainsGenericArguments(MemberInfo member)
         {
@@ -133,8 +133,26 @@ namespace Alpaca.Weld.Utils
             return false;
         }
 
-        private static MethodInfo TranslateMethodGenericArguments(Type translatedType, MethodInfo method, IDictionary<Type, Type> typeTranslations)
+        public static ConstructorInfo TranslateConstructorGenericArguments(ConstructorInfo ctor, IDictionary<Type, Type> typeTranslations)
         {
+            var translatedType = TranslateGenericArguments(ctor.ReflectedType, typeTranslations);
+            if (translatedType == null)
+                return null;
+
+            var translatedMethodParameters = ctor.GetParameters().Select(x => TranslateGenericArgument(x.ParameterType, typeTranslations)).ToArray();
+
+            if (ctor.ReflectedType != translatedType)
+                ctor = translatedType.GetConstructor(translatedMethodParameters);
+
+            return ctor;
+        }
+
+        public static MethodInfo TranslateMethodGenericArguments(MethodInfo method, IDictionary<Type, Type> typeTranslations)
+        {
+            var translatedType = TranslateGenericArguments(method.ReflectedType, typeTranslations);
+            if (translatedType == null)
+                return null;
+
             var translatedMethodParameters = method.GetParameters().Select(x => TranslateGenericArgument(x.ParameterType, typeTranslations)).ToArray();
 
             if (method.ReflectedType != translatedType)
@@ -149,16 +167,24 @@ namespace Alpaca.Weld.Utils
             return method;
         }
 
-        private static FieldInfo TranslateFieldType(Type translatedType, FieldInfo field)
+        public static FieldInfo TranslateFieldType(FieldInfo field, IDictionary<Type, Type> typeTranslations)
         {
+            var translatedType = TranslateGenericArguments(field.ReflectedType, typeTranslations);
+            if (translatedType == null)
+                return null;
+
             var flag = (field.IsStatic ? BindingFlags.Static : BindingFlags.Instance);
             flag |= (field.IsPublic ? BindingFlags.Public : BindingFlags.NonPublic);
 
             return translatedType.GetField(field.Name, flag);
         }
 
-        private static PropertyInfo TranslatePropertyType(Type translatedType, PropertyInfo property, IDictionary<Type, Type> typeTranslations)
+        public static PropertyInfo TranslatePropertyType(PropertyInfo property, IDictionary<Type, Type> typeTranslations)
         {
+            var translatedType = TranslateGenericArguments(property.ReflectedType, typeTranslations);
+            if (translatedType == null)
+                return null;
+
             return translatedType.GetProperty(property.Name, 
                 TranslateGenericArgument(property.PropertyType, typeTranslations),
                 property.GetIndexParameters().Select(x => TranslateGenericArgument(x.ParameterType, typeTranslations)).ToArray());

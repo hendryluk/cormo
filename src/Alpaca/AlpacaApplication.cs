@@ -1,32 +1,42 @@
-﻿using Alpaca.Weld;
+﻿using Alpaca.Injects;
+using Alpaca.Weld;
 
 namespace Alpaca
 {
     public class AlpacaApplication
     {
-        public WeldEngine Engine { get; private set; }
+        private AttributeScanDeployer _scanner;
+        public IComponentManager ComponentManager { get; private set; }
+        public WeldEnvironment Environment { get; private set; }
+        public WeldComponentManager Manager { get; set; }
 
-        public AlpacaApplication(WeldEngine engine)
+        private AlpacaApplication()
         {
-            Engine = engine;
+            Environment = new WeldEnvironment();
+            Manager = new WeldComponentManager();
+            _scanner = new AttributeScanDeployer(Manager, Environment);
         }
 
-        public static AlpacaApplication Configure()
+        public static AlpacaApplication AutoScan()
         {
-            var scanner = new AttributeScannerCatalogFactory();
-            var catalog = scanner.AutoScan();
-            var engine = new WeldEngine(catalog);
-            return new AlpacaApplication(engine);
+            var app = new AlpacaApplication();
+            app.Scan();
+            return app;
+        }
+
+        private void Scan()
+        {
+            _scanner.AutoScan();
         }
 
         public static void Run()
         {
-            Run(Configure());
+            AutoScan().Deploy();
         }
 
-        public static void Run(AlpacaApplication application)
+        public void Deploy()
         {
-            application.Engine.Run();
+            _scanner.Deploy();
         }
     }
 }

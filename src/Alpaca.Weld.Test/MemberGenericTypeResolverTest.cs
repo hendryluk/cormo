@@ -28,6 +28,8 @@ namespace Alpaca.Weld.Test
             public IList<KeyValuePair<T, Y>> ListKeyValuePair<Y>() { return null; }
 
             public IDictionary<T, int> DictionaryTInt() { return null; }
+
+            public IList<KeyValuePair<string, int>> ListKeyValuePairStringInt() { return null; }
         }
 
         private interface IDisposableList<T> : IList<T> where T : IDisposable { }

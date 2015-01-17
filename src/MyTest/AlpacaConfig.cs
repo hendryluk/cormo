@@ -20,7 +20,7 @@ namespace MyTest
         
     }
 
-    public class HendersRepository: IRepository<int>
+    public class HendersRepository: IRepository<string>
     {
         
     }

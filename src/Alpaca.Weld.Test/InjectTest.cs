@@ -1,4 +1,6 @@
-﻿using Alpaca.Injects;
+﻿using System;
+using System.Reflection;
+using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using NUnit.Framework;
 
@@ -6,6 +8,10 @@ namespace Alpaca.Weld.Test
 {
     public class InjectTest
     {
+        private WeldEnvironment _env;
+        private WeldComponentManager _manager;
+        private AttributeScanDeployer _deployer;
+
         public interface IRepository<T>
         {
         }
@@ -27,51 +33,51 @@ namespace Alpaca.Weld.Test
             [Inject] public IRepository<int> _repo;
         }
 
+        [SetUp]
+        public void Setup()
+        {
+            _manager = new WeldComponentManager();
+            _deployer = new AttributeScanDeployer(_manager, new WeldEnvironment());
+        }
+
         [Test]
         public void TestInjectionOfOpenGenericComponent()
         {
-            var catalog = new WeldCatalog();
-            catalog.RegisterComponent(typeof(Repository<>));
-            var reg = catalog.RegisterComponent(typeof(Target));
-            catalog.RegisterInject(typeof(Target).GetField("_repo"));
-
-            Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>(catalog, reg)._repo);
+            _deployer.AddType(typeof(IRepository<>));
+            var target = _deployer.AddType(typeof(Target));
+            
+            Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>(target)._repo);
         }
 
-        private static T GetInstance<T>(WeldCatalog catalog, ComponentRegistration reg)
+        private T GetInstance<T>(IComponent component)
         {
-            var weldEngine = new WeldEngine(catalog);
-            weldEngine.Run();
-            return (T)weldEngine.GetInstance(reg);
+            _deployer.Deploy();
+            return (T)_manager.GetReference(component);
         }
 
         [Test]
         public void TestInjectionOfClosedGenericComponent()
         {
-            var catalog = new WeldCatalog();
-            catalog.RegisterComponent(typeof(IntRepository));
-            var reg = catalog.RegisterComponent(typeof(Target));
-            catalog.RegisterInject(typeof(Target).GetField("_repo"));
+            _deployer.AddType(typeof(IntRepository));
+            var target = _deployer.AddType(typeof(Target));
 
-            Assert.IsInstanceOf<IntRepository>(GetInstance<Target>(catalog, reg)._repo);
+            Assert.IsInstanceOf<IntRepository>(GetInstance<Target>(target)._repo);
         }
 
         [Test]
         [ExpectedException(typeof(UnsatisfiedDependencyException))]
         public void TestMismatchWithClosedGenericComponent()
         {
-            var catalog = new WeldCatalog();
-            catalog.RegisterComponent(typeof(StringRepository));
-            var reg = catalog.RegisterComponent(typeof(Target));
-            catalog.RegisterInject(typeof(Target).GetField("_repo"));
+            _deployer.AddType(typeof(StringRepository));
+            _deployer.AddType(typeof(Target));
 
             try
             {
-                new WeldEngine(catalog).Run();
+                _deployer.Deploy();
             }
             catch (UnsatisfiedDependencyException e)
             {
-                Assert.AreEqual(typeof(IRepository<int>), e.InjectRegistration.RequestedType);
+                Assert.AreEqual(typeof(IRepository<int>), e.InjectionPoint.ComponentType);
                 throw;
             }
         }

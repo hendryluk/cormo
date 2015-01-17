@@ -6,7 +6,7 @@ namespace Alpaca.Web.Weld
 {
     public class WebApiRegistrar
     {
-        [Inject] IAppBuilder _appBuilder;
+        //[Inject] IAppBuilder _appBuilder;
         //[Inject] HttpConfiguration _httpConfiguration;
 
         [Produces]
