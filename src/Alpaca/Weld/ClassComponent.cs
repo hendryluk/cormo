@@ -94,5 +94,10 @@ namespace Alpaca.Weld
                     return method.Invoke(x, paramVals);
                 });
         }
+
+        public override string ToString()
+        {
+            return string.Format("Component [{0}] with Qualifiers [{1}]", Type, string.Join(",", Qualifiers));
+        }
     }
 }

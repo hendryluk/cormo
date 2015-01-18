@@ -71,6 +71,7 @@
     <Compile Include="Injects\Exceptions\UnsatisfiedDependencyException.cs" />
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
     <Compile Include="Weld\AbstractInjectionPoint.cs" />
+    <Compile Include="Weld\AbstractProducer.cs" />
     <Compile Include="Weld\AttributeScanDeployer.cs" />
     <Compile Include="Weld\BuildPlan.cs" />
     <Compile Include="Weld\AbstractComponent.cs" />
@@ -85,12 +86,14 @@
     <Compile Include="Weld\IWeldInjetionPoint.cs" />
     <Compile Include="Weld\MemberInfoVisitor.cs" />
     <Compile Include="Weld\MethodParameterInjectionPoint.cs" />
+    <Compile Include="Weld\ProducerField.cs" />
     <Compile Include="Weld\ProducerMethod.cs" />
     <Compile Include="Weld\PropertyInjectionPoint.cs" />
     <Compile Include="Weld\Utils\GenericUtils.cs" />
     <Compile Include="Weld\Utils\InjectionValidator.cs" />
     <Compile Include="Weld\Utils\ScannerUtils.cs" />
     <Compile Include="Weld\Utils\TypeUtils.cs" />
+    <Compile Include="Weld\Validator.cs" />
     <Compile Include="Weld\WeldComponentManager.cs" />
     <Compile Include="Weld\WeldEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

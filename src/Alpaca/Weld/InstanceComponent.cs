@@ -27,13 +27,14 @@ namespace Alpaca.Weld
             return null;
         }
 
-        public override void OnDeploy()
-        {
-        }
-
         protected override BuildPlan GetBuildPlan()
         {
             return () => _instance;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("Instance Component [{0}] with Qualifiers [{1}]", Type, string.Join(",", Qualifiers));
         }
     }
 }

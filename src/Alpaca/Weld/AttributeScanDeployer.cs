@@ -5,7 +5,6 @@ using System.Reflection;
 using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Weld;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld
@@ -29,7 +28,7 @@ namespace Alpaca.Weld
             var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
                 where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
                 from type in assembly.GetLoadableTypes()
-                where type.IsPublic && type.IsClass && !type.IsPrimitive
+                where (type.IsPublic || type.IsNestedPublic) && type.IsClass && !type.IsPrimitive
                 select type).ToArray();
 
             //var classComponents = .ToArray();

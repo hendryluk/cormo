@@ -15,7 +15,7 @@ namespace Alpaca.Weld
 
         //public AbstractComponent RegisterComponent(Type component, params object[] qualifiers)
         //{
-        //    ComponentCriteria.Validate(component);
+        //    ComponentCriteria.GetDependencies(component);
 
         //    var qualifierSet = new HashSet<object>(qualifiers);
         //    if (qualifierSet.All(x => (x is AnyAttribute)))
@@ -38,7 +38,7 @@ namespace Alpaca.Weld
         //{
         //    foreach (var config in configurations)
         //    {
-        //        ConfigurationCriteria.Validate(config);
+        //        ConfigurationCriteria.GetDependencies(config);
         //    }
         //    foreach(var config in configurations)
         //        _configurations.Add(new ClassComponent(config, new object[]{AnyAttributeInstance, DefaultAttributeInstance}));
@@ -46,19 +46,19 @@ namespace Alpaca.Weld
 
         //public void RegisterInject(FieldInfo field, params object[] qualifiers)
         //{
-        //    InjectionValidator.Validate(field);
+        //    InjectionValidator.GetDependencies(field);
         //    _injectRegistrations.Add(new InjectRegistration(field, field.FieldType, qualifiers));
         //}
 
         //public void RegisterInject(MethodBase method, ResolveSpec[] spec)
         //{
-        //    InjectionValidator.Validate(method);
+        //    InjectionValidator.GetDependencies(method);
         //    _injectRegistrations.Add(new InjectRegistration(method, spec));
         //}
 
         //public void RegisterInject(PropertyInfo property, object[] qualifiers)
         //{
-        //    InjectionValidator.Validate(property);
+        //    InjectionValidator.GetDependencies(property);
         //    _injectRegistrations.Add(new InjectRegistration(property, property.PropertyType, qualifiers));
         //}
 
@@ -66,7 +66,7 @@ namespace Alpaca.Weld
         //{
         //    foreach (var post in postConstructs)
         //    {
-        //        PostConstructCriteria.Validate(post);
+        //        PostConstructCriteria.GetDependencies(post);
         //        _postConstructs.Add(post);
         //    }
         //}

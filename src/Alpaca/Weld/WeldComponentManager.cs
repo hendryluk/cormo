@@ -16,8 +16,18 @@ namespace Alpaca.Weld
 
         private IEnumerable<IWeldComponent> GetComponentsForType(Type type)
         {
-            return _typeComponents.GetOrAdd(type, t => 
+            var components = _typeComponents.GetOrAdd(type, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
+
+            var undeployeds = components.Where(x => !_allComponents.Contains(x));
+
+            foreach(var undeployed in undeployeds)
+            {
+                _allComponents.Add(undeployed);
+                _undeployedComponents.Add(undeployed);
+            }
+
+            return components;
         }
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
@@ -101,7 +111,24 @@ namespace Alpaca.Weld
             var toBeDeployed = _undeployedComponents;
             _undeployedComponents = new ConcurrentBag<IWeldComponent>();
             foreach (var component in toBeDeployed)
-                component.OnDeploy();
+            {
+                Validate(component, new IComponent[0]);
+            }
+        }
+
+        private void Validate(IComponent component, IComponent[] path)
+        {
+            var nextPath = path.Concat(new []{component}).ToArray();
+
+            if (path.Contains(component))
+                throw new CircularDependenciesException(nextPath);
+
+            var producer = component as AbstractProducer;
+            if (producer != null)
+                Validate(producer.DeclaringComponent, nextPath);
+            
+            foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
+                Validate(inject.Component, nextPath);
         }
 
         public bool IsWrappedType(Type type)
@@ -122,6 +149,15 @@ namespace Alpaca.Weld
         private bool IsNormalScope(Attribute scope)
         {
             return scope is NormalScopeAttribute;
+        }
+    }
+
+    public class CircularDependenciesException : InjectionException
+    {
+        public CircularDependenciesException(IEnumerable<IComponent> nextPath):
+            base(string.Format("Pseudo scoped component has circular dependencies. Dependency path [{0}]",
+            string.Join(",", nextPath)))
+        {
         }
     }
 }

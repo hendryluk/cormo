@@ -52,14 +52,6 @@ namespace Alpaca.Weld
 
         public abstract IWeldComponent Resolve(Type requestedType);
 
-        public virtual void OnDeploy()
-        {
-            if (IsConcrete)
-            {
-                var _ = InjectionPoints.OfType<IWeldInjetionPoint>().Select(inject => inject.Component).ToArray();
-            }
-        }
-
         public object Build()
         {
             return _lazyBuildPlan.Value();
