@@ -88,6 +88,7 @@
     <Compile Include="Weld\MethodParameterInjectionPoint.cs" />
     <Compile Include="Weld\ProducerField.cs" />
     <Compile Include="Weld\ProducerMethod.cs" />
+    <Compile Include="Weld\ProducerProperty.cs" />
     <Compile Include="Weld\PropertyInjectionPoint.cs" />
     <Compile Include="Weld\Utils\GenericUtils.cs" />
     <Compile Include="Weld\Utils\InjectionValidator.cs" />

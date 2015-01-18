@@ -31,10 +31,6 @@ namespace Alpaca.Weld
                 where (type.IsPublic || type.IsNestedPublic) && type.IsClass && !type.IsPrimitive
                 select type).ToArray();
 
-            //var classComponents = .ToArray();
-
-            //var configurations = types.AsParallel().Where(ConfigurationCriteria.ScanPredicate).ToArray();
-
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
             var producerFields = (from type in types.AsParallel()
                 from field in type.GetFields(AllBindingFlags)
@@ -46,7 +42,7 @@ namespace Alpaca.Weld
                 where method.HasAttribute<ProducesAttribute>()
                 select method).ToArray();
 
-            var producesProperties = (from type in types.AsParallel()
+            var producerProperties = (from type in types.AsParallel()
                 from property in type.GetProperties(AllBindingFlags)
                 where property.HasAttribute<ProducesAttribute>()
                 select property).ToArray();
@@ -54,6 +50,7 @@ namespace Alpaca.Weld
             AddTypes(componentTypes);
             AddProducerMethods(producerMethods);
             AddProducerFields(producerFields);
+            AddProducerProperties(producerProperties);
         }
 
         public void AddProducerMethods(params MethodInfo[] methods)
@@ -66,6 +63,13 @@ namespace Alpaca.Weld
         public void AddProducerFields(params FieldInfo[] fields)
         {
             var components = fields.AsParallel().Select(MakeProducerField).ToArray();
+            foreach (var c in components)
+                _environment.AddComponent(c);
+        }
+
+        public void AddProducerProperties(params PropertyInfo[] properties)
+        {
+            var components = properties.AsParallel().Select(MakeProducerProperty).ToArray();
             foreach (var c in components)
                 _environment.AddComponent(c);
         }
@@ -99,6 +103,14 @@ namespace Alpaca.Weld
             var scope = field.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
 
             return new ProducerField(field, qualifiers, scope, _manager);
+        }
+
+        public IWeldComponent MakeProducerProperty(PropertyInfo property)
+        {
+            var qualifiers = property.GetQualifiers();
+            var scope = property.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+
+            return new ProducerProperty(property, qualifiers, scope, _manager);
         }
 
         public IWeldComponent MakeProducerMethod(MethodInfo method)
