@@ -1,10 +1,4 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Alpaca.Injects;
-using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld
 {
@@ -16,8 +10,6 @@ namespace Alpaca.Weld
         //private readonly List<InjectRegistration> _injectRegistrations = new List<InjectRegistration>();
         //private readonly List<MethodInfo> _postConstructs = new List<MethodInfo>();
 
-        private static readonly DefaultAttribute DefaultAttributeInstance = new DefaultAttribute();
-        private static readonly AnyAttribute AnyAttributeInstance = new AnyAttribute();
         public IEnumerable<IWeldComponent> Components { get { return _components; } }
         public IEnumerable<IWeldComponent> Configurations { get { return _configurations; } }
 

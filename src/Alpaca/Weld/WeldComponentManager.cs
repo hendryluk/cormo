@@ -10,7 +10,7 @@ namespace Alpaca.Weld
 {
     public class WeldComponentManager : IComponentManager
     {
-        private ConcurrentBag<IWeldComponent> _unresolvedComponents;
+        private ConcurrentBag<IWeldComponent> _undeployedComponents;
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
@@ -18,6 +18,30 @@ namespace Alpaca.Weld
         {
             return _typeComponents.GetOrAdd(type, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
+        }
+
+        public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
+        {
+            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+            var unwrappedType = UnwrapType(type);
+            var isWrapped = unwrappedType != type;
+
+            var resolved = GetComponentsForType(unwrappedType).Where(x => x.CanSatisfy(qualifiers)).ToArray();
+            if (!isWrapped)
+            {
+                if (resolved.Length > 1)
+                {
+                    throw new AmbiguousResolutionException(type, qualifiers, resolved.Cast<IComponent>().ToArray());
+                }
+                if (!resolved.Any())
+                {
+                    throw new UnsatisfiedDependencyException(type, qualifiers);
+                }
+
+                return resolved.Single();
+            }
+
+            return resolved.Single();
         }
 
         public IComponent GetComponent(IInjectionPoint injectionPoint)
@@ -56,10 +80,10 @@ namespace Alpaca.Weld
         public void Deploy(WeldEnvironment environment)
         {
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
-            _unresolvedComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Where(x=> x.IsConcrete));
+            _undeployedComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
             
-            while (_unresolvedComponents.Any())
-                ResolveComponents();
+            while (_undeployedComponents.Any())
+                DeployComponents();
 
             ResolveConfigurations(environment);
         }
@@ -72,14 +96,12 @@ namespace Alpaca.Weld
             }
         }
 
-        private void ResolveComponents()
+        private void DeployComponents()
         {
-            var toBeResolved = _unresolvedComponents;
-            _unresolvedComponents = new ConcurrentBag<IWeldComponent>();
-            foreach (var component in toBeResolved)
-            {
-                var _ = component.InjectionPoints.OfType<IWeldInjetionPoint>().Select(x => x.Component).ToArray();
-            }
+            var toBeDeployed = _undeployedComponents;
+            _undeployedComponents = new ConcurrentBag<IWeldComponent>();
+            foreach (var component in toBeDeployed)
+                component.OnDeploy();
         }
 
         public bool IsWrappedType(Type type)

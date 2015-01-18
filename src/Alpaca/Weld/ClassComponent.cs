@@ -60,10 +60,10 @@ namespace Alpaca.Weld
 
         protected override BuildPlan GetBuildPlan()
         {
-            var methodInjects = InjectionPoints.OfType<MethodParameterInjectionPoint>().ToArray();
-            var ctorInject = InjectMethods(methodInjects.Where(x => x.IsConstructor)).FirstOrDefault();
-            var setterInjects = InjectMethods(methodInjects.Where(x=> !x.IsConstructor)).ToArray();
-            var otherInjects = InjectionPoints.Except(methodInjects).Cast<IWeldInjetionPoint>();
+            var paramInject = InjectionPoints.OfType<MethodParameterInjectionPoint>().ToArray();
+            var ctorInject = InjectMethods(paramInject.Where(x => x.IsConstructor)).FirstOrDefault();
+            var methodInject = InjectMethods(paramInject.Where(x=> !x.IsConstructor)).ToArray();
+            var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
 
             var create = ctorInject == null? 
                 new BuildPlan(() => Activator.CreateInstance(Type, true)): 
@@ -74,7 +74,7 @@ namespace Alpaca.Weld
                 var instance = create();
                 foreach (var i in otherInjects)
                     i.Inject(instance);
-                foreach (var i in setterInjects)
+                foreach (var i in methodInject)
                     i(instance);
                 foreach (var post in _postConstructs)
                     post.Invoke(instance, new object[0]);

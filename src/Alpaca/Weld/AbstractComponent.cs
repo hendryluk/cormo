@@ -11,9 +11,15 @@ namespace Alpaca.Weld
     {
         protected AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
         {
+            var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
+            if (!qualifierSet.OfType<AnyAttribute>().Any())
+                qualifierSet.Add(AnyAttribute.Instance);
+            if (qualifierSet.All(x => (x is AnyAttribute)))
+                qualifierSet.Add(DefaultAttribute.Instance);
+            
             Type = type;
             Manager = manager;
-            Qualifiers = qualifiers;
+            Qualifiers = qualifierSet;
             Scope = scope;
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
         }
@@ -45,6 +51,14 @@ namespace Alpaca.Weld
         }
 
         public abstract IWeldComponent Resolve(Type requestedType);
+
+        public virtual void OnDeploy()
+        {
+            if (IsConcrete)
+            {
+                var _ = InjectionPoints.OfType<IWeldInjetionPoint>().Select(inject => inject.Component).ToArray();
+            }
+        }
 
         public object Build()
         {

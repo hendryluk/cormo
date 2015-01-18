@@ -37,12 +37,12 @@ namespace Alpaca.Weld
             //var configurations = types.AsParallel().Where(ConfigurationCriteria.ScanPredicate).ToArray();
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
-            var producesFields = (from type in types.AsParallel()
+            var producerFields = (from type in types.AsParallel()
                 from field in type.GetFields(AllBindingFlags)
                 where field.HasAttribute<ProducesAttribute>()
                 select field).ToArray();
 
-            var producesMethods = (from type in types.AsParallel()
+            var producerMethods = (from type in types.AsParallel()
                 from method in type.GetMethods(AllBindingFlags)
                 where method.HasAttribute<ProducesAttribute>()
                 select method).ToArray();
@@ -53,6 +53,22 @@ namespace Alpaca.Weld
                 select property).ToArray();
 
             AddTypes(componentTypes);
+            AddProducerMethods(producerMethods);
+            AddProducerFields(producerFields);
+        }
+
+        public void AddProducerMethods(params MethodInfo[] methods)
+        {
+            var components = methods.AsParallel().Select(MakeProducerMethod).ToArray();
+            foreach(var c in components)
+                _environment.AddComponent(c);
+        }
+
+        public void AddProducerFields(params FieldInfo[] fields)
+        {
+            var components = fields.AsParallel().Select(MakeProducerField).ToArray();
+            foreach (var c in components)
+                _environment.AddComponent(c);
         }
 
         public void AddTypes(Type[] types)
@@ -78,6 +94,25 @@ namespace Alpaca.Weld
             return component;
         }
 
+        public IWeldComponent MakeProducerField(FieldInfo field)
+        {
+            var qualifiers = field.GetQualifiers();
+            var scope = field.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+
+            return new ProducerField(field, qualifiers, scope, _manager);
+        }
+
+        public IWeldComponent MakeProducerMethod(MethodInfo method)
+        {
+            var qualifiers = method.GetQualifiers();
+            var scope = method.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+            
+            var producer = new ProducerMethod(method, qualifiers, scope, _manager);
+            var injects = ToMethodInjections(producer, method).ToArray();
+            producer.AddInjectionPoints(injects);
+            return producer;
+        }
+
         public IWeldComponent MakeComponent(Type type)
         {
             var methods = type.GetMethods(AllBindingFlags).ToArray();
@@ -88,21 +123,18 @@ namespace Alpaca.Weld
             var iFields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var postConstructs = methods.Where(x => x.HasAttribute<PostConstructAttribute>()).ToArray();
             var preDestroys = methods.Where(x => x.HasAttribute<PreDestroyAttribute>()).ToArray();
-            var scopes = type.GetRecursiveAttributes<ScopeAttribute>().ToArray();
+            var scope = type.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
 
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
 
-            var scope = scopes.FirstOrDefault() ?? new DependentAttribute();
             var component = new ClassComponent(type, type.GetQualifiers(), scope, _manager, postConstructs, preDestroys);
             var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
             var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
             var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
             var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetQualifiers())).ToArray();
-
-            foreach (var inject in methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects))
-                component.AddInjectionPoints(inject);
-
+            
+            component.AddInjectionPoints(methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects).ToArray());
             return component;
         }
 

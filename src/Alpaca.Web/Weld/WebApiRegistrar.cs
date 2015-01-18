@@ -6,15 +6,15 @@ namespace Alpaca.Web.Weld
 {
     public class WebApiRegistrar
     {
-        //[Inject] IAppBuilder _appBuilder;
+        [Inject] IAppBuilder _appBuilder;
         //[Inject] HttpConfiguration _httpConfiguration;
 
-        [Produces]
-        [ConditionalOnMissingBean]
-        public virtual HttpConfiguration GetHttpConfiguration()
-        {
-            return new HttpConfiguration();
-        }
+        //[Produces]
+        //[ConditionalOnMissingBean]
+        //public virtual HttpConfiguration GetHttpConfiguration()
+        //{
+        //    return new HttpConfiguration();
+        //}
 
         [PostConstruct]
         public virtual void Init()

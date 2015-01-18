@@ -1,12 +1,10 @@
-﻿using System;
-using System.Reflection;
-using Alpaca.Injects;
+﻿using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using NUnit.Framework;
 
-namespace Alpaca.Weld.Test
+namespace Alpaca.Weld.Test.Injection
 {
-    public class InjectTest
+    public class GenericsInjectTest
     {
         private WeldEnvironment _env;
         private WeldComponentManager _manager;

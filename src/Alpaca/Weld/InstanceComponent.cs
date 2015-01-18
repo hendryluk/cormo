@@ -27,6 +27,10 @@ namespace Alpaca.Weld
             return null;
         }
 
+        public override void OnDeploy()
+        {
+        }
+
         protected override BuildPlan GetBuildPlan()
         {
             return () => _instance;

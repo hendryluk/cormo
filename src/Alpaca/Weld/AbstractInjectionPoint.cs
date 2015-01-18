@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
 using Alpaca.Weld.Utils;
@@ -12,6 +13,8 @@ namespace Alpaca.Weld
         
         protected AbstractInjectionPoint(IComponent declaringComponent, MemberInfo member, Type type, QualifierAttribute[] qualifiers)
         {
+            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+
             DeclaringComponent = declaringComponent;
             Member = member;
             ComponentType = type;
