@@ -1,8 +1,10 @@
 ﻿using Alpaca.Injects;
+using Alpaca.Web.WebApi;
 
 namespace MyTest
 {
     [Configuration]
+    [EnableWebApi]
     public class AlpacaConfig
     {
         [Inject]

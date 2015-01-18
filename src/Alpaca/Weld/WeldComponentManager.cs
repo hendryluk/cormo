@@ -10,7 +10,6 @@ namespace Alpaca.Weld
 {
     public class WeldComponentManager : IComponentManager
     {
-        private ConcurrentBag<IWeldComponent> _undeployedComponents;
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
@@ -19,12 +18,11 @@ namespace Alpaca.Weld
             var components = _typeComponents.GetOrAdd(type, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
-            var undeployeds = components.Where(x => !_allComponents.Contains(x));
+            var newComponents = components.Where(x => !_allComponents.Contains(x));
 
-            foreach(var undeployed in undeployeds)
+            foreach(var c in newComponents)
             {
-                _allComponents.Add(undeployed);
-                _undeployedComponents.Add(undeployed);
+                _allComponents.Add(c);
             }
 
             return components;
@@ -90,15 +88,11 @@ namespace Alpaca.Weld
         public void Deploy(WeldEnvironment environment)
         {
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
-            _undeployedComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
-            
-            while (_undeployedComponents.Any())
-                DeployComponents();
-
-            ResolveConfigurations(environment);
+            ValidateComponents();
+            ExecuteConfigurations(environment);
         }
 
-        private void ResolveConfigurations(WeldEnvironment environment)
+        private void ExecuteConfigurations(WeldEnvironment environment)
         {
             foreach (var config in environment.Configurations)
             {
@@ -106,11 +100,9 @@ namespace Alpaca.Weld
             }
         }
 
-        private void DeployComponents()
+        private void ValidateComponents()
         {
-            var toBeDeployed = _undeployedComponents;
-            _undeployedComponents = new ConcurrentBag<IWeldComponent>();
-            foreach (var component in toBeDeployed)
+            foreach (var component in _allComponents.ToArray())
             {
                 Validate(component, new IComponent[0]);
             }
@@ -126,9 +118,11 @@ namespace Alpaca.Weld
             var producer = component as AbstractProducer;
             if (producer != null)
                 Validate(producer.DeclaringComponent, nextPath);
-            
+
             foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
-                Validate(inject.Component, nextPath);
+            {
+                Validate(inject.Component, (inject.Scope is NormalScopeAttribute)? new IComponent[0] : nextPath);
+            }
         }
 
         public bool IsWrappedType(Type type)
@@ -149,6 +143,11 @@ namespace Alpaca.Weld
         private bool IsNormalScope(Attribute scope)
         {
             return scope is NormalScopeAttribute;
+        }
+
+        public object GetReference(Type type, params QualifierAttribute[] qualifiers)
+        {
+            return GetReference(GetComponent(type, qualifiers));
         }
     }
 

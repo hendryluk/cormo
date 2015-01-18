@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 
 namespace Alpaca.Weld
@@ -9,5 +10,6 @@ namespace Alpaca.Weld
         IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         void Inject(object target);
         IComponent Component { get; }
+        ScopeAttribute Scope { get; }
     }
 }

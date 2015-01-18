@@ -44,18 +44,15 @@ namespace Alpaca.Weld.Test.Injection
         [Test]
         public void CanInjectFromProducer()
         {
-            _deployer.AddType(typeof(RepoProducer));
+            _deployer.AddTypes(typeof(RepoProducer), typeof(Target));
             _deployer.AddProducerMethods(typeof(RepoProducer).GetMethod("ProduceRepo"));
-            _deployer.AddType(typeof(Target));
-            var target = _deployer.AddType(typeof(Target));
-
-            Assert.IsInstanceOf<RepositoryImpl>(GetInstance<Target>(target)._repo);
+            Assert.IsInstanceOf<RepositoryImpl>(GetInstance<Target>()._repo);
         }
 
-        private T GetInstance<T>(IComponent component)
+        private T GetInstance<T>()
         {
             _deployer.Deploy();
-            return (T)_manager.GetReference(component);
+            return (T)_manager.GetReference(typeof(T));
         }
     }
 }

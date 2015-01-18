@@ -8,5 +8,6 @@ namespace Alpaca.Injects
         IComponent GetComponent(IInjectionPoint injectionPoint);
         object GetReference(IComponent component);
         object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component);
+        object GetReference(Type type, params QualifierAttribute[] qualifiers);
     }
 }

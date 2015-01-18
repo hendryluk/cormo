@@ -28,7 +28,7 @@ namespace Alpaca.Weld
             var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
                 where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
                 from type in assembly.GetLoadableTypes()
-                where (type.IsPublic || type.IsNestedPublic) && type.IsClass && !type.IsPrimitive
+                where type.IsVisible && type.IsClass && !type.IsPrimitive
                 select type).ToArray();
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
@@ -74,27 +74,45 @@ namespace Alpaca.Weld
                 _environment.AddComponent(c);
         }
 
-        public void AddTypes(Type[] types)
+        public void AddTypes(params Type[] types)
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
 
+            var configs = GetConfigs(components);
             foreach (var c in components)
-            {
                 _environment.AddComponent(c);
-                if (c.Type.HasAttribute<ConfigurationAttribute>())
-                    _environment.AddConfiguration(c);
-            }
+            
+            foreach(var c in configs)
+                _environment.AddConfiguration(c);
         }
 
-        public IWeldComponent AddType(Type type)
+        private static IEnumerable<IWeldComponent> GetConfigs(IWeldComponent[] components)
         {
-            var component = MakeComponent(type);
-            _environment.AddComponent(component);
-            
-            if (type.HasAttribute<ConfigurationAttribute>())
-                _environment.AddConfiguration(component);    
-            
-            return component;
+            var componentMap = components.ToDictionary(x => x.Type, x => x);
+            var configs = new List<IWeldComponent>();
+            var newConfigs = components.Where(x => x.Type.HasAttribute<ConfigurationAttribute>()).ToArray();
+
+            while (newConfigs.Any())
+            {
+                configs.AddRange(newConfigs);
+
+                var imports = from config in newConfigs
+                    from import in config.Type.GetRecursiveAttributes<ImportAttribute>()
+                    from importType in import.Types
+                    select new {config.Type, importType};
+
+                newConfigs = imports.Select(x =>
+                {
+                    IWeldComponent component;
+                    if (componentMap.TryGetValue(x.importType, out component))
+                        return component;
+                    throw new InvalidComponentException(x.importType,
+                        string.Format("Could not import a non-component type from Configuration [{0}]", x.Type));
+                })
+                .Except(configs)
+                .ToArray();
+            }
+            return configs;
         }
 
         public IWeldComponent MakeProducerField(FieldInfo field)

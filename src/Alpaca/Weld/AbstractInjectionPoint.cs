@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 
@@ -46,6 +47,11 @@ namespace Alpaca.Weld
         public IComponent Component
         {
             get { return _lazyComponents.Value; }    
+        }
+
+        public ScopeAttribute Scope
+        {
+            get { return Component.Scope; }
         }
 
         public void Inject(object target)

@@ -6,7 +6,6 @@ namespace Alpaca.Weld.Test.Injection
 {
     public class GenericsInjectTest
     {
-        private WeldEnvironment _env;
         private WeldComponentManager _manager;
         private AttributeScanDeployer _deployer;
 
@@ -41,33 +40,28 @@ namespace Alpaca.Weld.Test.Injection
         [Test]
         public void TestInjectionOfOpenGenericComponent()
         {
-            _deployer.AddType(typeof(IRepository<>));
-            var target = _deployer.AddType(typeof(Target));
-            
-            Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>(target)._repo);
+            _deployer.AddTypes(typeof(IRepository<>), typeof(Target));
+            Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>()._repo);
         }
 
-        private T GetInstance<T>(IComponent component)
+        private T GetInstance<T>()
         {
             _deployer.Deploy();
-            return (T)_manager.GetReference(component);
+            return (T)_manager.GetReference(typeof(T));
         }
 
         [Test]
         public void TestInjectionOfClosedGenericComponent()
         {
-            _deployer.AddType(typeof(IntRepository));
-            var target = _deployer.AddType(typeof(Target));
-
-            Assert.IsInstanceOf<IntRepository>(GetInstance<Target>(target)._repo);
+            _deployer.AddTypes(typeof(IntRepository), typeof(Target));
+            Assert.IsInstanceOf<IntRepository>(GetInstance<Target>()._repo);
         }
 
         [Test]
         [ExpectedException(typeof(UnsatisfiedDependencyException))]
         public void TestMismatchWithClosedGenericComponent()
         {
-            _deployer.AddType(typeof(StringRepository));
-            _deployer.AddType(typeof(Target));
+            _deployer.AddTypes(typeof(StringRepository), typeof(Target));
 
             try
             {
