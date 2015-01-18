@@ -6,13 +6,10 @@ namespace Alpaca.Web.Weld
 {
     public class WebApiRegistrar
     {
-        [Inject] IAppBuilder _appBuilder;
-        [Inject] HttpConfiguration _httpConfiguration;
-
-        [PostConstruct]
-        public virtual void Init()
+        [Inject]
+        public virtual void Setup(IAppBuilder appBuilder, HttpConfiguration httpConfiguration)
         {
-            _appBuilder.UseWebApi(_httpConfiguration);
+            appBuilder.UseWebApi(httpConfiguration);
         }
 
         public class Defaults
