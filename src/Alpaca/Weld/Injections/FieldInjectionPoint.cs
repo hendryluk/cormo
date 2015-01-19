@@ -26,17 +26,10 @@ namespace Alpaca.Weld.Injections
 
         protected override InjectPlan BuildInjectPlan(IComponent component)
         {
-            var manager = DeclaringComponent.Manager;
-            if (IsCacheable)
-            {
-                var instance = manager.GetReference(component);
-                return target => SetValue(target, instance);
-            }
-
-            return target =>
-            {
-                var instance = manager.GetReference(component);
-                return SetValue(target, instance);
+           return (target, context) =>
+           {
+               var value = GetValue(context);
+               return SetValue(target, value);
             };
         }
 

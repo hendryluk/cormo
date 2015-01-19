@@ -36,10 +36,10 @@ namespace Alpaca.Weld.Components
                 .Where(x => x.Member == _method)
                 .OrderBy(x => x.Position).ToArray();
 
-            return () =>
+            return context =>
             {
-                var containingObject = Manager.GetReference(DeclaringComponent);
-                var paramVals = paramInjects.Select(p => p.GetValue()).ToArray();
+                var containingObject = Manager.GetReference(DeclaringComponent, context);
+                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
 
                 return _method.Invoke(containingObject, paramVals);
             };

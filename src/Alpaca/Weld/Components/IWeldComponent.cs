@@ -11,6 +11,5 @@ namespace Alpaca.Weld.Components
 
         bool IsProxyRequired { get; }
         bool IsConcrete { get; }
-        object Build();
     }
 }

@@ -7,6 +7,7 @@ using Alpaca.Injects;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Weld.Components;
+using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Injections;
 using Alpaca.Weld.Validations;
 
@@ -51,14 +52,20 @@ namespace Alpaca.Weld
             return components.Single();
         }
 
-        public object GetReference(IComponent component)
+        public object GetReference(IComponent component, ICreationalContext context)
         {
-            return ((IWeldComponent) component).Build();
+            // TODO: scope context
+            return component.Create(context);
         }
 
-        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component)
+        public ICreationalContext CreateCreationalContext(IContextual contextual)
         {
-            return GetReference(component);
+            return new WeldCreationalContext(contextual);
+        }
+
+        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext context)
+        {
+            return GetReference(component, context);
         }
 
         public void Deploy(WeldEnvironment environment)
@@ -72,7 +79,7 @@ namespace Alpaca.Weld
         {
             foreach (var config in environment.Configurations)
             {
-                GetReference(config);
+                GetReference(config, CreateCreationalContext(config));
             }
         }
 
@@ -128,7 +135,8 @@ namespace Alpaca.Weld
 
         public object GetReference(Type type, params QualifierAttribute[] qualifiers)
         {
-            return GetReference(GetComponent(type, qualifiers));
+            var component = GetComponent(type, qualifiers);
+            return GetReference(component, CreateCreationalContext(component));
         }
     }
 }

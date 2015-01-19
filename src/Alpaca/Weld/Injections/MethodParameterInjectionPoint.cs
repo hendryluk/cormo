@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
+using Alpaca.Utils;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Utils;
 
@@ -11,26 +12,13 @@ namespace Alpaca.Weld.Injections
     public class MethodParameterInjectionPoint : AbstractInjectionPoint
     {
         private readonly ParameterInfo _param;
-        private readonly Lazy<BuildPlan> _lazyGetValuePlan = new Lazy<BuildPlan>(); 
+        
         public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, QualifierAttribute[] qualifiers) 
             : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, qualifiers)
         {
             _param = paramInfo;
             IsConstructor = _param.Member is ConstructorInfo;
-            _lazyGetValuePlan = new Lazy<BuildPlan>(BuildGetValuePlan);
-        }
-
-        private BuildPlan BuildGetValuePlan()
-        {
-            var manager = DeclaringComponent.Manager;
-            var component = Component;
-            if (IsCacheable)
-            {
-                var instance = manager.GetReference(component);
-                return () => instance;
-            }
-
-            return () => manager.GetReference(component);
+            
         }
 
         public bool IsConstructor { get; private set; }
@@ -57,11 +45,6 @@ namespace Alpaca.Weld.Injections
         protected override InjectPlan BuildInjectPlan(IComponent component)
         {
             throw new NotSupportedException();
-        }
-
-        public object GetValue()
-        {
-            return _lazyGetValuePlan.Value();
         }
 
         public override string ToString()

@@ -24,7 +24,8 @@ namespace Alpaca.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return () => Activator.CreateInstance(Type, new object[]{Qualifiers.ToArray(), _components});
+            return context => Activator.CreateInstance(Type, 
+                Qualifiers.ToArray(), _components, context);
         }
 
         public override bool IsConcrete

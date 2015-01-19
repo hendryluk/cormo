@@ -26,9 +26,9 @@ namespace Alpaca.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return () =>
+            return context =>
             {
-                var containingObject = Manager.GetReference(DeclaringComponent);
+                var containingObject = Manager.GetReference(DeclaringComponent, context);
                 return _property.GetValue(containingObject);
             };
         }

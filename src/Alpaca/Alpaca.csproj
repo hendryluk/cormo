@@ -43,7 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaApplication.cs" />
-    <Compile Include="Contexts\IComponentContext.cs" />
+    <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\NormalScopeAttribute.cs" />
     <Compile Include="Contexts\RequestScopedAttribute.cs" />
@@ -72,6 +72,7 @@
     <Compile Include="Injects\Exceptions\UnsatisfiedDependencyException.cs" />
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
     <Compile Include="Utils\AttributeUtils.cs" />
+    <Compile Include="Utils\CacheUtils.cs" />
     <Compile Include="Weld\Injections\AbstractInjectionPoint.cs" />
     <Compile Include="Weld\Components\AbstractProducer.cs" />
     <Compile Include="Weld\AttributeScanDeployer.cs" />

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects;
 using Alpaca.Weld.Injections;
@@ -53,9 +54,14 @@ namespace Alpaca.Weld.Components
 
         public abstract IWeldComponent Resolve(Type requestedType);
 
-        public object Build()
+        public object Create(ICreationalContext context)
         {
-            return _lazyBuildPlan.Value();
+            return _lazyBuildPlan.Value(context);
+        }
+
+        public void Destroy()
+        {
+            throw new NotImplementedException();
         }
 
         protected void TransferInjectionPointsTo(AbstractComponent component, GenericUtils.Resolution resolution)

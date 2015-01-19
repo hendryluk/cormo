@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Weld.Validations;
 
@@ -10,16 +11,18 @@ namespace Alpaca.Weld.Components
     {
         private readonly QualifierAttribute[] _qualifiers;
         private readonly IWeldComponent[] _components;
+        private readonly ICreationalContext _creationalContext;
 
-        public Instance(QualifierAttribute[] qualifiers, IWeldComponent[] components)
+        public Instance(QualifierAttribute[] qualifiers, IWeldComponent[] components, ICreationalContext creationalContext)
         {
             _qualifiers = qualifiers;
             _components = components;
+            _creationalContext = creationalContext;
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _components.Select(x => x.Manager.GetReference(x)).Cast<T>().GetEnumerator();
+            return _components.Select(x => x.Manager.GetReference(x, _creationalContext)).Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

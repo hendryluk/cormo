@@ -67,16 +67,16 @@ namespace Alpaca.Weld.Components
             var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
 
             var create = ctorInject == null? 
-                new BuildPlan(() => Activator.CreateInstance(Type, true)): 
-                () => ctorInject(null);
+                new BuildPlan(context => Activator.CreateInstance(Type, true)): 
+                context => ctorInject(null, context);
 
-            return () =>
+            return context =>
             {
-                var instance = create();
+                var instance = create(context);
                 foreach (var i in otherInjects)
-                    i.Inject(instance);
+                    i.Inject(instance, context);
                 foreach (var i in methodInject)
-                    i(instance);
+                    i(instance, context);
                 foreach (var post in _postConstructs)
                     post.Invoke(instance, new object[0]);
 
@@ -89,10 +89,10 @@ namespace Alpaca.Weld.Components
             return from g in injects.GroupBy(x => x.Member) 
                 let method = (MethodBase)g.Key 
                 let paramInjects = g.OrderBy(x => x.Position).ToArray() 
-                select (InjectPlan) (x =>
+                select (InjectPlan) ((target, context) =>
                 {
-                    var paramVals = paramInjects.Select(p => p.GetValue()).ToArray();
-                    return method.Invoke(x, paramVals);
+                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                    return method.Invoke(target, paramVals);
                 });
         }
 
