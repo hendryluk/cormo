@@ -10,8 +10,8 @@ namespace Alpaca.Weld.Component
     {
         private readonly IWeldComponent[] _components;
 
-        public InstanceComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, IComponentManager manager, IWeldComponent[] components) 
-            : base(type, qualifiers, typeof(DependentAttribute), manager)
+        public InstanceComponent(Type baseType, IEnumerable<QualifierAttribute> qualifiers, IComponentManager manager, IWeldComponent[] components) 
+            : base(typeof(Instance<>).MakeGenericType(baseType), qualifiers, typeof(DependentAttribute), manager)
         {
             _components = components;
         }
@@ -23,8 +23,7 @@ namespace Alpaca.Weld.Component
 
         protected override BuildPlan GetBuildPlan()
         {
-            var type = typeof (Instance<>).MakeGenericType(Type);
-            return () => Activator.CreateInstance(type, Type, Qualifiers.ToArray(), _components);
+            return () => Activator.CreateInstance(Type, new object[]{Qualifiers.ToArray(), _components});
         }
 
         public override bool IsConcrete

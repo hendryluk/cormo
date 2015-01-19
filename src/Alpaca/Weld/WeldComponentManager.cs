@@ -24,19 +24,16 @@ namespace Alpaca.Weld
             var components = _typeComponents.GetOrAdd(type, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
-            var newComponents = components.Where(x => !_allComponents.Contains(x));
+            var matched = components.Where(x => x.CanSatisfy(qualifiers)).ToArray();
+            var newComponents = matched.Where(x => !_allComponents.Contains(x));
 
             foreach(var c in newComponents)
-            {
                 _allComponents.Add(c);
-            }
-
+            
             if (isWrapped)
-            {
-                components = new IWeldComponent[] {new InstanceComponent(type, qualifiers, this, components)};
-            }
-
-            return components;
+                matched = new IWeldComponent[] { new InstanceComponent(type, qualifiers, this, matched) };
+            
+            return matched;
         }
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
