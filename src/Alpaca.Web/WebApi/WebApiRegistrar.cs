@@ -1,5 +1,6 @@
 ﻿using System.Web.Http;
-using Alpaca.Inject;
+using Alpaca.Injects;
+using Alpaca.Injects;
 using Owin;
 
 namespace Alpaca.Web.WebApi

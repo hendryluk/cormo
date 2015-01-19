@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alpaca.Inject;
-using Alpaca.Injects.Exceptions;
 
 namespace Alpaca.Injects.Exceptions
 {

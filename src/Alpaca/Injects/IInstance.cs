@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Alpaca.Inject
+namespace Alpaca.Injects
 {
     public interface IInstance<out T>: IEnumerable<T>
     {

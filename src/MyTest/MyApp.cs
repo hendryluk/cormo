@@ -1,5 +1,5 @@
 ﻿using System.Web.Http;
-using Alpaca.Inject;
+using Alpaca.Injects;
 
 namespace MyTest
 {

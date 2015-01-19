@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alpaca.Inject
+namespace Alpaca.Injects
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class DecoratorAttribute: Attribute

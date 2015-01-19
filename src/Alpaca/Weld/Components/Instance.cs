@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Weld.Validations;
 
 namespace Alpaca.Weld.Components

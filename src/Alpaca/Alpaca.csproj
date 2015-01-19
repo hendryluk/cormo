@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaApplication.cs" />
+    <Compile Include="Contexts\IComponentContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\NormalScopeAttribute.cs" />
     <Compile Include="Contexts\RequestScopedAttribute.cs" />

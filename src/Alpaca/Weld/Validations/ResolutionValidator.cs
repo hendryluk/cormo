@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Injects.Exceptions;
 

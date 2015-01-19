@@ -3,7 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alpaca.Contexts;
-using Alpaca.Inject;
+using Alpaca.Injects;
+using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Injections;
@@ -118,6 +119,11 @@ namespace Alpaca.Weld
         private bool IsNormalScope(Type scope)
         {
             return typeof(NormalScopeAttribute).IsAssignableFrom(scope);
+        }
+
+        public T GetReference<T>(params QualifierAttribute[] qualifiers)
+        {
+            return (T) GetReference(typeof (T), qualifiers);
         }
 
         public object GetReference(Type type, params QualifierAttribute[] qualifiers)

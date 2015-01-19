@@ -1,4 +1,4 @@
-﻿namespace Alpaca.Inject
+﻿namespace Alpaca.Injects
 {
     public sealed class DefaultAttribute: QualifierAttribute
     {

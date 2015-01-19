@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Alpaca.Inject;
+using Alpaca.Injects;
+using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld.Components

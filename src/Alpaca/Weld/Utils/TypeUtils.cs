@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Util;
-using Alpaca.Weld.Utils;
+using Alpaca.Utils;
 
 namespace Alpaca.Weld.Utils
 {

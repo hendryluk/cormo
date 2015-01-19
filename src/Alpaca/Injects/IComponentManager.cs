@@ -1,6 +1,7 @@
 ﻿using System;
+using Alpaca.Injects;
 
-namespace Alpaca.Inject
+namespace Alpaca.Injects
 {
     public interface IComponentManager
     {
@@ -9,5 +10,6 @@ namespace Alpaca.Inject
         object GetReference(IComponent component);
         object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component);
         object GetReference(Type type, params QualifierAttribute[] qualifiers);
+        T GetReference<T>(params QualifierAttribute[] qualifiers);
     }
 }

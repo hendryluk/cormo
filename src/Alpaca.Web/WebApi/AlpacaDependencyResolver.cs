@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http.Dependencies;
-using Alpaca.Inject;
+using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 
 namespace Alpaca.Web.WebApi
