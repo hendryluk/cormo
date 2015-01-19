@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Alpaca.Injects
+namespace Alpaca.Inject
 {
     public interface IInjectionPoint
     {

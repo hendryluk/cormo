@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
-using Alpaca.Injects;
+using Alpaca.Inject;
+using Alpaca.Injects.Exceptions;
 using Alpaca.Injects.Exceptions;
 
-namespace Alpaca.Weld.Validation
+namespace Alpaca.Weld.Validations
 {
     public static class ResolutionValidator
     {

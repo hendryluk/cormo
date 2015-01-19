@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Alpaca.Injects;
-using Alpaca.Web.Weld.Context;
-using Alpaca.Weld.Context;
 using Microsoft.Owin;
 using Microsoft.Owin.Extensions;
 using Owin;

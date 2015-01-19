@@ -2,26 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Injects;
+using Alpaca.Inject;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld.Injection
+namespace Alpaca.Weld.Injections
 {
-    public class FieldInjectionPoint : AbstractInjectionPoint
+    public class PropertyInjectionPoint: AbstractInjectionPoint
     {
-        private readonly FieldInfo _field;
+        private readonly PropertyInfo _property;
 
-        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, QualifierAttribute[] qualifiers) :
-            base(declaringComponent, field, field.FieldType, qualifiers)
+        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, QualifierAttribute[] qualifiers):
+            base(declaringComponent, property, property.PropertyType, qualifiers)
         {
-            InjectionValidator.Validate(field);
-            _field = field;
+            InjectionValidator.Validate(property);
+            _property = property;
         }
 
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
-            var field = GenericUtils.TranslateFieldType(_field, translations);
-            return new FieldInjectionPoint(component, field, Qualifiers.ToArray());
+            var property = GenericUtils.TranslatePropertyType(_property, translations);
+            return new PropertyInjectionPoint(component, property, Qualifiers.ToArray());
         }
 
         protected override InjectPlan BuildInjectPlan(IComponent component)
@@ -42,14 +42,14 @@ namespace Alpaca.Weld.Injection
 
         private object SetValue(object target, object instance)
         {
-            _field.SetValue(target, instance);
+            _property.SetValue(target, instance);
             return instance;
         }
 
         public override string ToString()
         {
             // TODO prettify
-            return _field.ToString();
+            return _property.ToString();
         }
     }
 }

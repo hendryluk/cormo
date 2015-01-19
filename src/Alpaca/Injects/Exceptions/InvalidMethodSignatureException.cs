@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Alpaca.Injects.Exceptions;
 
 namespace Alpaca.Injects.Exceptions
 {

@@ -1,4 +1,4 @@
-﻿namespace Alpaca.Weld.Context
+﻿namespace Alpaca.Weld.Contexts
 {
     public interface IComponentStore
     {

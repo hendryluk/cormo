@@ -1,10 +1,4 @@
-﻿using System.Diagnostics;
-using Alpaca.Contexts;
-using Alpaca.Injects;
-using Alpaca.Web;
-using Alpaca.Web.Weld;
-using Alpaca.Weld;
-using Alpaca.Weld.Context;
+﻿using Alpaca.Web;
 using Microsoft.Owin;
 using Owin;
 

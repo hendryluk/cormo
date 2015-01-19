@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Alpaca.Contexts;
 
-namespace Alpaca.Injects
+namespace Alpaca.Inject
 {
     public interface IComponent
     {

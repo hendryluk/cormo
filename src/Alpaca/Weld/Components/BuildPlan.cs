@@ -1,4 +1,4 @@
-namespace Alpaca.Weld.Component
+namespace Alpaca.Weld.Components
 {
     public delegate object BuildPlan();
 }

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Alpaca.Contexts;
-using Alpaca.Injects;
+using Alpaca.Inject;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Utils;
-using Alpaca.Weld.Component;
-using Alpaca.Weld.Injection;
+using Alpaca.Util;
+using Alpaca.Weld.Components;
+using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
-using Castle.Core.Internal;
 
 namespace Alpaca.Weld
 {

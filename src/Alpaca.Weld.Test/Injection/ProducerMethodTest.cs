@@ -1,4 +1,4 @@
-﻿using Alpaca.Injects;
+﻿using Alpaca.Inject;
 using NUnit.Framework;
 
 namespace Alpaca.Weld.Test.Injection

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Injects;
+using Alpaca.Inject;
 
-namespace Alpaca.Utils
+namespace Alpaca.Util
 {
     public static class AttributeUtils
     {

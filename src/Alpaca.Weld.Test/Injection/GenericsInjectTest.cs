@@ -1,4 +1,4 @@
-﻿using Alpaca.Injects;
+﻿using Alpaca.Inject;
 using Alpaca.Injects.Exceptions;
 using NUnit.Framework;
 

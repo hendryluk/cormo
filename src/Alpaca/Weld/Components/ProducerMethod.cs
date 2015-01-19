@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Injects;
-using Alpaca.Weld.Injection;
+using Alpaca.Inject;
+using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld.Component
+namespace Alpaca.Weld.Components
 {
     public class ProducerMethod : AbstractProducer
     {

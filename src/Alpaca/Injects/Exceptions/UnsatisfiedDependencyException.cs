@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
-using Alpaca.Weld;
+using Alpaca.Inject;
+using Alpaca.Injects.Exceptions;
 
 namespace Alpaca.Injects.Exceptions
 {

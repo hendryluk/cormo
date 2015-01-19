@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Injects;
-using Alpaca.Weld.Component;
+using Alpaca.Inject;
+using Alpaca.Weld.Components;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld.Injection
+namespace Alpaca.Weld.Injections
 {
     public class MethodParameterInjectionPoint : AbstractInjectionPoint
     {

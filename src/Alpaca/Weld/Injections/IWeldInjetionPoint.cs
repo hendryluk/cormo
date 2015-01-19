@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alpaca.Injects;
+using Alpaca.Inject;
 
-namespace Alpaca.Weld.Injection
+namespace Alpaca.Weld.Injections
 {
     public interface IWeldInjetionPoint : IInjectionPoint
     {

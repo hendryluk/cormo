@@ -1,7 +1,7 @@
 ﻿using System;
 using Alpaca.Contexts;
 
-namespace Alpaca.Weld.Context
+namespace Alpaca.Weld.Contexts
 {
     public abstract class AbstractContext: IContext
     {

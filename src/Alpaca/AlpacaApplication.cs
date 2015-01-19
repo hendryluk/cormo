@@ -1,5 +1,4 @@
-﻿using Alpaca.Injects;
-using Alpaca.Weld;
+﻿using Alpaca.Weld;
 
 namespace Alpaca
 {

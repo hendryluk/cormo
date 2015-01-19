@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Alpaca.Injects;
+using Alpaca.Inject;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld.Injection
+namespace Alpaca.Weld.Injections
 {
     public abstract class AbstractInjectionPoint : IWeldInjetionPoint
     {

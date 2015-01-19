@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Alpaca.Contexts;
-using Alpaca.Injects;
+using Alpaca.Inject;
 
-namespace Alpaca.Weld.Component
+namespace Alpaca.Weld.Components
 {
     public class InstanceComponent : AbstractComponent
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alpaca.Injects
+namespace Alpaca.Inject
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class ConditionalOnMissingBeanAttribute: Attribute

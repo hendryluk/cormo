@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Alpaca.Contexts
+﻿namespace Alpaca.Contexts
 {
     public sealed class RequestScopedAttribute:NormalScopeAttribute
     {

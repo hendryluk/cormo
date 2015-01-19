@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alpaca.Contexts;
-using Alpaca.Injects;
+using Alpaca.Inject;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Weld.Component;
-using Alpaca.Weld.Injection;
-using Alpaca.Weld.Validation;
+using Alpaca.Weld.Components;
+using Alpaca.Weld.Injections;
+using Alpaca.Weld.Validations;
 
 namespace Alpaca.Weld
 {

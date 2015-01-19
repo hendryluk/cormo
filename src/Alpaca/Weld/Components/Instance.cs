@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Alpaca.Injects;
-using Alpaca.Weld.Validation;
+using Alpaca.Inject;
+using Alpaca.Weld.Validations;
 
-namespace Alpaca.Weld.Component
+namespace Alpaca.Weld.Components
 {
     public class Instance<T>: IInstance<T>
     {

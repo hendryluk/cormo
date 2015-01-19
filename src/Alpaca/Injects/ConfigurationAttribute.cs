@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Alpaca.Injects
+namespace Alpaca.Inject
 {
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class ConfigurationAttribute: Attribute
