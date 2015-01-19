@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Component
 {
     public abstract class AbstractProducer: AbstractComponent
     {

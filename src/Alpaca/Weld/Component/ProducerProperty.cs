@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Component
 {
     public class ProducerProperty : AbstractProducer
     {

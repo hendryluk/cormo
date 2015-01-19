@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
+using Alpaca.Weld.Component;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Injection
 {
     public class MethodParameterInjectionPoint : AbstractInjectionPoint
     {

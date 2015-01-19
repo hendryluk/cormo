@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Alpaca.Contexts;
 using Alpaca.Injects;
+using Alpaca.Weld.Injection;
 using Alpaca.Weld.Utils;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Component
 {
     public abstract class AbstractComponent : IWeldComponent
     {

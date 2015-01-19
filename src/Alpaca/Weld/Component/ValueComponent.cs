@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Alpaca.Contexts;
 using Alpaca.Injects;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Component
 {
     public class ValueComponent : AbstractComponent
     {

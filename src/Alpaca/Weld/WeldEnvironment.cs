@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Alpaca.Injects;
+using Alpaca.Weld.Component;
 
 namespace Alpaca.Weld
 {

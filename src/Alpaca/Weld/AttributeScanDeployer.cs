@@ -6,6 +6,8 @@ using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Utils;
+using Alpaca.Weld.Component;
+using Alpaca.Weld.Injection;
 using Alpaca.Weld.Utils;
 using Castle.Core.Internal;
 

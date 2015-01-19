@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Alpaca.Injects;
 
-namespace Alpaca.Weld
+namespace Alpaca.Weld.Component
 {
     public interface IWeldComponent : IComponent
     {

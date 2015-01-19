@@ -1,4 +1,6 @@
-﻿namespace Alpaca.Weld
+﻿using Alpaca.Weld.Component;
+
+namespace Alpaca.Weld
 {
     public class Validator
     {

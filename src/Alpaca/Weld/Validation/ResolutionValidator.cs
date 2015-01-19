@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 
-namespace Alpaca.Weld.Validations
+namespace Alpaca.Weld.Validation
 {
     public static class ResolutionValidator
     {
