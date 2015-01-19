@@ -5,16 +5,15 @@ namespace Alpaca
 {
     public class AlpacaApplication
     {
-        private AttributeScanDeployer _scanner;
-        public IComponentManager ComponentManager { get; private set; }
-        public WeldEnvironment Environment { get; private set; }
-        public WeldComponentManager Manager { get; set; }
+        public AttributeScanDeployer Deployer { get; private set; }
+        private WeldEnvironment Environment { get; set; }
+        private WeldComponentManager Manager { get; set; }
 
         private AlpacaApplication()
         {
             Environment = new WeldEnvironment();
             Manager = new WeldComponentManager();
-            _scanner = new AttributeScanDeployer(Manager, Environment);
+            Deployer = new AttributeScanDeployer(Manager, Environment);
         }
 
         public static AlpacaApplication AutoScan()
@@ -26,7 +25,7 @@ namespace Alpaca
 
         private void Scan()
         {
-            _scanner.AutoScan();
+            Deployer.AutoScan();
         }
 
         public static void Run()
@@ -36,7 +35,7 @@ namespace Alpaca
 
         public void Deploy()
         {
-            _scanner.Deploy();
+            Deployer.Deploy();
         }
     }
 }

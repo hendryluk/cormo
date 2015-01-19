@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Alpaca.Contexts;
@@ -10,7 +11,7 @@ namespace Alpaca.Weld
     {
         private readonly FieldInfo _field;
 
-        public ProducerField(FieldInfo field, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
+        public ProducerField(FieldInfo field, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
             : base(field, field.FieldType, qualifiers, scope, manager)
         {
             _field = field;

@@ -2,8 +2,9 @@
 using Alpaca.Injects;
 using Owin;
 
-namespace Alpaca.Web.Weld
+namespace Alpaca.Web.WebApi
 {
+    [Configuration]
     public class WebApiRegistrar
     {
         [Inject]
@@ -14,11 +15,16 @@ namespace Alpaca.Web.Weld
 
         public class Defaults
         {
+            [Inject] private IComponentManager _manager;
+
             [Produces]
             [ConditionalOnMissingBean]
             public virtual HttpConfiguration GetHttpConfiguration()
             {
-                return new HttpConfiguration();
+                var config = new HttpConfiguration();
+                config.MapHttpAttributeRoutes();
+                config.DependencyResolver = new AlpacaDependencyResolver(_manager);
+                return config;
             }
         }
     }

@@ -49,7 +49,7 @@ namespace Alpaca.Weld
             get { return _lazyComponents.Value; }    
         }
 
-        public ScopeAttribute Scope
+        public Type Scope
         {
             get { return Component.Scope; }
         }

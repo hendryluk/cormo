@@ -5,7 +5,9 @@ using System.Reflection;
 using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
+using Alpaca.Utils;
 using Alpaca.Weld.Utils;
+using Castle.Core.Internal;
 
 namespace Alpaca.Weld
 {
@@ -26,31 +28,36 @@ namespace Alpaca.Weld
             var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
             var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
-                where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
-                from type in assembly.GetLoadableTypes()
-                where type.IsVisible && type.IsClass && !type.IsPrimitive
-                select type).ToArray();
+                            where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
+                            from type in assembly.GetLoadableTypes()
+                            where type.IsVisible && type.IsClass && !type.IsPrimitive
+                            select type).ToArray();
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
             var producerFields = (from type in types.AsParallel()
-                from field in type.GetFields(AllBindingFlags)
-                where field.HasAttribute<ProducesAttribute>()
-                select field).ToArray();
+                                    from field in type.GetFields(AllBindingFlags)
+                                    where field.HasAttributeRecursive<ProducesAttribute>()
+                                    select field).ToArray();
 
             var producerMethods = (from type in types.AsParallel()
-                from method in type.GetMethods(AllBindingFlags)
-                where method.HasAttribute<ProducesAttribute>()
-                select method).ToArray();
+                                    from method in type.GetMethods(AllBindingFlags)
+                                    where method.HasAttributeRecursive<ProducesAttribute>()
+                                    select method).ToArray();
 
             var producerProperties = (from type in types.AsParallel()
-                from property in type.GetProperties(AllBindingFlags)
-                where property.HasAttribute<ProducesAttribute>()
-                select property).ToArray();
+                                      from property in type.GetProperties(AllBindingFlags)
+                                      where property.HasAttributeRecursive<ProducesAttribute>()
+                                      select property).ToArray();
 
+            AddValue(_manager);
             AddTypes(componentTypes);
             AddProducerMethods(producerMethods);
             AddProducerFields(producerFields);
             AddProducerProperties(producerProperties);
+
+            var configs = GetConfigs(_environment.Components);
+            foreach (var c in configs)
+                _environment.AddConfiguration(c);
         }
 
         public void AddProducerMethods(params MethodInfo[] methods)
@@ -78,26 +85,30 @@ namespace Alpaca.Weld
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
 
-            var configs = GetConfigs(components);
             foreach (var c in components)
                 _environment.AddComponent(c);
-            
-            foreach(var c in configs)
-                _environment.AddConfiguration(c);
         }
 
-        private static IEnumerable<IWeldComponent> GetConfigs(IWeldComponent[] components)
+        public void AddValue(object instance, params QualifierAttribute[] qualifiers)
+        {
+            _environment.AddComponent(new ValueComponent(instance,
+                    new QualifierAttribute[0], typeof(DependentAttribute),
+                    _manager));
+        }
+        
+
+        private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components)
         {
             var componentMap = components.ToDictionary(x => x.Type, x => x);
             var configs = new List<IWeldComponent>();
-            var newConfigs = components.Where(x => x.Type.HasAttribute<ConfigurationAttribute>()).ToArray();
+            var newConfigs = componentMap.Values.Where(x => x.Type.HasAttributeRecursive<ConfigurationAttribute>()).ToArray();
 
             while (newConfigs.Any())
             {
                 configs.AddRange(newConfigs);
 
                 var imports = from config in newConfigs
-                    from import in config.Type.GetRecursiveAttributes<ImportAttribute>()
+                    from import in config.Type.GetAttributesRecursive<ImportAttribute>()
                     from importType in import.Types
                     select new {config.Type, importType};
 
@@ -118,7 +129,7 @@ namespace Alpaca.Weld
         public IWeldComponent MakeProducerField(FieldInfo field)
         {
             var qualifiers = field.GetQualifiers();
-            var scope = field.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+            var scope = field.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
             return new ProducerField(field, qualifiers, scope, _manager);
         }
@@ -126,7 +137,7 @@ namespace Alpaca.Weld
         public IWeldComponent MakeProducerProperty(PropertyInfo property)
         {
             var qualifiers = property.GetQualifiers();
-            var scope = property.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+            var scope = property.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
             return new ProducerProperty(property, qualifiers, scope, _manager);
         }
@@ -134,8 +145,8 @@ namespace Alpaca.Weld
         public IWeldComponent MakeProducerMethod(MethodInfo method)
         {
             var qualifiers = method.GetQualifiers();
-            var scope = method.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
-            
+            var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
+
             var producer = new ProducerMethod(method, qualifiers, scope, _manager);
             var injects = ToMethodInjections(producer, method).ToArray();
             producer.AddInjectionPoints(injects);
@@ -150,9 +161,9 @@ namespace Alpaca.Weld
             var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var iFields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var postConstructs = methods.Where(x => x.HasAttribute<PostConstructAttribute>()).ToArray();
-            var preDestroys = methods.Where(x => x.HasAttribute<PreDestroyAttribute>()).ToArray();
-            var scope = type.GetRecursiveAttributes<ScopeAttribute>().FirstOrDefault() ?? new DependentAttribute();
+            var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
+            var preDestroys = methods.Where(x => x.HasAttributeRecursive<PreDestroyAttribute>()).ToArray();
+            var scope = type.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");

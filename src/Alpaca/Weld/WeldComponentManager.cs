@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
+using Alpaca.Weld.Validations;
 
 namespace Alpaca.Weld
 {
@@ -13,8 +15,11 @@ namespace Alpaca.Weld
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
-        private IEnumerable<IWeldComponent> GetComponentsForType(Type type)
+        private IEnumerable<IWeldComponent> GetComponents(Type type, IEnumerable<QualifierAttribute> qualifiers)
         {
+            var unwrappedType = UnwrapType(type);
+            var isWrapped = unwrappedType != type;
+            
             var components = _typeComponents.GetOrAdd(type, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
@@ -25,54 +30,26 @@ namespace Alpaca.Weld
                 _allComponents.Add(c);
             }
 
+            if (isWrapped)
+            {
+                components = new IWeldComponent[] {new InstanceComponent(type, qualifiers, this, components)};
+            }
+
             return components;
         }
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
         {
-            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
-            var unwrappedType = UnwrapType(type);
-            var isWrapped = unwrappedType != type;
-
-            var resolved = GetComponentsForType(unwrappedType).Where(x => x.CanSatisfy(qualifiers)).ToArray();
-            if (!isWrapped)
-            {
-                if (resolved.Length > 1)
-                {
-                    throw new AmbiguousResolutionException(type, qualifiers, resolved.Cast<IComponent>().ToArray());
-                }
-                if (!resolved.Any())
-                {
-                    throw new UnsatisfiedDependencyException(type, qualifiers);
-                }
-
-                return resolved.Single();
-            }
-
-            return resolved.Single();
+            var components = GetComponents(type, qualifiers).ToArray();
+            ResolutionValidator.ValidateSingleResult(type, qualifiers, components);
+            return components.Single();
         }
 
         public IComponent GetComponent(IInjectionPoint injectionPoint)
         {
-            var unwrappedType = UnwrapType(injectionPoint.ComponentType);
-            var isWrapped = unwrappedType != injectionPoint.ComponentType;
-
-            var resolved = GetComponentsForType(unwrappedType).Where(x=> x.CanSatisfy(injectionPoint.Qualifiers)).ToArray();
-            if (!isWrapped)
-            {
-                if (resolved.Length > 1)
-                {
-                    throw new AmbiguousResolutionException(injectionPoint, resolved.Cast<IComponent>().ToArray());
-                }
-                if (!resolved.Any())
-                {
-                    throw new UnsatisfiedDependencyException(injectionPoint);
-                }
-
-                return resolved.Single();
-            }
-
-            return resolved.Single();
+            var components = GetComponents(injectionPoint.ComponentType, injectionPoint.Qualifiers).ToArray();
+            ResolutionValidator.ValidateSingleResult(injectionPoint, components);
+            return components.Single();
         }
 
         public object GetReference(IComponent component)
@@ -140,9 +117,9 @@ namespace Alpaca.Weld
             return IsNormalScope(component.Scope);
         }
 
-        private bool IsNormalScope(Attribute scope)
+        private bool IsNormalScope(Type scope)
         {
-            return scope is NormalScopeAttribute;
+            return typeof(NormalScopeAttribute).IsAssignableFrom(scope);
         }
 
         public object GetReference(Type type, params QualifierAttribute[] qualifiers)
@@ -151,12 +128,63 @@ namespace Alpaca.Weld
         }
     }
 
-    public class CircularDependenciesException : InjectionException
+    public class InstanceComponent : AbstractComponent
     {
-        public CircularDependenciesException(IEnumerable<IComponent> nextPath):
-            base(string.Format("Pseudo scoped component has circular dependencies. Dependency path [{0}]",
-            string.Join(",", nextPath)))
+        private readonly IWeldComponent[] _components;
+
+        public InstanceComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, IComponentManager manager, IWeldComponent[] components) 
+            : base(type, qualifiers, typeof(DependentAttribute), manager)
         {
+            _components = components;
+        }
+
+        public override IWeldComponent Resolve(Type requestedType)
+        {
+            return this;
+        }
+
+        protected override BuildPlan GetBuildPlan()
+        {
+            var type = typeof (Instance<>).MakeGenericType(Type);
+            return () => Activator.CreateInstance(type, Type, Qualifiers.ToArray(), _components);
+        }
+
+        public override bool IsConcrete
+        {
+            get { return true; }
+        }
+    }
+
+    public class Instance<T>: IInstance<T>
+    {
+        private readonly Type _type;
+        private readonly QualifierAttribute[] _qualifiers;
+        private readonly IWeldComponent[] _components;
+
+        public Instance(Type type, QualifierAttribute[] qualifiers, IWeldComponent[] components)
+        {
+            _type = type;
+            _qualifiers = qualifiers;
+            _components = components;
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _components.Select(x => x.Manager.GetReference(x)).Cast<T>().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public T Value
+        {
+            get
+            {
+                ResolutionValidator.ValidateSingleResult(_type, _qualifiers, _components);
+                return this.First();
+            }
         }
     }
 }

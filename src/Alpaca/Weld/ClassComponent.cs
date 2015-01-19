@@ -14,7 +14,7 @@ namespace Alpaca.Weld
         private readonly IEnumerable<MethodInfo> _preDestroys;
         private readonly bool _containsGenericParameters;
         
-        public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope,  IComponentManager manager, MethodInfo[] postConstructs, MethodInfo[] preDestroys)
+        public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,  IComponentManager manager, MethodInfo[] postConstructs, MethodInfo[] preDestroys)
             : base(type, qualifiers, scope, manager)
         {
             _postConstructs = postConstructs;

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +12,7 @@ namespace Alpaca.Weld
     {
         private readonly MethodInfo _method;
         
-        public ProducerMethod(MethodInfo method, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
+        public ProducerMethod(MethodInfo method, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
             : base(method, method.ReturnType, qualifiers, scope, manager)
         {
             _method = method;

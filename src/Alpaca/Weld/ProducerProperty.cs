@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Alpaca.Contexts;
@@ -10,7 +11,7 @@ namespace Alpaca.Weld
     {
         private readonly PropertyInfo _property;
 
-        public ProducerProperty(PropertyInfo property, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
+        public ProducerProperty(PropertyInfo property, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
             : base(property, property.PropertyType, qualifiers, scope, manager)
         {
             _property = property;

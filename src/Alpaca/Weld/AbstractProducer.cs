@@ -15,7 +15,7 @@ namespace Alpaca.Weld
         private readonly Lazy<IComponent> _lazyDeclaringComponent;
 
         protected AbstractProducer(MemberInfo member, Type returnType,
-            IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope,
+            IEnumerable<QualifierAttribute> qualifiers, Type scope,
             IComponentManager manager): base(returnType, qualifiers, scope, manager)
         {
             _member = member;

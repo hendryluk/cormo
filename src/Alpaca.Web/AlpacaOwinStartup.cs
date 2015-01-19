@@ -16,12 +16,7 @@ namespace Alpaca.Web
         public void Configuration(IAppBuilder app)
         {
             var alpaca = AlpacaApplication.AutoScan();
-            
-            var appComponent = new InstanceComponent(app, app.GetType(), 
-                    new QualifierAttribute[0], new DependentAttribute(), 
-                    alpaca.ComponentManager);
-
-            alpaca.Environment.AddComponent(appComponent);
+            alpaca.Deployer.AddValue(app);
             //alpaca.Engine.AddContext(new RequestContext());
             alpaca.Deploy();
         }

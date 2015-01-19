@@ -5,12 +5,12 @@ using Alpaca.Injects;
 
 namespace Alpaca.Weld
 {
-    public class InstanceComponent : AbstractComponent
+    public class ValueComponent : AbstractComponent
     {
         private readonly object _instance;
 
-        public InstanceComponent(object instance, Type type, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
-            : base(type, qualifiers, scope, manager)
+        public ValueComponent(object instance, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+            : base(instance.GetType(), qualifiers, scope, manager)
         {
             _instance = instance;
         }

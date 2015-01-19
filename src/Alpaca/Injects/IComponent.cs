@@ -10,6 +10,6 @@ namespace Alpaca.Injects
         Type Type { get; }
         IEnumerable<QualifierAttribute> Qualifiers { get; }
         IEnumerable<IInjectionPoint> InjectionPoints { get; }
-        ScopeAttribute Scope { get; }
+        Type Scope { get; }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
+using Alpaca.Utils;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld.Utils
@@ -14,7 +15,7 @@ namespace Alpaca.Weld.Utils
         {
             return //type.IsClass &&  // Already checked at scanner level
                     !(type.IsSealed && type.IsAbstract) // static classes
-                   && (!type.IsAbstract || type.HasAttribute<DecoratorAttribute>())
+                   && (!type.IsAbstract || type.HasAttributeRecursive<DecoratorAttribute>())
                    && HasInjectableConstructor(type);
         }
 
@@ -25,13 +26,13 @@ namespace Alpaca.Weld.Utils
                     .Where(x => !x.IsPrivate)
                 : type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
 
-            return accessibleConstructors.Any(x => x.HasAttribute<InjectAttribute>() || !x.GetParameters().Any());
+            return accessibleConstructors.Any(x => x.HasAttributeRecursive<InjectAttribute>() || !x.GetParameters().Any());
         }
 
         public static IEnumerable<ConstructorInfo> GetInjectableConstructors(Type type)
         {
             return type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(x => x.HasAttribute<InjectAttribute>());
+                .Where(x => x.HasAttributeRecursive<InjectAttribute>());
         }
 
         public static void CheckProxiable(Type type)

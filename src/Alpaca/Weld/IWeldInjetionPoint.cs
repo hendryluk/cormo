@@ -10,6 +10,6 @@ namespace Alpaca.Weld
         IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         void Inject(object target);
         IComponent Component { get; }
-        ScopeAttribute Scope { get; }
+        Type Scope { get; }
     }
 }

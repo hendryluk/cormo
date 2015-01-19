@@ -9,7 +9,7 @@ namespace Alpaca.Weld
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        protected AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, ScopeAttribute scope, IComponentManager manager)
+        protected AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
         {
             var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
             if (!qualifierSet.OfType<AnyAttribute>().Any())
@@ -25,7 +25,7 @@ namespace Alpaca.Weld
         }
 
         public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
-        public ScopeAttribute Scope { get; private set; }
+        public Type Scope { get; private set; }
         public Type Type { get; set; }
         public IComponentManager Manager { get; set; }
         public abstract bool IsConcrete { get; }
