@@ -25,9 +25,20 @@ namespace Alpaca.Weld.Utils
 
         public static Resolution ResolveGenericType(Type component, Type requestedType)
         {
-            Type resolvedType;
-            var typeTransations = new Dictionary<Type, Type>();
+            var typeTranslations = new Dictionary<Type, Type>();
+            var resolvedType = ResolveGenericType(component, requestedType, typeTranslations);
+            
+            return new Resolution
+            {
+                ResolvedType = resolvedType,
+                GenericParameterTranslations = typeTranslations
+            };
+        }
 
+        private static Type ResolveGenericType(Type component, Type requestedType, Dictionary<Type, Type> typeTranslations)
+        {
+            Type resolvedType;
+            
             if (requestedType.IsAssignableFrom(component))
                 resolvedType = component;
             else if (!component.ContainsGenericParameters)
@@ -39,7 +50,7 @@ namespace Alpaca.Weld.Utils
 
                 var resolvedComponentType = (from i in interfaces
                         where openRequestedType == OpenIfGeneric(i)
-                        let closedType = CloseGenericType(i, requestedType, typeTransations)
+                        let closedType = CloseGenericType(i, requestedType, typeTranslations)
                         where closedType != null
                         select closedType)
                         .FirstOrDefault();
@@ -47,14 +58,10 @@ namespace Alpaca.Weld.Utils
                 if (resolvedComponentType == null)
                     return null;
 
-                resolvedType = TranslateGenericArguments(component, typeTransations);
+                resolvedType = TranslateGenericArguments(component, typeTranslations);
             }
 
-            return new Resolution
-            {
-                ResolvedType = resolvedType,
-                GenericParameterTranslations = typeTransations
-            };
+            return resolvedType;
         }
 
         private static Type TranslateGenericArguments(Type type, IDictionary<Type, Type> typeTransations)
@@ -225,14 +232,13 @@ namespace Alpaca.Weld.Utils
             foreach (var arg in componentType.GetGenericArguments())
             {
                 if (arg.IsGenericParameter)
+                {
                     yield return SearchClosedArgument(arg, componentType, requestedType, typeTransations);
+                }
+                    
                 else if (arg.ContainsGenericParameters)
                 {
-                    var argArgs = CloseGenericArguments(arg, requestedType.GetGenericArguments()[i], typeTransations).ToArray();
-                    if (argArgs.Contains(null))
-                        yield return null;
-                    else
-                        yield return arg.GetGenericTypeDefinition().MakeGenericType(argArgs);
+                    yield return ResolveGenericType(arg, requestedType.GetGenericArguments()[i], typeTransations);
                 }
                 else yield return arg;
 

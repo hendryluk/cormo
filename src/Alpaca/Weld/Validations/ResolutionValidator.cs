@@ -2,7 +2,6 @@
 using System.Linq;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Injects.Exceptions;
 
 namespace Alpaca.Weld.Validations
 {

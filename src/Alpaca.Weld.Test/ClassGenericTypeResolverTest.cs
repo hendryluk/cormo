@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Alpaca.Injects;
 using Alpaca.Weld.Utils;
 using NUnit.Framework;
 
@@ -95,5 +96,18 @@ namespace Alpaca.Weld.Test
             Assert.AreEqual(typeof (IList<string>),
                 Resolve<IEnumerable<object>>(typeof(IList<string>)));
         }
+
+        [Test]
+        public void ResolveMismatchedGenerics()
+        {
+            Assert.IsNull(Resolve<IComparer<string>>(typeof(ComparerEnumerable<>)));
+        }
+
+        private abstract class ComparerEnumerable<T> : IComparer<IEnumerable<T>> {
+            public int Compare(IEnumerable<T> x, IEnumerable<T> y)
+            {
+                throw new NotImplementedException();
+            }
+        } 
     }
 }
