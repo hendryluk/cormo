@@ -1,4 +1,4 @@
-# alpaca
+# Alpaca
 Alpaca is a .NET application development framework that implements best practices from [Spring](spring.io) and the "Contexts and Dependency Injection" from JavaEE specifications, specifically its implementation by [JBoss Weld] (http://weld.cdi-spec.org). 
 
 Two main objectives that Alpaca is trying to achieve:
