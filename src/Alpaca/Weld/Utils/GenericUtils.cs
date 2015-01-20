@@ -99,35 +99,6 @@ namespace Alpaca.Weld.Utils
             return arg;
         }
 
-        //public static MemberInfo TranslateMemberGenericArguments(MemberInfo member, IDictionary<Type, Type> typeTranslations)
-        //{
-        //    var type = TranslateGenericArguments(member.ReflectedType, typeTranslations);
-        //    if (type == null)
-        //        return null;
-
-        //    var method = member as MethodInfo;
-        //    if (method != null)
-        //    {
-        //        if (!method.ContainsGenericParameters && method.ReflectedType == type)
-        //            return method;
-
-        //        return TranslateMethodGenericArguments(type, method, typeTranslations);
-        //    }
-
-        //    if (type == member.ReflectedType)
-        //        return member;
-
-        //    var field = member as FieldInfo;
-        //    if (field != null)
-        //        return TranslateFieldType(type, field);
-
-        //    var property = member as PropertyInfo;
-        //    if (property != null)
-        //        return TranslatePropertyType(type, property, typeTranslations);
-
-        //    return null;
-        //}
-
         public static bool MemberContainsGenericArguments(MemberInfo member)
         {
             if (member.ReflectedType.ContainsGenericParameters)

@@ -92,9 +92,7 @@ namespace Alpaca.Weld
 
         public void AddValue(object instance, params QualifierAttribute[] qualifiers)
         {
-            _environment.AddComponent(new ValueComponent(instance,
-                    new QualifierAttribute[0], typeof(DependentAttribute),
-                    _manager));
+            _environment.AddValue(instance, qualifiers, _manager);
         }
         
 

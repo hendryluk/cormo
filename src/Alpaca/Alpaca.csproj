@@ -45,6 +45,8 @@
     <Compile Include="AlpacaApplication.cs" />
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
+    <Compile Include="Injects\IPassivationCapable.cs" />
+    <Compile Include="Weld\Contexts\IDependentContext.cs" />
     <Compile Include="Contexts\NormalScopeAttribute.cs" />
     <Compile Include="Contexts\RequestScopedAttribute.cs" />
     <Compile Include="Contexts\SessionScopedAttribute.cs" />

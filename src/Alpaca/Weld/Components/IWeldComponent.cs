@@ -4,7 +4,7 @@ using Alpaca.Injects;
 
 namespace Alpaca.Weld.Components
 {
-    public interface IWeldComponent : IComponent
+    public interface IWeldComponent : IComponent, IPassivationCapable
     {
         IWeldComponent Resolve(Type type);
         bool CanSatisfy(IEnumerable<QualifierAttribute> qualifiers);

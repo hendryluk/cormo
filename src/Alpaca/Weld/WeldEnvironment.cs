@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Alpaca.Contexts;
+using Alpaca.Injects;
 using Alpaca.Weld.Components;
 
 namespace Alpaca.Weld
@@ -18,6 +20,13 @@ namespace Alpaca.Weld
         public void AddConfiguration(IWeldComponent component)
         {
             _configurations.Add(component);
+        }
+
+        public void AddValue(object instance, QualifierAttribute[] qualifiers, IComponentManager manager)
+        {
+            AddComponent(new ValueComponent(instance,
+                new QualifierAttribute[0], typeof (DependentAttribute),
+                manager));
         }
     }
 }

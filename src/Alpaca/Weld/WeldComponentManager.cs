@@ -8,6 +8,7 @@ using Alpaca.Injects.Exceptions;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Injections;
+using Alpaca.Weld.Serialization;
 using Alpaca.Weld.Validations;
 
 namespace Alpaca.Weld
@@ -69,6 +70,10 @@ namespace Alpaca.Weld
 
         public void Deploy(WeldEnvironment environment)
         {
+            environment.AddValue(this, new QualifierAttribute[0], this);
+            environment.AddValue(new ContextualStore(), new QualifierAttribute[0], this);
+            Container.Instance.Initialize(this);
+            
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
             ValidateComponents();
             ExecuteConfigurations(environment);
