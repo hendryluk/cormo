@@ -1,7 +1,7 @@
 ﻿using System.Web.Http;
 using Alpaca.Injects;
 
-namespace MyTest
+namespace SampleWebApp
 {
     public class GreetingService
     {
