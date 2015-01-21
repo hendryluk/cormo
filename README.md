@@ -36,7 +36,7 @@ Example:
 [RestController]
 public class MyController
 {
-  [Inject] Greeter _greeter;
+  [Inject] Greeter _greeter;   // <- Here
   
   [Route("/hello")]
   public string Hello() { return _greeter.Greet("world"); }  
