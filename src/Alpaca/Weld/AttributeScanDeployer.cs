@@ -9,6 +9,7 @@ using Alpaca.Utils;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
+using Castle.DynamicProxy;
 
 namespace Alpaca.Weld
 {
@@ -16,6 +17,7 @@ namespace Alpaca.Weld
     {
         private readonly WeldComponentManager _manager;
         private readonly WeldEnvironment _environment;
+        private Type[] _mixins = new Type[0];
         private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
 
         public AttributeScanDeployer(WeldComponentManager manager, WeldEnvironment environment)
@@ -35,6 +37,9 @@ namespace Alpaca.Weld
                             select type).ToArray();
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
+
+            _mixins = componentTypes.Where(AttributeUtils.HasAttributeRecursive<MixinAttribute>).ToArray();
+
             var producerFields = (from type in types.AsParallel()
                                     from field in type.GetFields(AllBindingFlags)
                                     where field.HasAttributeRecursive<ProducesAttribute>()
@@ -153,6 +158,9 @@ namespace Alpaca.Weld
 
         public IWeldComponent MakeComponent(Type type)
         {
+            var qualifiers = type.GetQualifiers();
+            var mixins = _mixins.Where(x => qualifiers.Any(q => x.HasAttributeRecursive(q.GetType()))).ToArray();
+
             var methods = type.GetMethods(AllBindingFlags).ToArray();
 
             var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
@@ -166,7 +174,11 @@ namespace Alpaca.Weld
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
 
-            var component = new ClassComponent(type, type.GetQualifiers(), scope, _manager, postConstructs, preDestroys);
+           
+            var component = new ClassComponent(type, qualifiers, scope, _manager, postConstructs, preDestroys)
+            {
+                Mixins = mixins
+            };
             var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
             var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
             var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();

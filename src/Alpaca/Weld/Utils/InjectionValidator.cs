@@ -3,8 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Weld.Utils;
-using Castle.Core.Internal;
+using Alpaca.Utils;
 
 namespace Alpaca.Weld.Utils
 {
@@ -12,7 +11,7 @@ namespace Alpaca.Weld.Utils
     {
         public static bool ScanPredicate(ICustomAttributeProvider provider)
         {
-            return AttributesUtil.HasAttribute<InjectAttribute>(provider);
+            return provider.HasAttributeRecursive<InjectAttribute>();
         }
 
         public static bool ScanPredicate(PropertyInfo property)
@@ -45,7 +44,7 @@ namespace Alpaca.Weld.Utils
     {
         public static bool ScanPredicate(Type type)
         {
-            return !type.IsAbstract && type.HasAttribute<ConfigurationAttribute>();
+            return !type.IsAbstract && type.HasAttributeRecursive<ConfigurationAttribute>();
         }
 
         public static void Validate(Type type)

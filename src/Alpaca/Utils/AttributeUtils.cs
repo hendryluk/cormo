@@ -8,9 +8,19 @@ namespace Alpaca.Utils
 {
     public static class AttributeUtils
     {
+        public static bool HasAttributeRecursive(this ICustomAttributeProvider attributeProvider, Type type)
+        {
+            return GetAttributesRecursive(attributeProvider, type).Any();
+        }
+
         public static bool HasAttributeRecursive<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
         {
-            return GetAttributesRecursive<T>(attributeProvider).Any();
+            return HasAttributeRecursive(attributeProvider, typeof(T));
+        }
+
+        public static IEnumerable<Attribute> GetAttributesRecursive(this ICustomAttributeProvider attributeProvider, Type type)
+        {
+            return GetAttributesRecursive(attributeProvider).Where(type.IsInstanceOfType);
         }
 
         public static IEnumerable<T> GetAttributesRecursive<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute

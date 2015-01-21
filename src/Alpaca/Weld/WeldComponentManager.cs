@@ -18,7 +18,7 @@ namespace Alpaca.Weld
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
-        private IEnumerable<IWeldComponent> GetComponents(Type type, IEnumerable<QualifierAttribute> qualifiers)
+        public IEnumerable<IWeldComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
         {
             var unwrappedType = UnwrapType(type);
             var isWrapped = unwrappedType != type;
@@ -47,7 +47,7 @@ namespace Alpaca.Weld
 
         public IComponent GetComponent(IInjectionPoint injectionPoint)
         {
-            var components = GetComponents(injectionPoint.ComponentType, injectionPoint.Qualifiers).ToArray();
+            var components = GetComponents(injectionPoint.ComponentType, injectionPoint.Qualifiers.ToArray()).ToArray();
             ResolutionValidator.ValidateSingleResult(injectionPoint, components);
             return components.Single();
         }

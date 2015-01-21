@@ -1,17 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Web.Http;
 using Alpaca.Injects;
+using Alpaca.Web.Attributes;
 
 namespace SampleWebApp
 {
-    public class MyController : ApiController
+    [RestController]
+    public class MyController    
+    // Inheriting ApiController or IHttpController is optional. Alpaca.Web will inject that for you.
+    // This promotes DI principle and lightweight components.
     {
-        [Inject]
-        IGreeter<string> _stringService;                // -> UpperCaseGreeter
-        [Inject]
-        IGreeter<IEnumerable<int>> _integersService;    // -> EnumerableeGreeter<int>
-
+        [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter
+        [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
+        
         [Route("test"), HttpGet]
         public string Test()
         {
@@ -25,6 +26,7 @@ namespace SampleWebApp
         }
     }
 
+    // ============= SERVICES BELOW ===============
     public interface IGreeter<T>
     {
         string Greet(T val);
