@@ -1,49 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Web.Http;
-using System.Web.Http.Controllers;
-using System.Web.Http.Dispatcher;
-using System.Web.Http.Routing;
 using Alpaca.Injects;
 using Alpaca.Web.Attributes;
 
 namespace SampleWebApp
 {
-    //public class AlpacaActionSelector : IHttpActionSelector
-    //{
-    //    public HttpActionDescriptor SelectAction(HttpControllerContext controllerContext)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-
-    //    public ILookup<string, HttpActionDescriptor> GetActionMapping(HttpControllerDescriptor controllerDescriptor)
-    //    {
-    //        return Lookup<>
-    //    }
-    //}
-
     [RestController]
-    public class MyController
+    public class MyController    
+    // Inheriting ApiController or IHttpController is optional. Alpaca.Web will inject that for you.
+    // This promotes DI principle and lightweight components.
     {
-        private readonly IGreeter<IEnumerable<int>> _integersService;
-
-        [Inject]
-        public MyController(IGreeter<IEnumerable<int>> integersService)
-        {
-            _integersService = integersService;
-        }
-
-        [Inject]
-        IGreeter<string> _stringService;                // -> UpperCaseGreeter
+        [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter
+        [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
         
         [Route("test"), HttpGet]
         public string Test()
         {
-            return _stringService.Greet("World") + " --> by " + GetType();
+            return _stringService.Greet("World");
         }
 
         [Route("testMany"), HttpGet]
@@ -53,6 +26,7 @@ namespace SampleWebApp
         }
     }
 
+    // ============= SERVICES BELOW ===============
     public interface IGreeter<T>
     {
         string Greet(T val);
