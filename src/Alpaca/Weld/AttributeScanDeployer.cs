@@ -50,7 +50,6 @@ namespace Alpaca.Weld
                                       where property.HasAttributeRecursive<ProducesAttribute>()
                                       select property).ToArray();
 
-            AddValue(_manager);
             AddTypes(componentTypes);
             AddProducerMethods(producerMethods);
             AddProducerFields(producerFields);

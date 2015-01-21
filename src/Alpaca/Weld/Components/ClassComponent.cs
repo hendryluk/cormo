@@ -88,12 +88,19 @@ namespace Alpaca.Weld.Components
         {
             return from g in injects.GroupBy(x => x.Member) 
                 let method = (MethodBase)g.Key 
-                let paramInjects = g.OrderBy(x => x.Position).ToArray() 
-                select (InjectPlan) ((target, context) =>
-                {
-                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                    return method.Invoke(target, paramVals);
-                });
+                let paramInjects = g.OrderBy(x => x.Position).ToArray()
+                let ctor = method as ConstructorInfo
+                let plan = ctor==null? (InjectPlan)((target, context) =>
+                        {
+                            var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                            return method.Invoke(target, paramVals);
+                        }):
+                        (target, context) =>
+                        {
+                            var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                            return ctor.Invoke(paramVals);
+                        }
+                select plan;
         }
 
         public override string ToString()
