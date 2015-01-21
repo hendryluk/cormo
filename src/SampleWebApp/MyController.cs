@@ -25,6 +25,18 @@ namespace SampleWebApp
     //    }
     //}
 
+    public class ControllerAttribute : QualifierAttribute
+    {
+        
+    }
+
+    [Controller]
+    [Mixin]
+    public class MySimpleController : ApiController
+    {
+
+    }
+
     public class AlpacaControllerSelector : IHttpControllerSelector
     {
         public static HttpControllerDescriptor _descriptor;
@@ -71,6 +83,7 @@ namespace SampleWebApp
         }
     }
 
+    [Controller]
     public class MyController
     {
         private readonly IGreeter<IEnumerable<int>> _integersService;

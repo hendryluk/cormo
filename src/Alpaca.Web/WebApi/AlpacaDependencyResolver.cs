@@ -17,6 +17,7 @@ namespace Alpaca.Web.WebApi
     {
         private readonly IComponentManager _componentManager;
         ProxyGenerator gen = new ProxyGenerator();
+        DefaultProxyBuilder builder = new DefaultProxyBuilder();
                 
         public AlpacaDependencyResolver(IComponentManager componentManager)
         {
@@ -27,23 +28,11 @@ namespace Alpaca.Web.WebApi
         {
         }
 
-        public class MySimpleController : ApiController
-        {
-            
-        }
-
         public object GetService(Type serviceType)
         {
             try
             {
                 var instance = _componentManager.GetReference(serviceType);
-                if (serviceType.Name.EndsWith("Controller"))
-                {
-                    var pgo = new ProxyGenerationOptions();
-                    pgo.AddMixinInstance(new MySimpleController());
-                    instance = gen.CreateClassProxyWithTarget(serviceType, instance, pgo);
-                }
-
                 return instance;
             }
             catch (UnsatisfiedDependencyException)

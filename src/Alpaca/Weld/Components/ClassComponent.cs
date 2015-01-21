@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
-using Alpaca.Injects;
 using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
+using Castle.DynamicProxy;
 
 namespace Alpaca.Weld.Components
 {
@@ -42,6 +42,8 @@ namespace Alpaca.Weld.Components
             get { return !_containsGenericParameters; }
         }
 
+        public Type[] Mixins { get; set; }
+
         public override IWeldComponent Resolve(Type requestedType)
         {
             if (!_containsGenericParameters)
@@ -54,7 +56,10 @@ namespace Alpaca.Weld.Components
             var postConstructs = _postConstructs.Select(x=> GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
             var preDestroys = _preDestroys.Select(x => GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
 
-            var components = new ClassComponent(resolution.ResolvedType, Qualifiers, Scope, Manager, postConstructs, preDestroys);
+            var components = new ClassComponent(resolution.ResolvedType, Qualifiers, Scope, Manager, postConstructs, preDestroys)
+            {
+                Mixins = Mixins
+            };
             TransferInjectionPointsTo(components, resolution);
             return components;
         }
@@ -62,17 +67,17 @@ namespace Alpaca.Weld.Components
         protected override BuildPlan GetBuildPlan()
         {
             var paramInject = InjectionPoints.OfType<MethodParameterInjectionPoint>().ToArray();
-            var ctorInject = InjectMethods(paramInject.Where(x => x.IsConstructor)).FirstOrDefault();
+            var ctorInject = InjectConstructor(paramInject.Where(x => x.IsConstructor));
             var methodInject = InjectMethods(paramInject.Where(x=> !x.IsConstructor)).ToArray();
             var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
 
-            var create = ctorInject == null? 
-                new BuildPlan(context => Activator.CreateInstance(Type, true)): 
-                context => ctorInject(null, context);
+            //var create = ctorInject == null? 
+            //    new BuildPlan(context => Activator.CreateInstance(Type, true)): 
+            //    context => ctorInject(null, context);
 
             return context =>
             {
-                var instance = create(context);
+                var instance = ctorInject(context);
                 foreach (var i in otherInjects)
                     i.Inject(instance, context);
                 foreach (var i in methodInject)
@@ -84,23 +89,48 @@ namespace Alpaca.Weld.Components
             };
         }
 
+        private static readonly ProxyGenerator _generator = new ProxyGenerator();
+
+        private BuildPlan InjectConstructor(IEnumerable<MethodParameterInjectionPoint> injects)
+        {
+            var pgo = new ProxyGenerationOptions();
+
+            var paramInjects = injects.GroupBy(x => x.Member)
+                .Select(x => x.OrderBy(i => i.Position).ToArray())
+                .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
+                .First();
+
+            if (Mixins.Any())
+            {
+                foreach (var mixin in Mixins)
+                {
+                    pgo.AddMixinInstance(Activator.CreateInstance(mixin));
+                }
+
+                return context =>
+                {
+                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                    return _generator.CreateClassProxy(Type, pgo, paramVals);
+                };
+            }
+        
+            return context =>
+            {
+                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                return Activator.CreateInstance(Type, paramVals);
+            };
+        }
+
         private IEnumerable<InjectPlan> InjectMethods(IEnumerable<MethodParameterInjectionPoint> injects)
         {
-            return from g in injects.GroupBy(x => x.Member) 
-                let method = (MethodBase)g.Key 
+            return from g in injects.GroupBy(x => x.Member)
+                let method = (MethodInfo)g.Key
                 let paramInjects = g.OrderBy(x => x.Position).ToArray()
-                let ctor = method as ConstructorInfo
-                let plan = ctor==null? (InjectPlan)((target, context) =>
-                        {
-                            var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                            return method.Invoke(target, paramVals);
-                        }):
-                        (target, context) =>
-                        {
-                            var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                            return ctor.Invoke(paramVals);
-                        }
-                select plan;
+                select (InjectPlan) ((target, context) =>
+                {
+                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                    return method.Invoke(target, paramVals);
+                });
         }
 
         public override string ToString()
