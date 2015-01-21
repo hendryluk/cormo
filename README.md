@@ -30,8 +30,7 @@ Note that extending ApiController or IHttpController is optional. At runtime Alp
 [A single-file sample app] (https://github.com/hendryluk/alpaca/blob/master/src/SampleWebApp/MyController.cs)
 
 # Dependency Injection
-TODO: Inject, Produce, PostConstruct, PreDeploy, Qualifier
-
+Dependency Injection is fully configured for you. No additional setup needed.
 Example:
 ```csharp
 [RestController]
@@ -48,6 +47,7 @@ public class Greeter
   public string Greet(string name) { return "Hello " + name; }
 }
 ```
+TODO: explain [Inject], [Produce], [Qualifier], [PostConstruct], [PreDeploy]
 
 # Tweaking Your Plumbing
 Alpaca modules (e.g. Alpaca.Web in this case) configure your environment with sensible defaults. If you do however want to deviate from the provided default, you can always override it by declaring your own components. For instance, to override WebApi's HttpConfiguration settings:
