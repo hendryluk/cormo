@@ -98,13 +98,13 @@ namespace SampleWebApp
         IGreeter<string> _stringService;                // -> UpperCaseGreeter
         
         [Route("test"), HttpGet]
-        public virtual string Test()
+        public string Test()
         {
-            return _stringService.Greet("World");
+            return _stringService.Greet("World") + "/ by " + GetType();
         }
 
         [Route("testMany"), HttpGet]
-        public virtual string TestMany()
+        public string TestMany()
         {
             return _integersService.Greet(new []{1,2,3,4,5});
         }

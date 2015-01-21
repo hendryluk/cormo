@@ -6,6 +6,7 @@ using Alpaca.Injects;
 using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
 using Castle.DynamicProxy;
+using Castle.DynamicProxy.Generators;
 
 namespace Alpaca.Weld.Components
 {
@@ -89,12 +90,43 @@ namespace Alpaca.Weld.Components
             };
         }
 
-        private static readonly ProxyGenerator _generator = new ProxyGenerator();
+        public class AlpacaNamingScope : INamingScope
+        {
+            private readonly INamingScope _delegate;
+
+            public AlpacaNamingScope()
+            {
+                _delegate = new NamingScope();
+            }
+            private AlpacaNamingScope(AlpacaNamingScope alpacaNamingScope)
+            {
+                ParentScope = alpacaNamingScope;
+                _delegate = alpacaNamingScope._delegate.SafeSubScope();
+            }
+
+            public string GetUniqueName(string suggestedName)
+            {
+                var name = _delegate.GetUniqueName(suggestedName);
+                return name.Replace("Castle.Proxies", PROXY_PREFIX);
+            }
+
+            public INamingScope SafeSubScope()
+            {
+                return new AlpacaNamingScope(this);
+            }
+
+            public INamingScope ParentScope { get; private set; }
+        }
+
+        private const string PROXY_PREFIX = "Alpaca.Weld.Proxies";
+        private static readonly ProxyGenerator ProxyGenerator =
+            new ProxyGenerator(new DefaultProxyBuilder(new ModuleScope(false, false, new AlpacaNamingScope(), 
+                PROXY_PREFIX, PROXY_PREFIX, PROXY_PREFIX, PROXY_PREFIX)));
 
         private BuildPlan InjectConstructor(IEnumerable<MethodParameterInjectionPoint> injects)
         {
             var pgo = new ProxyGenerationOptions();
-
+            
             var paramInjects = injects.GroupBy(x => x.Member)
                 .Select(x => x.OrderBy(i => i.Position).ToArray())
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
@@ -110,7 +142,7 @@ namespace Alpaca.Weld.Components
                 return context =>
                 {
                     var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                    return _generator.CreateClassProxy(Type, pgo, paramVals);
+                    return ProxyGenerator.CreateClassProxy(Type, pgo, paramVals);
                 };
             }
         
