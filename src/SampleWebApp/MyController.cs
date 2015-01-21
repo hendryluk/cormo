@@ -9,6 +9,7 @@ using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using System.Web.Http.Routing;
 using Alpaca.Injects;
+using Alpaca.Web.Attributes;
 
 namespace SampleWebApp
 {
@@ -25,17 +26,7 @@ namespace SampleWebApp
     //    }
     //}
 
-    public class ControllerAttribute : QualifierAttribute
-    {
-        
-    }
-
-    [Controller]
-    [Mixin]
-    public class MySimpleController : ApiController
-    {
-
-    }
+    
 
     public class AlpacaControllerSelector : IHttpControllerSelector
     {
@@ -83,7 +74,7 @@ namespace SampleWebApp
         }
     }
 
-    [Controller]
+    [RestController]
     public class MyController
     {
         private readonly IGreeter<IEnumerable<int>> _integersService;

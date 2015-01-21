@@ -125,22 +125,20 @@ namespace Alpaca.Weld.Components
 
         private BuildPlan InjectConstructor(IEnumerable<MethodParameterInjectionPoint> injects)
         {
-            var pgo = new ProxyGenerationOptions();
-            
             var paramInjects = injects.GroupBy(x => x.Member)
                 .Select(x => x.OrderBy(i => i.Position).ToArray())
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
-
             if (Mixins.Any())
             {
-                foreach (var mixin in Mixins)
-                {
-                    pgo.AddMixinInstance(Activator.CreateInstance(mixin));
-                }
-
                 return context =>
                 {
+                    var pgo = new ProxyGenerationOptions();
+                    foreach (var mixin in Mixins)
+                    {
+                        pgo.AddMixinInstance(Activator.CreateInstance(mixin));
+                    }
+
                     var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                     return ProxyGenerator.CreateClassProxy(Type, pgo, paramVals);
                 };
