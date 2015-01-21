@@ -71,6 +71,7 @@
     <Compile Include="AlpacaOwinStartup.cs" />
     <Compile Include="Attributes\RestControllerAttribute.cs" />
     <Compile Include="WebApi\AlpacaDependencyResolver.cs" />
+    <Compile Include="WebApi\AlpacaHttpControllerSelector.cs" />
     <Compile Include="WebApi\ApiControllerMixin.cs" />
     <Compile Include="Weld\Contexts\HttpRequestContext.cs" />
     <Compile Include="Weld\HttpContextLifecycle.cs" />

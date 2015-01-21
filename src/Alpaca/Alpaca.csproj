@@ -54,7 +54,7 @@
     <Compile Include="Contexts\DependentAttribute.cs" />
     <Compile Include="Injects\Exceptions\AmbiguousResolutionException.cs" />
     <Compile Include="Injects\AnyAttribute.cs" />
-    <Compile Include="Injects\ConditionalOnMissingBeanAttribute.cs" />
+    <Compile Include="Injects\ConditionalOnMissingComponentAttribute.cs" />
     <Compile Include="Injects\ConfigurationAttribute.cs" />
     <Compile Include="Injects\DecoratorAttribute.cs" />
     <Compile Include="Injects\DefaultAttribute.cs" />

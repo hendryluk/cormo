@@ -24,7 +24,7 @@ namespace Alpaca.Web.WebApi
             [Inject] private IComponentManager _manager;
 
             [Produces]
-            [ConditionalOnMissingBean]
+            [ConditionalOnMissingComponent]
             public virtual HttpConfiguration GetHttpConfiguration()
             {
                 var config = new HttpConfiguration();

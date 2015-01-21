@@ -26,54 +26,6 @@ namespace SampleWebApp
     //    }
     //}
 
-    
-
-    public class AlpacaControllerSelector : IHttpControllerSelector
-    {
-        public static HttpControllerDescriptor _descriptor;
-        private HttpControllerDescriptor _proxyDescriptor;
-
-        [Inject]
-        public AlpacaControllerSelector(HttpConfiguration httpConfiguration)
-        {
-            _proxyDescriptor = new HttpControllerDescriptor(httpConfiguration, "ProxyController",
-                typeof (MyGlobalController));
-            _descriptor = new HttpControllerDescriptor(httpConfiguration, "MyController",
-                typeof(MyController));
-            
-        }
-
-        public HttpControllerDescriptor SelectController(HttpRequestMessage request)
-        {
-            return _descriptor;
-        }
-
-        public IDictionary<string, HttpControllerDescriptor> GetControllerMapping()
-        {
-            return new Dictionary<string, HttpControllerDescriptor>
-            {
-                {"MyController", _descriptor}, {"ProxyController", _proxyDescriptor}
-            };
-        }
-    }
-
-    public class MyGlobalController: IHttpController
-    {
-        [Inject] private IComponentManager _manager;
-
-        public async Task<HttpResponseMessage> ExecuteAsync(HttpControllerContext controllerContext, CancellationToken cancellationToken)
-        {
-            var services = controllerContext.ControllerDescriptor.Configuration.Services;
-            var route = (IHttpRouteData[])controllerContext.RouteData.Values["MS_SubRoutes"];
-            var actions = (HttpActionDescriptor[]) route[0].Route.DataTokens["actions"];
-
-            
-            var xx= await actions[0].ExecuteAsync(controllerContext, new Dictionary<string, object>(), cancellationToken);
-            //var action = ServicesExtensions.GetActionSelector(services).SelectAction(controllerContext);
-            return null;
-        }
-    }
-
     [RestController]
     public class MyController
     {
@@ -91,7 +43,7 @@ namespace SampleWebApp
         [Route("test"), HttpGet]
         public string Test()
         {
-            return _stringService.Greet("World") + "/ by " + GetType();
+            return _stringService.Greet("World") + " --> by " + GetType();
         }
 
         [Route("testMany"), HttpGet]
