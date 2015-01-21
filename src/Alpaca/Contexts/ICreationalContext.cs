@@ -28,7 +28,8 @@ namespace Alpaca.Weld.Contexts
 
     public interface IWeldCreationalContext : ICreationalContext
     {
-        
+        IEnumerable<IContextualInstance> DependentInstances { get; }
+        void AddDependentInstance(IContextualInstance contextualInstance);
     }
 
     public class WeldCreationalContext : IWeldCreationalContext
@@ -69,6 +70,12 @@ namespace Alpaca.Weld.Contexts
         public void Release()
         {
             throw new System.NotImplementedException();
+        }
+
+        public IEnumerable<IContextualInstance> DependentInstances { get { return _dependentInstances; } }
+        public void AddDependentInstance(IContextualInstance contextualInstance)
+        {
+            _parentDependentInstances.Add(contextualInstance);
         }
     }
 }

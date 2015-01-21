@@ -10,17 +10,24 @@ using Castle.DynamicProxy.Generators;
 
 namespace Alpaca.Weld.Components
 {
-    public class ClassComponent : AbstractComponent
+    public abstract class ManagedComponent : AbstractComponent
     {
-        private readonly IEnumerable<MethodInfo> _postConstructs;
-        private readonly IEnumerable<MethodInfo> _preDestroys;
+        protected ManagedComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager) : base(type, qualifiers, scope, manager)
+        {
+        }
+    }
+
+    public class ClassComponent : ManagedComponent
+    {
+        public IEnumerable<MethodInfo> PostConstructs { get; private set; }
+        public IEnumerable<MethodInfo> PreDestroys { get; private set; }
         private readonly bool _containsGenericParameters;
         
         public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,  IComponentManager manager, MethodInfo[] postConstructs, MethodInfo[] preDestroys)
             : base(type, qualifiers, scope, manager)
         {
-            _postConstructs = postConstructs;
-            _preDestroys = preDestroys;
+            PostConstructs = postConstructs;
+            PreDestroys = preDestroys;
             _containsGenericParameters = Type.ContainsGenericParameters;
 
             ValidateMethodSignatures();
@@ -28,11 +35,11 @@ namespace Alpaca.Weld.Components
 
         private void ValidateMethodSignatures()
         {
-            foreach (var m in _postConstructs)
+            foreach (var m in PostConstructs)
             {
                 PostConstructCriteria.Validate(m);
             }
-            foreach (var m in _preDestroys)
+            foreach (var m in PreDestroys)
             {
                 PreDestroyCriteria.Validate(m);
             }
@@ -54,8 +61,8 @@ namespace Alpaca.Weld.Components
             if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                 return null;
 
-            var postConstructs = _postConstructs.Select(x=> GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
-            var preDestroys = _preDestroys.Select(x => GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
+            var postConstructs = PostConstructs.Select(x=> GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
+            var preDestroys = PreDestroys.Select(x => GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
 
             var components = new ClassComponent(resolution.ResolvedType, Qualifiers, Scope, Manager, postConstructs, preDestroys)
             {
@@ -83,7 +90,7 @@ namespace Alpaca.Weld.Components
                     i.Inject(instance, context);
                 foreach (var i in methodInject)
                     i(instance, context);
-                foreach (var post in _postConstructs)
+                foreach (var post in PostConstructs)
                     post.Invoke(instance, new object[0]);
 
                 return instance;

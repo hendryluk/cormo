@@ -10,6 +10,8 @@ namespace Alpaca.Contexts
         /// </summary>
         Type Scope { get; }
 
+        bool IsActive { get; }
+
         /// <summary>
         /// Return an existing instance of certain contextual type or create a new 
         /// instance by calling <see cref="IContextual.Create(ICreationalContext)"/>

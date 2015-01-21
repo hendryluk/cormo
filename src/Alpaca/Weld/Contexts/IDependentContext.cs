@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using Alpaca.Contexts;
 using Alpaca.Injects;
@@ -198,6 +199,13 @@ namespace Alpaca.Weld.Contexts
 
     public class DependentContext : IDependentContext
     {
+        readonly IContextualStore _store;
+
+        public DependentContext(IContextualStore store)
+        {
+            _store = store;
+        }
+
         public Type Scope
         {
             get { return typeof (DependentAttribute); }
@@ -205,12 +213,56 @@ namespace Alpaca.Weld.Contexts
 
         public object Get(IContextual contextual, ICreationalContext creationalContext)
         {
-            throw new NotImplementedException();
+            if (IsActive) 
+            {
+                throw new ContextNotActiveException();
+            }
+            if (creationalContext != null) {
+                var instance = contextual.Create(creationalContext);
+                if (creationalContext is IWeldCreationalContext) {
+                    AddDependentInstance(instance, contextual, (IWeldCreationalContext)creationalContext);
+                }
+                return instance;
+            }
+            return null;
+        }
+
+        private void AddDependentInstance(object instance, IContextual contextual, IWeldCreationalContext creationalContext)
+        {
+            // by this we are making sure that the dependent instance has no transitive dependency with @PreDestroy / disposal method
+            if (!creationalContext.DependentInstances.Any())
+            {
+                var classComponent = contextual as ClassComponent;
+                if (classComponent != null)
+                {
+                    if (!classComponent.PreDestroys.Any()
+                        /* TODO: && component.HasInterceptors && component.HasDefaultProducer */)
+                    {
+                        return;
+                    }
+                }
+                var producer = contextual as ProducerMethod;
+                if (producer != null)
+                {
+                    /*TODO: if (producer.DisposalMethod == null && producer.HasDefaultProducer) */
+                        return;
+                }
+
+                var componentInstance = new SerializableContextualInstance(contextual, instance, creationalContext, _store);
+                creationalContext.AddDependentInstance(componentInstance);
+            }
+        }
+
+        public bool IsActive
+        {
+            get { return true; }
         }
 
         public object Get(IContextual contextual)
         {
-            throw new NotImplementedException();
+            return Get(contextual, null);
         }
     }
+
+    
 }

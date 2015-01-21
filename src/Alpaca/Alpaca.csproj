@@ -43,6 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaApplication.cs" />
+    <Compile Include="Contexts\ContextException.cs" />
+    <Compile Include="Contexts\ContextNotActiveException.cs" />
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />
