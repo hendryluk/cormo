@@ -47,6 +47,8 @@ public class Greeter
   public string Greet(string name) { return "Hello " + name; }
 }
 ```
+Of course you can use interfaces but it's not necessary. You could also put [Inject] on constructors, fields, methods, and properties. Open generic types and constraints are also supported (TODO: example).
+
 TODO: explain [Inject], [Produce], [Qualifier], [PostConstruct], [PreDeploy]
 
 # Tweaking Your Plumbing
