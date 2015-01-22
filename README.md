@@ -77,6 +77,13 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
+# Further Reading
+Alpaca combines ideas from these following frameworks. Each comes with great documentation far beyond what Alpaca has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Alpaca (or what Alpaca will come to be), so check them out. Just replace the word "Bean" with "Component".
+* [JBoss Weld](https://docs.jboss.org/weld/reference/latest/en-US/html/)
+* [JBoss Seam](https://docs.jboss.org/seam/latest/reference/html/)
+* [Spring Framework](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/)
+* [Spring Boot](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/)
+
 # NEXT
 
 TODO: Scopes (Dependent, Singleton, RequestScoped, ResponseScoped, custom scopes)
