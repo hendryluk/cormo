@@ -80,7 +80,7 @@ Note: Marking your class with [Configuration] ensures your class gets executed b
 # Further Reading
 Alpaca combines ideas from these following frameworks. Each comes with great documentation far beyond what Alpaca has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Alpaca (or what Alpaca will come to be), so check them out. Just replace the word "Bean" with "Component".
 * [JBoss Weld](http://weld.cdi-spec.org)  [ [Doc](https://docs.jboss.org/weld/reference/latest/en-US/html/) ]
-* [JBoss Seam](http://seamframework.org)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
+* [JBoss Seam 3](http://seamframework.org/Seam3/Home.html)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
 * [Spring Framework](http://projects.spring.io/spring-framework/)  [ [Doc](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/) ]
 * [Spring Boot](http://projects.spring.io/spring-boot/)  [ [Doc](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/) ]
 
