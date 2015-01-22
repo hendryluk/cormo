@@ -83,6 +83,7 @@ Alpaca combines ideas from these following frameworks. Each comes with great doc
 * [JBoss Seam 3](http://seamframework.org/Seam3/Home.html)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
 * [Spring Framework](http://projects.spring.io/spring-framework/)  [ [Doc](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/) ]
 * [Spring Boot](http://projects.spring.io/spring-boot/)  [ [Doc](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/) ]
+* JAX-RS  [ [Doc](http://docs.jboss.org/resteasy/docs/3.0.6.Final/userguide/html/) ]
 
 # NEXT
 
