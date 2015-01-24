@@ -30,14 +30,13 @@ Note that extending ApiController or IHttpController is optional. At runtime Alp
 [A single-file sample app] (https://github.com/hendryluk/alpaca/blob/master/src/SampleWebApp/MyController.cs)
 
 # Dependency Injection
-TODO: Inject, Produce, PostConstruct, PreDeploy, Qualifier
-
+Dependency Injection is fully configured for you. No additional setup needed.
 Example:
 ```csharp
 [RestController]
 public class MyController
 {
-  [Inject] Greeter _greeter;
+  [Inject] Greeter _greeter;   // <- Here
   
   [Route("/hello")]
   public string Hello() { return _greeter.Greet("world"); }  
@@ -48,6 +47,9 @@ public class Greeter
   public string Greet(string name) { return "Hello " + name; }
 }
 ```
+Of course you could also use interfaces but it's not required. You could also put [Inject] on constructors, fields, methods, and properties. Open generic types and constraints are also supported (TODO: example).
+
+TODO: explain [Inject], [Produce], [Qualifier], [PostConstruct], [PreDeploy]
 
 # Tweaking Your Plumbing
 Alpaca modules (e.g. Alpaca.Web in this case) configure your environment with sensible defaults. If you do however want to deviate from the provided default, you can always override it by declaring your own components. For instance, to override WebApi's HttpConfiguration settings:
@@ -74,6 +76,14 @@ public class WebApiConfiguration
 See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
+
+# Further Reading
+Alpaca combines ideas from these following frameworks. Each comes with great documentation far beyond what Alpaca has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Alpaca (or what Alpaca will come to be), so check them out. Just replace the word "Bean" with "Component".
+* [JBoss Weld](http://weld.cdi-spec.org)  [ [Doc](https://docs.jboss.org/weld/reference/latest/en-US/html/) ]
+* [JBoss Seam 3](http://seamframework.org/Seam3/Home.html)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
+* [Spring Framework](http://projects.spring.io/spring-framework/)  [ [Doc](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/) ]
+* [Spring Boot](http://projects.spring.io/spring-boot/)  [ [Doc](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/) ]
+* JAX-RS  [ [Doc](http://docs.jboss.org/resteasy/docs/3.0.6.Final/userguide/html/) ]
 
 # NEXT
 
