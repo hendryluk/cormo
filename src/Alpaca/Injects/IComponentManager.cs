@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Alpaca.Contexts;
-using Alpaca.Injects;
-using Alpaca.Weld.Components;
+using Alpaca.Mixins;
 
 namespace Alpaca.Injects
 {
     public interface IComponentManager
     {
-        IEnumerable<IWeldComponent> GetComponents(Type type, params QualifierAttribute[] qualifiers);
+        IEnumerable<IComponent> GetComponents(Type type, params QualifierAttribute[] qualifiers);
         IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers);
         IComponent GetComponent(IInjectionPoint injectionPoint);
         object GetReference(IComponent component, ICreationalContext creationalContext);

@@ -12,7 +12,7 @@ namespace Alpaca.Weld.Components
     public abstract class AbstractComponent : IWeldComponent
     {
         private AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers,
-            Type scope, IComponentManager manager)
+            Type scope, WeldComponentManager manager)
         {
             var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
             if (!qualifierSet.OfType<AnyAttribute>().Any())
@@ -28,13 +28,13 @@ namespace Alpaca.Weld.Components
         }
 
         protected AbstractComponent(ComponentIdentifier id, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,
-            IComponentManager manager)
+            WeldComponentManager manager)
             : this(type, qualifiers, scope, manager)
         {
             _id = id;
         }
 
-        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager)
             : this(type, qualifiers, scope, manager)
         {
             _id = new ComponentIdentifier(string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix));
@@ -43,7 +43,13 @@ namespace Alpaca.Weld.Components
         public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
         public Type Scope { get; private set; }
         public Type Type { get; set; }
-        public IComponentManager Manager { get; set; }
+
+        IComponentManager IComponent.Manager
+        {
+            get { return Manager; }
+        }
+
+        public WeldComponentManager Manager { get; set; }
         public abstract bool IsConcrete { get; }
         public IEnumerable<IInjectionPoint> InjectionPoints
         {

@@ -11,7 +11,7 @@ namespace Alpaca.Weld.Components
     {
         private readonly FieldInfo _field;
 
-        public ProducerField(FieldInfo field, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        public ProducerField(FieldInfo field, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager)
             : base(field, field.FieldType, qualifiers, scope, manager)
         {
             _field = field;

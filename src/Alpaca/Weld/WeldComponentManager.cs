@@ -5,6 +5,7 @@ using System.Linq;
 using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
+using Alpaca.Mixins;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Injections;
@@ -24,13 +25,20 @@ namespace Alpaca.Weld
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
         private readonly IContextualStore _contextualStore = new ContextualStore();
         private bool _isDeployed = false;
+        private IWeldComponent[] _allMixins;
 
         public IContextualStore ContextualStore
         {
             get { return _contextualStore; }
         }
 
-        public IEnumerable<IWeldComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
+
+        public IWeldComponent[] GetMixins(IComponent component)
+        {
+            return _allMixins.Where(x => x.Qualifiers.All(b => component.Qualifiers.Contains(b))).ToArray();
+        }
+
+        public IEnumerable<IComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
         {
             var unwrappedType = UnwrapType(type);
             var isWrapped = unwrappedType != type;
@@ -90,7 +98,9 @@ namespace Alpaca.Weld
             environment.AddValue(new ContextualStore(), new QualifierAttribute[0], this);
             Container.Instance.Initialize(this);
             
-            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
+            _allMixins = new ConcurrentBag<IWeldComponent>(environment.Components.OfType<Mixin>()).ToArray();
+            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins));
+            
             ValidateComponents();
             ExecuteConfigurations(environment);
             _isDeployed = true;
@@ -122,7 +132,15 @@ namespace Alpaca.Weld
             var producer = component as AbstractProducer;
             if (producer != null)
                 Validate(producer.DeclaringComponent, nextPath);
-
+            var classComponent = component as ClassComponent;
+            if (classComponent != null)
+            {
+                foreach (var mixin in classComponent.Mixins)
+                {
+                    Validate(mixin, nextPath);
+                }
+            }
+                
             foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
             {
                 Validate(inject.Component, (inject.Scope is NormalScopeAttribute)? new IComponent[0] : nextPath);

@@ -9,7 +9,7 @@ namespace Alpaca.Weld.Components
     {
         private readonly object _instance;
 
-        public ValueComponent(object instance, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        public ValueComponent(object instance, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager)
             : base(instance.GetType().FullName, instance.GetType(), qualifiers, scope, manager)
         {
             _instance = instance;

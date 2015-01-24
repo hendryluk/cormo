@@ -67,6 +67,15 @@ namespace Alpaca.Weld.Utils
         }
     }
 
+    public static class MixinCriteria
+    {
+        public static void Validate(Type type)
+        {
+            if(type.IsGenericType)
+                throw new InvalidComponentException(type, "Mixin cannot be a generic class");
+        }
+    }
+
     public static class PostConstructCriteria
     {
         public static void Validate(MethodInfo method)

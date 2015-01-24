@@ -15,7 +15,7 @@ namespace Alpaca.Weld.Components
 
         protected AbstractProducer(MemberInfo member, Type returnType,
             IEnumerable<QualifierAttribute> qualifiers, Type scope,
-            IComponentManager manager)
+            WeldComponentManager manager)
             : base(member.ToString(), returnType, qualifiers, scope, manager)
         {
             _member = member;

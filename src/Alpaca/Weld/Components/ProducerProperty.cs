@@ -11,7 +11,7 @@ namespace Alpaca.Weld.Components
     {
         private readonly PropertyInfo _property;
 
-        public ProducerProperty(PropertyInfo property, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        public ProducerProperty(PropertyInfo property, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager)
             : base(property, property.PropertyType, qualifiers, scope, manager)
         {
             _property = property;

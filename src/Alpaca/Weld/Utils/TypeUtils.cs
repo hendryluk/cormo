@@ -14,7 +14,7 @@ namespace Alpaca.Weld.Utils
         {
             return //type.IsClass &&  // Already checked at scanner level
                     !(type.IsSealed && type.IsAbstract) // static classes
-                   && (!type.IsAbstract || type.HasAttributeRecursive<DecoratorAttribute>())
+                   && (!type.IsAbstract || type.HasAttributeRecursive<MixinAttribute>() || type.HasAttributeRecursive<DecoratorAttribute>())
                    && HasInjectableConstructor(type);
         }
 

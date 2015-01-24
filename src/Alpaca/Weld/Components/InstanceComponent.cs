@@ -11,7 +11,7 @@ namespace Alpaca.Weld.Components
     {
         private readonly IWeldComponent[] _components;
 
-        public InstanceComponent(Type baseType, IEnumerable<QualifierAttribute> qualifiers, IComponentManager manager, IWeldComponent[] components) 
+        public InstanceComponent(Type baseType, IEnumerable<QualifierAttribute> qualifiers, WeldComponentManager manager, IWeldComponent[] components) 
             : base("", typeof(Instance<>).MakeGenericType(baseType), qualifiers, typeof(DependentAttribute), manager)
         {
             _components = components;
