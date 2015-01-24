@@ -47,6 +47,7 @@
     <Compile Include="Contexts\ContextNotActiveException.cs" />
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
+    <Compile Include="Contexts\SingletonAttribute.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />
     <Compile Include="Injects\MixinAttribute.cs" />
     <Compile Include="Mixins\MixinBindingAttribute.cs" />
@@ -56,6 +57,7 @@
     <Compile Include="Weld\Contexts\Container.cs" />
     <Compile Include="Weld\Contexts\DependentContext.cs" />
     <Compile Include="Weld\Contexts\ForwardingContextual.cs" />
+    <Compile Include="Weld\Contexts\IComponentStore.cs" />
     <Compile Include="Weld\Contexts\IDependentContext.cs" />
     <Compile Include="Contexts\NormalScopeAttribute.cs" />
     <Compile Include="Contexts\RequestScopedAttribute.cs" />
@@ -84,8 +86,10 @@
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
     <Compile Include="Utils\AttributeUtils.cs" />
     <Compile Include="Utils\CacheUtils.cs" />
+    <Compile Include="Weld\Contexts\ISingletonContext.cs" />
     <Compile Include="Weld\Contexts\SerializableContextual.cs" />
     <Compile Include="Weld\Contexts\SerializableContextualInstance.cs" />
+    <Compile Include="Weld\Contexts\SingletonContext.cs" />
     <Compile Include="Weld\Injections\AbstractInjectionPoint.cs" />
     <Compile Include="Weld\Components\AbstractProducer.cs" />
     <Compile Include="Weld\AttributeScanDeployer.cs" />

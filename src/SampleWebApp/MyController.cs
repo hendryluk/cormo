@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Web.Http;
+using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Web.Attributes;
 
@@ -32,11 +33,12 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
+    [Singleton]
     public class UpperCaseGreeter : IGreeter<string>
     {
         public string Greet(string val)
         {
-            return "Hello " + val.ToUpper();
+            return string.Format("Hello {0} ({1})", val.ToUpper(), GetHashCode());
         }
     }
 
@@ -44,7 +46,7 @@ namespace SampleWebApp
     {
         public string Greet(IEnumerable<T> vals)
         {
-            return "Hello many " + string.Join(",", vals);
+            return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }
     }
 }

@@ -13,7 +13,6 @@ namespace Alpaca.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        
         private ClassComponent(ClassComponent parent, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
             : base(new ComponentIdentifier(parent.Id.Key, type), type, qualifiers, scope, manager,
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())

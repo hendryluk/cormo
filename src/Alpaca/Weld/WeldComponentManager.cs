@@ -78,8 +78,7 @@ namespace Alpaca.Weld
 
         public object GetReference(IComponent component, ICreationalContext creationalContext)
         {
-            var context = GetContext(component.Scope);
-            return context.Get(component, creationalContext);
+            return GetContext(component.Scope).Get(component, creationalContext);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)

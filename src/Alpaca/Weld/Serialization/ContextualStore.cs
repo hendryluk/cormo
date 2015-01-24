@@ -19,7 +19,9 @@ namespace Alpaca.Weld.Serialization
         private int _idIncrement = 0;
         public void Cleanup()
         {
-            throw new NotImplementedException();
+            _contextuals.Clear();
+            _contextualsInverse.Clear();
+            _passivationCapableContextuals.Clear();
         }
 
         /// <summary>

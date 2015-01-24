@@ -40,10 +40,6 @@ namespace Alpaca.Weld.Components
             var methodInject = InjectMethods(paramInject.Where(x => !x.IsConstructor)).ToArray();
             var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
 
-            //var create = ctorInject == null? 
-            //    new BuildPlan(context => Activator.CreateInstance(Type, true)): 
-            //    context => ctorInject(null, context);
-
             return context =>
             {
                 var instance = constructPlan(context);
