@@ -1,7 +1,7 @@
 ﻿namespace Alpaca.Injects
 {
-    public interface IPassivationCapable
+    public interface IPassivationCapable<T>
     {
-        string Id { get; }
+        T Id { get; }
     }
 }

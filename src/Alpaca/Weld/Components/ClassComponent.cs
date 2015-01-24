@@ -12,6 +12,11 @@ namespace Alpaca.Weld.Components
 {
     public abstract class ManagedComponent : AbstractComponent
     {
+        protected ManagedComponent(ComponentIdentifier id, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+            : base(id, type, qualifiers, scope, manager)
+        {
+        }
+
         protected ManagedComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager) 
             : base(type.FullName, type, qualifiers, scope, manager)
         {
@@ -21,15 +26,28 @@ namespace Alpaca.Weld.Components
     public class ClassComponent : ManagedComponent
     {
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
-        public IEnumerable<MethodInfo> PreDestroys { get; private set; }
         private readonly bool _containsGenericParameters;
-        
-        public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,  IComponentManager manager, MethodInfo[] postConstructs, MethodInfo[] preDestroys)
+
+        private ClassComponent(ClassComponent parent, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager, GenericUtils.Resolution typeResolution)
+            : base(new ComponentIdentifier(parent.Id.Key, type), type, qualifiers, scope, manager)
+        {
+            var postConstructs = parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray();
+            PostConstructs = postConstructs;
+            _containsGenericParameters = Type.ContainsGenericParameters;
+            IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
+
+            Mixins = parent.Mixins;
+            TransferInjectionPointsTo(this, typeResolution);
+
+            ValidateMethodSignatures();
+        }
+
+        public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,  IComponentManager manager, MethodInfo[] postConstructs)
             : base(type, qualifiers, scope, manager)
         {
             PostConstructs = postConstructs;
-            PreDestroys = preDestroys;
             _containsGenericParameters = Type.ContainsGenericParameters;
+            IsDisposable = typeof (IDisposable).IsAssignableFrom(Type);
 
             ValidateMethodSignatures();
         }
@@ -40,10 +58,6 @@ namespace Alpaca.Weld.Components
             {
                 PostConstructCriteria.Validate(m);
             }
-            foreach (var m in PreDestroys)
-            {
-                PreDestroyCriteria.Validate(m);
-            }
         }
 
         public override bool IsConcrete
@@ -52,6 +66,7 @@ namespace Alpaca.Weld.Components
         }
 
         public Type[] Mixins { get; set; }
+        public bool IsDisposable { get; private set; }
 
         public override IWeldComponent Resolve(Type requestedType)
         {
@@ -62,15 +77,13 @@ namespace Alpaca.Weld.Components
             if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                 return null;
 
-            var postConstructs = PostConstructs.Select(x=> GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
-            var preDestroys = PreDestroys.Select(x => GenericUtils.TranslateMethodGenericArguments(x, resolution.GenericParameterTranslations)).ToArray();
+            
+            var component = new ClassComponent(this, 
+                resolution.ResolvedType, 
+                Qualifiers, 
+                Scope, Manager, resolution);
 
-            var components = new ClassComponent(resolution.ResolvedType, Qualifiers, Scope, Manager, postConstructs, preDestroys)
-            {
-                Mixins = Mixins
-            };
-            TransferInjectionPointsTo(components, resolution);
-            return components;
+            return component;
         }
 
         protected override BuildPlan GetBuildPlan()

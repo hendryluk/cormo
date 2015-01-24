@@ -11,20 +11,33 @@ namespace Alpaca.Weld.Components
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        private AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers,
+            Type scope, IComponentManager manager)
         {
-            Id = string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix);
             var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
             if (!qualifierSet.OfType<AnyAttribute>().Any())
                 qualifierSet.Add(AnyAttribute.Instance);
             if (qualifierSet.All(x => (x is AnyAttribute)))
                 qualifierSet.Add(DefaultAttribute.Instance);
-            
+
             Type = type;
             Manager = manager;
             Qualifiers = qualifierSet;
             Scope = scope;
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
+        }
+
+        protected AbstractComponent(ComponentIdentifier id, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,
+            IComponentManager manager)
+            : this(type, qualifiers, scope, manager)
+        {
+            _id = id;
+        }
+
+        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+            : this(type, qualifiers, scope, manager)
+        {
+            _id = new ComponentIdentifier(string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix));
         }
 
         public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
@@ -45,6 +58,7 @@ namespace Alpaca.Weld.Components
 
         private readonly Lazy<BuildPlan> _lazyBuildPlan;
         private readonly ISet<IWeldInjetionPoint> _injectionPoints = new HashSet<IWeldInjetionPoint>();
+        private ComponentIdentifier _id;
 
         public bool IsProxyRequired { get; private set; }
 
@@ -76,6 +90,6 @@ namespace Alpaca.Weld.Components
         }
 
         protected abstract BuildPlan GetBuildPlan();
-        public string Id { get; private set; }
+        public ComponentIdentifier Id { get { return _id; } }
     }
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
 using System.Threading;
 using Alpaca.Contexts;
 using Alpaca.Injects;
@@ -29,9 +27,9 @@ namespace Alpaca.Weld.Serialization
     {
         private static readonly String GeneratedIdPrefix = typeof(ContextualStore).Name;
 
-        private readonly ConcurrentDictionary<IContextual, string> _contextuals = new ConcurrentDictionary<IContextual, string>();
-        private readonly ConcurrentDictionary<string, IContextual> _contextualsInverse = new ConcurrentDictionary<string, IContextual>();
-        private readonly ConcurrentDictionary<string, IContextual> _passivationCapableContextuals = new ConcurrentDictionary<string, IContextual>();
+        private readonly ConcurrentDictionary<IContextual, ComponentIdentifier> _contextuals = new ConcurrentDictionary<IContextual, ComponentIdentifier>();
+        private readonly ConcurrentDictionary<ComponentIdentifier, IContextual> _contextualsInverse = new ConcurrentDictionary<ComponentIdentifier, IContextual>();
+        private readonly ConcurrentDictionary<ComponentIdentifier, IContextual> _passivationCapableContextuals = new ConcurrentDictionary<ComponentIdentifier, IContextual>();
 
         private int _idIncrement = 0;
         public void Cleanup()
@@ -46,9 +44,9 @@ namespace Alpaca.Weld.Serialization
         /// </summary>
         /// <param name="contextual">contextual the contexutal to add</param>
         /// <returns>the current id for the contextual</returns>
-        public string PutIfAbsent(IContextual contextual)
+        public ComponentIdentifier PutIfAbsent(IContextual contextual)
         {
-            var passivationCapable = contextual as IPassivationCapable;
+            var passivationCapable = contextual as IPassivationCapable<ComponentIdentifier>;
             if (passivationCapable != null)
             {
                 var id = passivationCapable.Id;
@@ -58,22 +56,34 @@ namespace Alpaca.Weld.Serialization
 
             return _contextuals.GetOrAdd(contextual, _ =>
             {
-                var id = string.Format("{0}{1}", GeneratedIdPrefix, Interlocked.Increment(ref _idIncrement));
+                var id = new ComponentIdentifier(
+                    string.Format("{0}{1}", GeneratedIdPrefix, Interlocked.Increment(ref _idIncrement)));
                 _contextualsInverse[id] = contextual;
                 return id;
             });
         }
 
-        public IContextual GetContextual(string id)
+        public IContextual GetContextual(ComponentIdentifier id)
         {
-            if (id.StartsWith(GeneratedIdPrefix))
+            if (id.Key.StartsWith(GeneratedIdPrefix))
             {
                 return _contextualsInverse.GetOrDefault(id);
             }
-            else
+
+            var contextual = _passivationCapableContextuals.GetOrDefault(id);
+            if (contextual != null) 
+                return contextual;
+
+            var seed = _passivationCapableContextuals.GetOrDefault(new ComponentIdentifier(id.Key)) as IWeldComponent;
+            if (seed == null) 
+                return null;
+
+            contextual = seed.Resolve(seed.Type);
+            if (contextual != null)
             {
-                return _passivationCapableContextuals.GetOrDefault(id);
+                PutIfAbsent(contextual);
             }
+            return contextual;
         }
     }
 
@@ -88,8 +98,8 @@ namespace Alpaca.Weld.Serialization
 
     public interface IContextualStore: IService
     {
-        string PutIfAbsent(IContextual contextual);
-        IContextual GetContextual(string id);
+        ComponentIdentifier PutIfAbsent(IContextual contextual);
+        IContextual GetContextual(ComponentIdentifier id);
     }
 }
 namespace Alpaca.Weld.Contexts
@@ -171,7 +181,7 @@ namespace Alpaca.Weld.Contexts
         [NonSerialized]
         private IContextual _cached;
 
-        private readonly string _id;
+        private readonly ComponentIdentifier _id;
 
         public SerializableContextual(IContextual contextual, IContextualStore contextualStore)
         {
@@ -269,7 +279,7 @@ namespace Alpaca.Weld.Contexts
                 var classComponent = contextual as ClassComponent;
                 if (classComponent != null)
                 {
-                    if (!classComponent.PreDestroys.Any()
+                    if (!classComponent.IsDisposable
                         /* TODO: && component.HasInterceptors && component.HasDefaultProducer */)
                     {
                         return;

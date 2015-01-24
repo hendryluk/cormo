@@ -79,17 +79,4 @@ namespace Alpaca.Weld.Utils
 
         }
     }
-
-    public static class PreDestroyCriteria
-    {
-        public static void Validate(MethodInfo method)
-        {
-            if (method.IsGenericMethod)
-                throw new InvalidMethodSignatureException(method, "PreDestroy method must not be generic");
-
-            if (method.GetParameters().Any())
-                throw new InvalidMethodSignatureException(method, "PreDestroy method must not have any parameter");
-
-        }
-    }
 }

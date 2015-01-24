@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Alpaca.Contexts;
-using Alpaca.Injects;
 
 namespace Alpaca.Contexts
 {
@@ -69,7 +69,7 @@ namespace Alpaca.Weld.Contexts
 
         public void Release()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public IEnumerable<IContextualInstance> DependentInstances { get { return _dependentInstances; } }

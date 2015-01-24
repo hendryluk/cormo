@@ -169,14 +169,13 @@ namespace Alpaca.Weld
             var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var iFields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
-            var preDestroys = methods.Where(x => x.HasAttributeRecursive<PreDestroyAttribute>()).ToArray();
             var scope = type.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
 
            
-            var component = new ClassComponent(type, qualifiers, scope, _manager, postConstructs, preDestroys)
+            var component = new ClassComponent(type, qualifiers, scope, _manager, postConstructs)
             {
                 Mixins = mixins
             };

@@ -40,7 +40,7 @@ namespace Alpaca.Weld.Test.Injection
         [Test]
         public void TestInjectionOfOpenGenericComponent()
         {
-            _deployer.AddTypes(typeof(IRepository<>), typeof(Target));
+            _deployer.AddTypes(typeof(Repository<>), typeof(Target));
             Assert.IsInstanceOf<Repository<int>>(GetInstance<Target>()._repo);
         }
 

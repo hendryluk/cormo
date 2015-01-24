@@ -72,7 +72,6 @@
     <Compile Include="Injects\Exceptions\InvalidComponentException.cs" />
     <Compile Include="Injects\Exceptions\NonProxiableTypeException.cs" />
     <Compile Include="Injects\PostConstructAttribute.cs" />
-    <Compile Include="Injects\PreDestroyAttribute.cs" />
     <Compile Include="Injects\ProducesAttribute.cs" />
     <Compile Include="Injects\QualifierAttribute.cs" />
     <Compile Include="Injects\Exceptions\UnsatisfiedDependencyException.cs" />

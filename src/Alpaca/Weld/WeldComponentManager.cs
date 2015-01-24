@@ -23,7 +23,8 @@ namespace Alpaca.Weld
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
         private readonly IContextualStore _contextualStore = new ContextualStore();
-        
+        private bool _isDeployed = false;
+
         public IContextualStore ContextualStore
         {
             get { return _contextualStore; }
@@ -39,10 +40,14 @@ namespace Alpaca.Weld
 
             var matched = components.Where(x => x.CanSatisfy(qualifiers)).ToArray();
             var newComponents = matched.Where(x => !_allComponents.Contains(x));
-
-            foreach(var c in newComponents)
+            foreach (var c in newComponents)
+            {
                 _allComponents.Add(c);
-            
+                ContextualStore.PutIfAbsent(c);
+                if (_isDeployed)
+                    Validate(c, new IComponent[0]);
+            }
+             
             if (isWrapped)
                 matched = new IWeldComponent[] { new InstanceComponent(type, qualifiers, this, matched) };
             
@@ -88,6 +93,7 @@ namespace Alpaca.Weld
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components);
             ValidateComponents();
             ExecuteConfigurations(environment);
+            _isDeployed = true;
         }
 
         private void ExecuteConfigurations(WeldEnvironment environment)
