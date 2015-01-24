@@ -49,6 +49,7 @@
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />
     <Compile Include="Injects\MixinAttribute.cs" />
+    <Compile Include="Utils\DictionaryUtils.cs" />
     <Compile Include="Weld\Contexts\IDependentContext.cs" />
     <Compile Include="Contexts\NormalScopeAttribute.cs" />
     <Compile Include="Contexts\RequestScopedAttribute.cs" />

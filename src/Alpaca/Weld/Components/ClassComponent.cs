@@ -12,7 +12,8 @@ namespace Alpaca.Weld.Components
 {
     public abstract class ManagedComponent : AbstractComponent
     {
-        protected ManagedComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager) : base(type, qualifiers, scope, manager)
+        protected ManagedComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager) 
+            : base(type.FullName, type, qualifiers, scope, manager)
         {
         }
     }

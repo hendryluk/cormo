@@ -2,6 +2,6 @@
 {
     public interface IPassivationCapable
     {
-       // string Id { get; }
+        string Id { get; }
     }
 }

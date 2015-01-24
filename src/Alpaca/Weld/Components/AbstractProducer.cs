@@ -15,7 +15,8 @@ namespace Alpaca.Weld.Components
 
         protected AbstractProducer(MemberInfo member, Type returnType,
             IEnumerable<QualifierAttribute> qualifiers, Type scope,
-            IComponentManager manager): base(returnType, qualifiers, scope, manager)
+            IComponentManager manager)
+            : base(member.ToString(), returnType, qualifiers, scope, manager)
         {
             _member = member;
             _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(member);

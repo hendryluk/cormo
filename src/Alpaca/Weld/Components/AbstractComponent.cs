@@ -11,8 +11,9 @@ namespace Alpaca.Weld.Components
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        protected AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
+        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, IComponentManager manager)
         {
+            Id = string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix);
             var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
             if (!qualifierSet.OfType<AnyAttribute>().Any())
                 qualifierSet.Add(AnyAttribute.Instance);
@@ -75,5 +76,6 @@ namespace Alpaca.Weld.Components
         }
 
         protected abstract BuildPlan GetBuildPlan();
+        public string Id { get; private set; }
     }
 }

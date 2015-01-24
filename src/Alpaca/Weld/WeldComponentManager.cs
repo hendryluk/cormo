@@ -15,8 +15,19 @@ namespace Alpaca.Weld
 {
     public class WeldComponentManager : IComponentManager
     {
+        public WeldComponentManager(string id)
+        {
+            Id = id;
+        }
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
+        private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
+        private readonly IContextualStore _contextualStore = new ContextualStore();
+        
+        public IContextualStore ContextualStore
+        {
+            get { return _contextualStore; }
+        }
 
         public IEnumerable<IWeldComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
         {
@@ -52,10 +63,10 @@ namespace Alpaca.Weld
             return components.Single();
         }
 
-        public object GetReference(IComponent component, ICreationalContext context)
+        public object GetReference(IComponent component, ICreationalContext creationalContext)
         {
-            // TODO: scope context
-            return component.Create(context);
+            var context = GetContext(component.Scope);
+            return context.Get(component, creationalContext);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)
@@ -137,10 +148,33 @@ namespace Alpaca.Weld
             return (T) GetReference(typeof (T), qualifiers);
         }
 
+        public string Id { get; private set; }
+
         public object GetReference(Type type, params QualifierAttribute[] qualifiers)
         {
             var component = GetComponent(type, qualifiers);
             return GetReference(component, CreateCreationalContext(component));
+        }
+
+        public void AddContext(IContext context)
+        {
+            _contexts.GetOrAdd(context.Scope, _=> new List<IContext>()).Add(context);
+        }
+
+        public IContext GetContext(Type scope)
+        {
+            IList<IContext> contexts;
+            if(!_contexts.TryGetValue(scope, out contexts))
+                throw new ContextNotActiveException(scope);
+
+            var activeContexts = contexts.Where(x => x.IsActive).ToArray();
+            if(!activeContexts.Any())
+                throw new ContextNotActiveException(scope);
+
+            if (activeContexts.Count() > 1)
+                throw new ContextException(string.Format("Duplicate contexts: [{0}]", scope.Name));
+
+            return activeContexts.Single();
         }
     }
 }

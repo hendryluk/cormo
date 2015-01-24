@@ -7,6 +7,7 @@ using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Alpaca.Utils;
 using Alpaca.Weld.Components;
+using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Injections;
 using Alpaca.Weld.Utils;
 using Castle.DynamicProxy;
@@ -196,7 +197,13 @@ namespace Alpaca.Weld
 
         public void Deploy()
         {
+            AddContexts();
             _manager.Deploy(_environment);
+        }
+
+        private void AddContexts()
+        {
+            _manager.AddContext(new DependentContext(_manager.ContextualStore));
         }
     }
 }

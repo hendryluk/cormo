@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading;
 using Alpaca.Contexts;
 using Alpaca.Injects;
+using Alpaca.Utils;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Serialization;
@@ -24,23 +27,53 @@ namespace Alpaca.Weld.Serialization
 {
     public class ContextualStore : IContextualStore
     {
-        private Dictionary<IContextual, Guid> _contextuals;
-        private Dictionary<Guid, IContextual> _contextualsInverse;
-        private Dictionary<IContextual, Guid> _passivationCapableContextuals;
- 
+        private static readonly String GeneratedIdPrefix = typeof(ContextualStore).Name;
+
+        private readonly ConcurrentDictionary<IContextual, string> _contextuals = new ConcurrentDictionary<IContextual, string>();
+        private readonly ConcurrentDictionary<string, IContextual> _contextualsInverse = new ConcurrentDictionary<string, IContextual>();
+        private readonly ConcurrentDictionary<string, IContextual> _passivationCapableContextuals = new ConcurrentDictionary<string, IContextual>();
+
+        private int _idIncrement = 0;
         public void Cleanup()
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Add a contextual (if not already present) to the store, and return it's
+        /// id. If the contextual is passivation capable, it's id will be used,
+        /// otherwise an id will be generated
+        /// </summary>
+        /// <param name="contextual">contextual the contexutal to add</param>
+        /// <returns>the current id for the contextual</returns>
         public string PutIfAbsent(IContextual contextual)
         {
-            throw new NotImplementedException();
+            var passivationCapable = contextual as IPassivationCapable;
+            if (passivationCapable != null)
+            {
+                var id = passivationCapable.Id;
+                _passivationCapableContextuals.TryAdd(id, contextual);
+                return id;
+            }
+
+            return _contextuals.GetOrAdd(contextual, _ =>
+            {
+                var id = string.Format("{0}{1}", GeneratedIdPrefix, Interlocked.Increment(ref _idIncrement));
+                _contextualsInverse[id] = contextual;
+                return id;
+            });
         }
 
         public IContextual GetContextual(string id)
         {
-            throw new NotImplementedException();
+            if (id.StartsWith(GeneratedIdPrefix))
+            {
+                return _contextualsInverse.GetOrDefault(id);
+            }
+            else
+            {
+                return _passivationCapableContextuals.GetOrDefault(id);
+            }
         }
     }
 
@@ -213,14 +246,15 @@ namespace Alpaca.Weld.Contexts
 
         public object Get(IContextual contextual, ICreationalContext creationalContext)
         {
-            if (IsActive) 
+            if (!IsActive) 
             {
-                throw new ContextNotActiveException();
+                throw new ContextNotActiveException(Scope);
             }
             if (creationalContext != null) {
                 var instance = contextual.Create(creationalContext);
-                if (creationalContext is IWeldCreationalContext) {
-                    AddDependentInstance(instance, contextual, (IWeldCreationalContext)creationalContext);
+                var weldContext = creationalContext as IWeldCreationalContext;
+                if (weldContext != null) {
+                    AddDependentInstance(instance, contextual, weldContext);
                 }
                 return instance;
             }

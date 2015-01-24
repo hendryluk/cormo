@@ -11,7 +11,7 @@ namespace Alpaca
         private AlpacaApplication()
         {
             Environment = new WeldEnvironment();
-            Manager = new WeldComponentManager();
+            Manager = new WeldComponentManager("deployment");
             Deployer = new AttributeScanDeployer(Manager, Environment);
         }
 

@@ -33,7 +33,7 @@ namespace Alpaca.Weld.Test.Injection
         [SetUp]
         public void Setup()
         {
-            _manager = new WeldComponentManager();
+            _manager = new WeldComponentManager("test");
             _deployer = new AttributeScanDeployer(_manager, new WeldEnvironment());
         }
 
