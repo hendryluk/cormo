@@ -54,6 +54,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Client.5.2.2\lib\net45\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web" />
     <Reference Include="System.Web.Http, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Core.5.2.2\lib\net45\System.Web.Http.dll</HintPath>
@@ -69,13 +70,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AlpacaOwinStartup.cs" />
-    <Compile Include="Attributes\RestControllerAttribute.cs" />
-    <Compile Include="WebApi\AlpacaDependencyResolver.cs" />
-    <Compile Include="WebApi\AlpacaHttpControllerSelector.cs" />
-    <Compile Include="WebApi\ApiControllerMixin.cs" />
-    <Compile Include="Weld\Contexts\HttpRequestContext.cs" />
-    <Compile Include="Weld\HttpContextLifecycle.cs" />
-    <Compile Include="WebApi\WebApiRegistrar.cs" />
+    <Compile Include="Api\CookieParamAttribute.cs" />
+    <Compile Include="Api\RestControllerAttribute.cs" />
+    <Compile Include="Impl\AlpacaDependencyResolver.cs" />
+    <Compile Include="Impl\AlpacaHttpControllerSelector.cs" />
+    <Compile Include="Impl\ApiControllerMixin.cs" />
+    <Compile Include="Impl\Contexts\HttpRequestContext.cs" />
+    <Compile Include="Impl\CookieParamProducer.cs" />
+    <Compile Include="Impl\HttpContextLifecycle.cs" />
+    <Compile Include="Impl\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

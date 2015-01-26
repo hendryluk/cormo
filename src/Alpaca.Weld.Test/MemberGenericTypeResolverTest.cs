@@ -17,6 +17,8 @@ namespace Alpaca.Weld.Test
 
         private class GenericClass<T>
         {
+            public T Tee() { return default(T); }
+
             public IList<T> List() { return null; }
 
             public IList<string> ListString() { return null; }
@@ -100,6 +102,13 @@ namespace Alpaca.Weld.Test
         {
             var resolution = GenericUtils.ResolveGenericType(typeof(IDisposableList<>), GetMethodType("List"));
             Assert.IsNotNull(resolution);
+        }
+
+        [Test]
+        public void ResolveTIntoString()
+        {
+            Assert.AreEqual(typeof(string),
+                Resolve<string>("Tee"));
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Web.Http;
 using Alpaca.Injects;
-using Alpaca.Web.Attributes;
+using Alpaca.Web.Api;
 
-namespace Alpaca.Web.WebApi
+namespace Alpaca.Web.Impl
 {
     [RestController]
     [Mixin]

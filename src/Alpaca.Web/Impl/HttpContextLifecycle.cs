@@ -1,10 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Owin;
-using Microsoft.Owin.Extensions;
-using Owin;
-
-namespace Alpaca.Web.Weld
+﻿namespace Alpaca.Web.Impl
 {
     //[Configuration]
     //public class HttpContextLifecycle

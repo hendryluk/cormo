@@ -39,10 +39,10 @@ namespace Alpaca.Weld.Injections
             var component = Component;
             if (IsCacheable)
             {
-                return CacheUtils.Cache(context => manager.GetReference(component, context));
+                return CacheUtils.Cache((context, ip) => manager.GetInjectableReference(ip, component, context));
             }
 
-            return context => manager.GetInjectableReference(this, component, context);
+            return (context, ip) => manager.GetInjectableReference(this, component, context);
         }
 
         public MemberInfo Member { get; private set; }
@@ -55,9 +55,9 @@ namespace Alpaca.Weld.Injections
         private readonly Lazy<IComponent> _lazyComponents;
         private readonly Lazy<BuildPlan> _lazyGetValuePlan;
 
-        public object GetValue(ICreationalContext context)
+        public object GetValue(ICreationalContext context, IInjectionPoint ip)
         {
-            return _lazyGetValuePlan.Value(context);
+            return _lazyGetValuePlan.Value(context, ip);
         }
 
         private IComponent ResolveComponents()
@@ -77,7 +77,7 @@ namespace Alpaca.Weld.Injections
 
         public void Inject(object target, ICreationalContext context)
         {
-            _lazyInjectPlan.Value(target, context);
+            _lazyInjectPlan.Value(target, context, this);
         }
     }
 }

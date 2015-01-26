@@ -3,15 +3,15 @@ using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Dispatcher;
 using Alpaca.Injects;
-using Alpaca.Web.Attributes;
+using Alpaca.Web.Api;
 
-namespace Alpaca.Web.WebApi
+namespace Alpaca.Web.Impl
 {
     [ConditionalOnMissingComponent]
     public class AlpacaHttpControllerSelector : DefaultHttpControllerSelector
     {
         [Inject] IComponentManager _manager;
-        private HttpConfiguration _configuration;
+        private readonly HttpConfiguration _configuration;
 
         [Inject]
         public AlpacaHttpControllerSelector(HttpConfiguration httpConfiguration)

@@ -1,4 +1,5 @@
 ﻿using Alpaca.Contexts;
+using Alpaca.Injects;
 
 namespace Alpaca.Weld.Contexts
 {
@@ -6,9 +7,9 @@ namespace Alpaca.Weld.Contexts
     {
         protected abstract IContextual Delegate { get;  }
 
-        public object Create(ICreationalContext context)
+        public object Create(ICreationalContext context, IInjectionPoint ip)
         {
-            return Delegate.Create(context);
+            return Delegate.Create(context, ip);
         }
 
         public void Destroy()

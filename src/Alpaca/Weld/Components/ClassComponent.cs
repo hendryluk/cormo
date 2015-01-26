@@ -93,20 +93,20 @@ namespace Alpaca.Weld.Components
             
             if (Mixins.Any())
             {
-                return context =>
+                return (context, ip) =>
                 {
                     var pgo = new ProxyGenerationOptions();
                     foreach (var mixin in Mixins)
                         pgo.AddMixinInstance(Manager.GetReference(mixin, context));
                     
-                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                    var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
                     return ProxyGenerator.CreateClassProxy(Type, pgo, paramVals);
                 };
             }
         
-            return context =>
+            return (context, ip) =>
             {
-                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
         }

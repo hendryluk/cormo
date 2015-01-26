@@ -5,7 +5,6 @@ using System.Linq;
 using Alpaca.Contexts;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
-using Alpaca.Mixins;
 using Alpaca.Weld.Components;
 using Alpaca.Weld.Contexts;
 using Alpaca.Weld.Injections;
@@ -35,7 +34,7 @@ namespace Alpaca.Weld
 
         public IWeldComponent[] GetMixins(IComponent component)
         {
-            return _allMixins.Where(x => x.Qualifiers.All(b => component.Qualifiers.Contains(b))).ToArray();
+            return _allMixins.Where(x => x.CanSatisfy(component.Qualifiers)).ToArray();
         }
 
         public IEnumerable<IComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
@@ -64,6 +63,8 @@ namespace Alpaca.Weld
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
         {
+            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+
             var components = GetComponents(type, qualifiers).ToArray();
             ResolutionValidator.ValidateSingleResult(type, qualifiers, components);
             return components.Single();
@@ -78,7 +79,7 @@ namespace Alpaca.Weld
 
         public object GetReference(IComponent component, ICreationalContext creationalContext)
         {
-            return GetContext(component.Scope).Get(component, creationalContext);
+            return GetInjectableReference(null, component, creationalContext);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)
@@ -88,7 +89,7 @@ namespace Alpaca.Weld
 
         public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext context)
         {
-            return GetReference(component, context);
+            return GetContext(component.Scope).Get(component, context, injectionPoint);
         }
 
         public void Deploy(WeldEnvironment environment)

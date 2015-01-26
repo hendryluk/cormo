@@ -45,10 +45,16 @@ namespace Alpaca.Weld.Utils
                 return null;
             else
             {
-                var openRequestedType = OpenIfGeneric(requestedType);
-                var interfaces = TypeUtils.GetComponentTypes(component);
+                if (component.IsGenericParameter)
+                {
+                    typeTranslations.Add(component, requestedType);
+                    return requestedType;
+                }
 
-                var resolvedComponentType = (from i in interfaces
+                var openRequestedType = OpenIfGeneric(requestedType);
+                var ancestors = TypeUtils.GetComponentTypes(component);
+
+                var resolvedComponentType = (from i in ancestors
                         where openRequestedType == OpenIfGeneric(i)
                         let closedType = CloseGenericType(i, requestedType, typeTranslations)
                         where closedType != null

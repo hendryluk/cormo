@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Web.Http;
-using System.Web.Http.Controllers;
 using System.Web.Http.Dependencies;
 using Alpaca.Injects;
 using Alpaca.Injects.Exceptions;
 using Castle.DynamicProxy;
 
-namespace Alpaca.Web.WebApi
+namespace Alpaca.Web.Impl
 {
     public class AlpacaDependencyResolver: IDependencyResolver
     {
         private readonly IComponentManager _componentManager;
-        ProxyGenerator gen = new ProxyGenerator();
-        DefaultProxyBuilder builder = new DefaultProxyBuilder();
+        ProxyGenerator _gen = new ProxyGenerator();
+        DefaultProxyBuilder _builder = new DefaultProxyBuilder();
                 
         public AlpacaDependencyResolver(IComponentManager componentManager)
         {

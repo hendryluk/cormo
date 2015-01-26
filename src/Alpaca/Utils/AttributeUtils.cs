@@ -23,7 +23,7 @@ namespace Alpaca.Utils
             return GetAttributesRecursive(attributeProvider).Where(type.IsInstanceOfType);
         }
 
-        public static IEnumerable<T> GetAttributesRecursive<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
+        public static IEnumerable<T> GetAttributesRecursive<T>(this ICustomAttributeProvider attributeProvider)
         {
             return GetAttributesRecursive(attributeProvider).OfType<T>();
         }

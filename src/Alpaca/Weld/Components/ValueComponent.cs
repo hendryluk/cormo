@@ -29,7 +29,7 @@ namespace Alpaca.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return _ => _instance;
+            return (_,__) => _instance;
         }
 
         public override string ToString()

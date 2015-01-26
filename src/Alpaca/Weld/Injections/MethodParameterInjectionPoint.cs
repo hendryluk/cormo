@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Alpaca.Injects;
-using Alpaca.Utils;
-using Alpaca.Weld.Components;
 using Alpaca.Weld.Utils;
 
 namespace Alpaca.Weld.Injections
 {
-    public class MethodParameterInjectionPoint : AbstractInjectionPoint
+    public class MethodParameterInjectionPoint : AbstractInjectionPoint, IMethodParameterInjectionPoint
     {
         private readonly ParameterInfo _param;
+
+        public ParameterInfo ParameterInfo { get { return _param; } }
         
         public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, QualifierAttribute[] qualifiers) 
             : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, qualifiers)

@@ -192,7 +192,13 @@ namespace Alpaca.Weld
         public void Deploy()
         {
             AddContexts();
+            AddBuiltInComponents();
             _manager.Deploy(_environment);
+        }
+
+        private void AddBuiltInComponents()
+        {
+            _environment.AddComponent(new InjectionPointComponent(_manager));
         }
 
         private void AddContexts()

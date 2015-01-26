@@ -15,8 +15,6 @@ namespace Alpaca.Weld.Components
             Type scope, WeldComponentManager manager)
         {
             var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
-            if (!qualifierSet.OfType<AnyAttribute>().Any())
-                qualifierSet.Add(AnyAttribute.Instance);
             if (qualifierSet.All(x => (x is AnyAttribute)))
                 qualifierSet.Add(DefaultAttribute.Instance);
 
@@ -70,14 +68,18 @@ namespace Alpaca.Weld.Components
 
         public bool CanSatisfy(IEnumerable<QualifierAttribute> qualifiers)
         {
-            return qualifiers.All(Qualifiers.Contains);
+            var qualifierTypes = qualifiers.Select(x => x.GetType()).ToArray();
+            if (qualifierTypes.Contains(typeof (AnyAttribute)))
+                return true;
+
+            return qualifierTypes.All(Qualifiers.Select(x=> x.GetType()).Contains);
         }
 
         public abstract IWeldComponent Resolve(Type requestedType);
 
-        public object Create(ICreationalContext context)
+        public object Create(ICreationalContext context, IInjectionPoint injectionPoint)
         {
-            return _lazyBuildPlan.Value(context);
+            return _lazyBuildPlan.Value(context, injectionPoint);
         }
 
         public void Destroy()

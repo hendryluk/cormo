@@ -24,7 +24,7 @@ namespace Alpaca.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return context => Activator.CreateInstance(Type, 
+            return (context, ip) => Activator.CreateInstance(Type, 
                 Qualifiers.ToArray(), _components, context);
         }
 

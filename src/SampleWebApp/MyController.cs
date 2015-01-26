@@ -2,7 +2,7 @@
 using System.Web.Http;
 using Alpaca.Contexts;
 using Alpaca.Injects;
-using Alpaca.Web.Attributes;
+using Alpaca.Web.Api;
 
 namespace SampleWebApp
 {
@@ -36,6 +36,8 @@ namespace SampleWebApp
     [Singleton]
     public class UpperCaseGreeter : IGreeter<string>
     {
+        [Inject][CookieParam] private string Xxx;
+
         public string Greet(string val)
         {
             return string.Format("Hello {0} ({1})", val.ToUpper(), GetHashCode());

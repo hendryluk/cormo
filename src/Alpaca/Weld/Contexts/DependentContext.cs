@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using Alpaca.Contexts;
+using Alpaca.Injects;
 using Alpaca.Weld.Components;
+using Alpaca.Weld.Injections;
 using Alpaca.Weld.Serialization;
 
 namespace Alpaca.Weld.Contexts
@@ -20,14 +22,14 @@ namespace Alpaca.Weld.Contexts
             get { return typeof (DependentAttribute); }
         }
 
-        public object Get(IContextual contextual, ICreationalContext creationalContext)
+        public object Get(IContextual contextual, ICreationalContext creationalContext, IInjectionPoint injectionPoint)
         {
             if (!IsActive) 
             {
                 throw new ContextNotActiveException(Scope);
             }
             if (creationalContext != null) {
-                var instance = contextual.Create(creationalContext);
+                var instance = contextual.Create(creationalContext, injectionPoint);
                 var weldContext = creationalContext as IWeldCreationalContext;
                 if (weldContext != null) {
                     AddDependentInstance(instance, contextual, weldContext);
@@ -70,7 +72,7 @@ namespace Alpaca.Weld.Contexts
 
         public object Get(IContextual contextual)
         {
-            return Get(contextual, null);
+            return Get(contextual, null, null);
         }
     }
 }

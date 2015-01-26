@@ -8,14 +8,14 @@ namespace Alpaca.Utils
     {
         public static BuildPlan Cache(BuildPlan plan)
         {
-            BuildPlan nextPlan = context =>
+            BuildPlan nextPlan = (context, ip) =>
             {
-                var result = plan(context);
-                nextPlan = _ => result;
+                var result = plan(context, ip);
+                nextPlan = (_, __) => result;
                 return result;
             };
 
-            return context => nextPlan(context);
+            return (context, ip) => nextPlan(context, ip);
         }
     }
 }

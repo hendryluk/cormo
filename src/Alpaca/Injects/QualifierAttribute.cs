@@ -3,7 +3,7 @@
 namespace Alpaca.Injects
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Parameter)]
-    public abstract class QualifierAttribute: Attribute
+    public abstract class QualifierAttribute : Attribute
     {
         public override string ToString()
         {

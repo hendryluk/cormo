@@ -1,5 +1,7 @@
 ﻿using System;
 using Alpaca.Contexts;
+using Alpaca.Injects;
+using Alpaca.Weld.Injections;
 using Alpaca.Weld.Serialization;
 
 namespace Alpaca.Weld.Contexts
@@ -16,7 +18,7 @@ namespace Alpaca.Weld.Contexts
             _contextualStore = contextualStore;
         }
 
-        public object Get(IContextual contextual, ICreationalContext creationalContext)
+        public object Get(IContextual contextual, ICreationalContext creationalContext, IInjectionPoint injectionPoint)
         {
             if(!IsActive)
                 throw new ContextNotActiveException(Scope);
@@ -30,7 +32,7 @@ namespace Alpaca.Weld.Contexts
             var id = _contextualStore.PutIfAbsent(contextual);
             var instance = store.GetOrPut(id, _ =>
             {
-                var i = contextual.Create(creationalContext);
+                var i = contextual.Create(creationalContext, injectionPoint);
                 return new SerializableContextualInstance(contextual, i, creationalContext, _contextualStore);
             });
             if (instance != null)
@@ -40,7 +42,7 @@ namespace Alpaca.Weld.Contexts
 
         public object Get(IContextual contextual)
         {
-            return Get(contextual, null);
+            return Get(contextual, null, null);
         }
     }
 

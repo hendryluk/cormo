@@ -26,9 +26,9 @@ namespace Alpaca.Weld.Components
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
 
-            return context =>
+            return (context, ip) =>
             {
-                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
         }

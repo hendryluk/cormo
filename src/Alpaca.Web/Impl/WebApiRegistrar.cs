@@ -1,14 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Net.Http;
-using System.Web.Http;
-using System.Web.Http.Controllers;
-using System.Web.Http.Dispatcher;
+﻿using System.Web.Http;
 using Alpaca.Injects;
-using Castle.DynamicProxy;
-using Castle.DynamicProxy.Generators;
 using Owin;
 
-namespace Alpaca.Web.WebApi
+namespace Alpaca.Web.Impl
 {
     [Configuration]
     public class WebApiRegistrar

@@ -1,8 +1,4 @@
-﻿using System;
-using Alpaca.Contexts;
-using Alpaca.Weld.Contexts;
-
-namespace Alpaca.Web.Weld.Contexts
+﻿namespace Alpaca.Web.Impl.Contexts
 {
     //public class HttpRequestContext: AbstractContext
     //{

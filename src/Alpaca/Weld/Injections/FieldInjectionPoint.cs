@@ -26,9 +26,9 @@ namespace Alpaca.Weld.Injections
 
         protected override InjectPlan BuildInjectPlan(IComponent component)
         {
-           return (target, context) =>
+           return (target, context, ip) =>
            {
-               var value = GetValue(context);
+               var value = GetValue(context, ip);
                return SetValue(target, value);
             };
         }
