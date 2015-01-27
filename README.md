@@ -3,12 +3,12 @@ Cormo is a .NET application development framework that brings both [Spring](http
 
 Two main objectives thatCormo is trying to achieve:
 * Remove ceremonies out of writing code. Cormo aims to provide an ecosystem of modules that you can pick and plug onto your application to take care of various dirty plumbing works so you don't have to. This is 21st century. With all conveniences in life, writing code shouldn't be so hard. You shouldn't need to do anything to have fully configured IoC, ORM, auditing, security, messaging, events, logging, transactions, scheduling, health-monitoring, etc. I want to only need to say so and they just happen. [Spring-Boot](http://projects.spring.io/spring-boot/) is a great framework that currently offers such capability, and Cormo tries to bring it to .NET environment.
-* CDI -> TODO
+* A simpler way for application components to interact. Layered architecture with traditional DI is often ceremonially bloated, with vertical dependencies that become unmanageable as your codebase grows. JavaEE introduces CDI as the standard glue for independent parts of your application. Contextual awareness provides a loosely-coupled way to reference functionalities from different parts of your application. It results in a more organic and pragmatic layering of your application.
 
 # Getting Started
-To start a new web project, start a blank ASP.NET project (do not pick any template e.g. MVC or WebAPI).
+To start a new web project, start an *empty* ASP.NET project (do not pick any template e.g. MVC or WebAPI).
 
-Then NuGet: (TODO: not currently published yet)
+Then NuGet:
 ```
 Install-Package Cormo.Web
 ```
