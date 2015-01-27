@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Web.Http;
-using Alpaca.Contexts;
-using Alpaca.Injects;
-using Alpaca.Web.Api;
+using Cormo.Contexts;
+using Cormo.Injects;
+using Cormo.Web.Api;
 
 namespace SampleWebApp
 {
     [RestController]
     public class MyController    
-    // Inheriting ApiController or IHttpController is optional. Alpaca.Web will inject that for you.
+    // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
     {
         [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter

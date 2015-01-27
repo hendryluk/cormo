@@ -1,0 +1,16 @@
+﻿using System.Reflection;
+using Cormo.Injects.Exceptions;
+
+namespace Cormo.Injects.Exceptions
+{
+    public class InvalidMethodSignatureException: InjectionException
+    {
+        public MethodBase Method { get; private set; }
+
+        public InvalidMethodSignatureException(MethodBase method, string message, params object[] args) 
+            : base(string.Format("Invalid method signature: [{0}], {1}", string.Format(message, args)))
+        {
+            Method = method;
+        }
+    }
+}
