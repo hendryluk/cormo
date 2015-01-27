@@ -1,4 +1,5 @@
 ﻿using System.Web.Http;
+using System.Web.Http.Dependencies;
 using Alpaca.Injects;
 using Owin;
 
@@ -15,7 +16,7 @@ namespace Alpaca.Web.Impl
 
         public class Defaults
         {
-            [Inject] private IComponentManager _manager;
+            [Inject] private IDependencyResolver _resolver;
 
             [Produces]
             [ConditionalOnMissingComponent]
@@ -23,7 +24,7 @@ namespace Alpaca.Web.Impl
             {
                 var config = new HttpConfiguration();
                 config.MapHttpAttributeRoutes();
-                config.DependencyResolver = new AlpacaDependencyResolver(_manager);
+                config.DependencyResolver = _resolver;
                 //config.Services.Replace(typeof(IHttpControllerSelector), new AlpacaControllerSelector());
                 return config;
             }

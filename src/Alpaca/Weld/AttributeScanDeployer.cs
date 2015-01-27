@@ -25,12 +25,30 @@ namespace Alpaca.Weld
             _environment = environment;
         }
 
+        public IEnumerable<Assembly> WhereReferencesRecursive(Assembly[] assemblies, params AssemblyName[] names)
+        {
+            var referencings =
+                assemblies.Where(a => a.GetReferencedAssemblies().Any(
+                    r => names.Any(n=> AssemblyName.ReferenceMatchesDefinition(r, n))))
+                    .ToArray();
+
+            if (!referencings.Any()) 
+                return referencings;
+
+            var others = assemblies.Except(referencings).ToArray();
+            var referencingNames = referencings.Select(x => x.GetName()).ToArray();
+            referencings = referencings.Union(WhereReferencesRecursive(others, referencingNames)).ToArray();
+
+            return referencings;
+        }
+
         public void AutoScan()
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-            var types = (from assembly in AppDomain.CurrentDomain.GetAssemblies().AsParallel()
-                            where assembly.GetReferencedAssemblies().Any(x=> AssemblyName.ReferenceMatchesDefinition(x, assemblyName))
+            var types = (from assembly in 
+                             WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName)
+                             .AsParallel()
                             from type in assembly.GetLoadableTypes()
                             where type.IsVisible && type.IsClass && !type.IsPrimitive
                             select type).ToArray();

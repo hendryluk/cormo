@@ -10,15 +10,8 @@ namespace Alpaca.Web.Impl
 {
     public class AlpacaDependencyResolver: IDependencyResolver
     {
-        private readonly IComponentManager _componentManager;
-        ProxyGenerator _gen = new ProxyGenerator();
-        DefaultProxyBuilder _builder = new DefaultProxyBuilder();
-                
-        public AlpacaDependencyResolver(IComponentManager componentManager)
-        {
-            _componentManager = componentManager;
-        }
-
+        [Inject] IComponentManager _componentManager;
+        
         public void Dispose()
         {
         }
