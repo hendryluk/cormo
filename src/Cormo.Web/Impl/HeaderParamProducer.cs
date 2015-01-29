@@ -7,31 +7,30 @@ using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
-    public class CookieParamProducer
+    public class HeaderParamProducer
     {
         [Produces]
-        [CookieParam]
-        protected T GetCookieParam<T>(IInjectionPoint ip)
+        [HeaderParam]
+        protected T GetHeaderParam<T>(IInjectionPoint ip)
         {
-            if(ip == null)
-                throw new InjectionException("CookieParam needs injection point");
+            if (ip == null)
+                throw new InjectionException("HeaderParam needs injection point");
 
             var context = HttpContext.Current;
-            var converter = TypeDescriptor.GetConverter(typeof (T));
-            if(context == null || converter == null)
+            var converter = TypeDescriptor.GetConverter(typeof(T));
+            if (context == null || converter == null)
                 throw new UnsatisfiedDependencyException(ip);
 
-            var httpCookie = context.Request.Cookies.Get(GetCookieName(ip));
-            if (httpCookie == null)
+            var header = context.Request.Headers.Get(GetHeaderName(ip));
+            if (header == null)
                 return GetDefaultValue<T>(ip);
 
-            var cookieValue = httpCookie.Value;
-            return (T) converter.ConvertFromString(cookieValue);
+            return (T)converter.ConvertFromString(header);
         }
 
-        protected string GetCookieName(IInjectionPoint ip)
+        protected string GetHeaderName(IInjectionPoint ip)
         {
-            var attrName = ip.Qualifiers.OfType<CookieParamAttribute>().Select(x => x.Name).SingleOrDefault();
+            var attrName = ip.Qualifiers.OfType<HeaderParamAttribute>().Select(x => x.Name).SingleOrDefault();
             if (string.IsNullOrEmpty(attrName))
             {
                 var methodParam = ip as IMethodParameterInjectionPoint;
@@ -45,7 +44,7 @@ namespace Cormo.Web.Impl
 
         protected T GetDefaultValue<T>(IInjectionPoint ip)
         {
-            var attrDefault = ip.Qualifiers.OfType<CookieParamAttribute>().Select(x => x.Default).OfType<T>().ToArray();
+            var attrDefault = ip.Qualifiers.OfType<HeaderParamAttribute>().Select(x => x.Default).OfType<T>().ToArray();
             if (attrDefault.Any())
                 return attrDefault[0];
 

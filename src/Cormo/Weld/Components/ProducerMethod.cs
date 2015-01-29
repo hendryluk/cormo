@@ -39,7 +39,7 @@ namespace Cormo.Weld.Components
             return (context, ip) =>
             {
                 var containingObject = Manager.GetReference(DeclaringComponent, context);
-                var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context, ip)).ToArray();
 
                 return _method.Invoke(containingObject, paramVals);
             };

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Web.Http;
 using Cormo.Contexts;
 using Cormo.Injects;
@@ -36,11 +37,11 @@ namespace SampleWebApp
     [Singleton]
     public class UpperCaseGreeter : IGreeter<string>
     {
-        [Inject][CookieParam] private string Xxx;
-
+        [Inject, HeaderParam] private string Accept;
+        
         public string Greet(string val)
         {
-            return string.Format("Hello {0} ({1})", val.ToUpper(), GetHashCode());
+            return string.Format("Hello {0} ({1}). Accept: {2}", val.ToUpper(), GetHashCode(), Accept);
         }
     }
 
@@ -50,5 +51,7 @@ namespace SampleWebApp
         {
             return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }
+
+        
     }
 }

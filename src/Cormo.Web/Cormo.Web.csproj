@@ -74,6 +74,7 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Api\HeaderParamAttribute.cs" />
     <Compile Include="CormoOwinStartup.cs" />
     <Compile Include="Api\CookieParamAttribute.cs" />
     <Compile Include="Api\RestControllerAttribute.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Impl\ApiControllerMixin.cs" />
     <Compile Include="Impl\Contexts\HttpRequestContext.cs" />
     <Compile Include="Impl\CookieParamProducer.cs" />
+    <Compile Include="Impl\HeaderParamProducer.cs" />
     <Compile Include="Impl\HttpContextLifecycle.cs" />
     <Compile Include="Impl\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
