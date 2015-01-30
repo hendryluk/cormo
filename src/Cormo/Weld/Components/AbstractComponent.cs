@@ -82,10 +82,7 @@ namespace Cormo.Weld.Components
             return _lazyBuildPlan.Value(context, injectionPoint);
         }
 
-        public void Destroy()
-        {
-            throw new NotImplementedException();
-        }
+        public abstract void Destroy(object instance, ICreationalContext creationalContext);
 
         protected void TransferInjectionPointsTo(AbstractComponent component, GenericUtils.Resolution resolution)
         {

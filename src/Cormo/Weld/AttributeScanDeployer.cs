@@ -221,8 +221,8 @@ namespace Cormo.Weld
 
         private void AddContexts()
         {
-            _manager.AddContext(new DependentContext(_manager.ContextualStore));
-            _manager.AddContext(new SingletonContext(_manager.ContextualStore));
+            _manager.AddContext(new DependentContext());
+            _manager.AddContext(new SingletonContext());
         }
     }
 }

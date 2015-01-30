@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Injects;
 
@@ -25,6 +26,10 @@ namespace Cormo.Weld.Components
             if (requestedType.IsInstanceOfType(_instance))
                 return this;
             return null;
+        }
+
+        public override void Destroy(object instance, ICreationalContext creationalContext)
+        {
         }
 
         protected override BuildPlan GetBuildPlan()

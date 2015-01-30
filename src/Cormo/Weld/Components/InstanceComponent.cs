@@ -22,6 +22,11 @@ namespace Cormo.Weld.Components
             return this;
         }
 
+        public override void Destroy(object instance, ICreationalContext creationalContext)
+        {
+            creationalContext.Release();
+        }
+
         protected override BuildPlan GetBuildPlan()
         {
             return (context, ip) => Activator.CreateInstance(Type, 

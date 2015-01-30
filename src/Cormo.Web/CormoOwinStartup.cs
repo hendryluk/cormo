@@ -1,4 +1,5 @@
 ﻿using Cormo.Web;
+using Cormo.Web.Impl.Contexts;
 using Microsoft.Owin;
 using Owin;
 
@@ -11,7 +12,7 @@ namespace Cormo.Web
         {
             var cormo = CormoApplication.AutoScan();
             cormo.Deployer.AddValue(app);
-            //cormo.Engine.AddContext(new RequestContext());
+            cormo.Manager.AddContext(new HttpRequestContext());
             cormo.Deploy();
         }
     }

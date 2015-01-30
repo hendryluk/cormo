@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Web.Http;
 using Cormo.Contexts;
@@ -8,7 +10,7 @@ using Cormo.Web.Api;
 namespace SampleWebApp
 {
     [RestController]
-    public class MyController    
+    public class MyController
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
     {
@@ -45,13 +47,18 @@ namespace SampleWebApp
         }
     }
 
-    public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>
+    public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>, IDisposable
     {
         public string Greet(IEnumerable<T> vals)
         {
             return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }
 
-        
+
+        public void Dispose()
+        {
+            // Clear some resources here
+            Debug.WriteLine("Disposed EnumerableeGreeter: " + this);
+        }
     }
 }

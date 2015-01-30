@@ -17,6 +17,10 @@ namespace Cormo.Weld.Components
             return requestedType.IsAssignableFrom(Type) ? this : null;
         }
 
+        public override void Destroy(object instance, ICreationalContext creationalContext)
+        {
+        }
+
         protected override BuildPlan GetBuildPlan()
         {
             return (context, ip) => ip;

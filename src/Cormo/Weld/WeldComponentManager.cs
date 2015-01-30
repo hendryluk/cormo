@@ -39,6 +39,8 @@ namespace Cormo.Weld
 
         public IEnumerable<IComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
         {
+            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+
             var unwrappedType = UnwrapType(type);
             var isWrapped = unwrappedType != type;
             
@@ -63,8 +65,6 @@ namespace Cormo.Weld
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
         {
-            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
-
             var components = GetComponents(type, qualifiers).ToArray();
             ResolutionValidator.ValidateSingleResult(type, qualifiers, components);
             return components.Single();
@@ -87,16 +87,19 @@ namespace Cormo.Weld
             return new WeldCreationalContext(contextual);
         }
 
-        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext context)
+        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
         {
-            return GetContext(component.Scope).Get(component, context, injectionPoint);
+            creationalContext = creationalContext.GetCreationalContext(component);
+            
+            //TODO proxy
+            return GetContext(component.Scope).Get(component, creationalContext, injectionPoint);
         }
 
         public void Deploy(WeldEnvironment environment)
         {
+            Container.Instance.Initialize(this);
             environment.AddValue(this, new QualifierAttribute[0], this);
             environment.AddValue(new ContextualStore(), new QualifierAttribute[0], this);
-            Container.Instance.Initialize(this);
             
             _allMixins = new ConcurrentBag<IWeldComponent>(environment.Components.OfType<Mixin>()).ToArray();
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins));
@@ -169,16 +172,15 @@ namespace Cormo.Weld
 
         public T GetReference<T>(params QualifierAttribute[] qualifiers)
         {
-            return (T) GetReference(typeof (T), qualifiers);
+            return (T)GetReference(typeof(T), qualifiers);
         }
-
-        public string Id { get; private set; }
-
         public object GetReference(Type type, params QualifierAttribute[] qualifiers)
         {
             var component = GetComponent(type, qualifiers);
             return GetReference(component, CreateCreationalContext(component));
         }
+
+        public string Id { get; private set; }
 
         public void AddContext(IContext context)
         {

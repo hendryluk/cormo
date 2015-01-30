@@ -12,9 +12,9 @@ namespace Cormo.Weld.Contexts
             return Delegate.Create(context, ip);
         }
 
-        public void Destroy()
+        public void Destroy(object instance, ICreationalContext creationalContext)
         {
-            Delegate.Destroy();
+            Delegate.Destroy(instance, creationalContext);
         }
 
         public override bool Equals(object obj)

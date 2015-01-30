@@ -2,7 +2,7 @@
 
 namespace Cormo.Weld.Contexts
 {
-    public interface IDependentContext: IContext
+    public interface IDependentContext : IContext
     {
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cormo.Contexts;
+using Cormo.Injects;
 
 namespace Cormo.Weld.Contexts
 {
@@ -27,7 +28,7 @@ namespace Cormo.Weld.Contexts
             _parentDependentInstances = parentDependentInstances;
         }
 
-        public WeldCreationalContext GetComponentContext(IContextual contextual)
+        public ICreationalContext GetCreationalContext(IContextual contextual)
         {
             return new WeldCreationalContext(contextual,
                 new Dictionary<IContextual, object>(_incompleteInstanceMap),
@@ -41,13 +42,29 @@ namespace Cormo.Weld.Contexts
 
         public void Release()
         {
-            throw new NotImplementedException();
+            Release(null, null);
         }
 
         public IEnumerable<IContextualInstance> DependentInstances { get { return _dependentInstances; } }
         public void AddDependentInstance(IContextualInstance contextualInstance)
         {
             _parentDependentInstances.Add(contextualInstance);
+        }
+
+        public void Release(IContextual contextual, object instance)
+        {
+            foreach(var dependentInstance in _dependentInstances)
+            {
+                if (contextual == null || !Equals(dependentInstance.Contextual, contextual))
+                {
+                    Destroy(dependentInstance);
+                }
+            }
+        }
+
+        private void Destroy(IContextualInstance instance)
+        {
+            instance.Contextual.Destroy(instance.Instance, instance.CreationalContext);
         }
     }
 }

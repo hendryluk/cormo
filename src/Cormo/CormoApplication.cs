@@ -6,7 +6,7 @@ namespace Cormo
     {
         public AttributeScanDeployer Deployer { get; private set; }
         private WeldEnvironment Environment { get; set; }
-        private WeldComponentManager Manager { get; set; }
+        public WeldComponentManager Manager { get; set; }
 
         private CormoApplication()
         {

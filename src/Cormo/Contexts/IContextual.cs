@@ -5,6 +5,6 @@ namespace Cormo.Contexts
     public interface IContextual
     {
         object Create(ICreationalContext context, IInjectionPoint ip);
-        void Destroy();
+        void Destroy(object instance, ICreationalContext creationalContext);
     }
 }

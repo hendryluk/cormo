@@ -10,13 +10,6 @@ namespace Cormo.Weld.Contexts
 {
     public class DependentContext : IDependentContext
     {
-        readonly IContextualStore _store;
-
-        public DependentContext(IContextualStore store)
-        {
-            _store = store;
-        }
-
         public Type Scope
         {
             get { return typeof (DependentAttribute); }
@@ -59,10 +52,10 @@ namespace Cormo.Weld.Contexts
                     /*TODO: if (producer.DisposalMethod == null && producer.HasDefaultProducer) */
                     return;
                 }
-
-                var componentInstance = new SerializableContextualInstance(contextual, instance, creationalContext, _store);
-                creationalContext.AddDependentInstance(componentInstance);
             }
+
+            var componentInstance = new SerializableContextualInstance(contextual, instance, creationalContext, Container.Instance.ContextualStore);
+            creationalContext.AddDependentInstance(componentInstance);
         }
 
         public bool IsActive

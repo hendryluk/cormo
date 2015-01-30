@@ -1,13 +1,19 @@
 ﻿using Cormo.Injects;
+using Cormo.Weld.Serialization;
 
 namespace Cormo.Weld.Contexts
 {
     public class Container
     {
         public static readonly Container Instance = new Container();
-        private IComponentManager _componentManager;
+        private WeldComponentManager _componentManager;
 
-        public void Initialize(IComponentManager componentManager)
+        public IContextualStore ContextualStore
+        {
+            get { return _componentManager.ContextualStore; }
+        }
+
+        public void Initialize(WeldComponentManager componentManager)
         {
             _componentManager = componentManager;
         }

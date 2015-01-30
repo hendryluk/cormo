@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Cormo.Contexts;
 using Cormo.Injects;
+using Cormo.Weld.Contexts;
 using Cormo.Weld.Injections;
 using Cormo.Weld.Utils;
 
@@ -31,6 +33,31 @@ namespace Cormo.Weld.Components
             IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
 
             ValidateMethodSignatures();
+        }
+
+        public override void Destroy(object instance, ICreationalContext creationalContext)
+        {
+            try 
+            {
+                var disposable = instance as IDisposable;
+                if (disposable != null)
+                {
+                    disposable.Dispose();
+                }
+                
+                // WELD-1010 hack?
+                var context = creationalContext as IWeldCreationalContext;
+                if (context != null) {
+                    context.Release(this, instance);
+                } else {
+                    creationalContext.Release();
+                }
+            } 
+            catch (Exception e) {
+                // TODO log.error(ERROR_DESTROYING, this, instance);
+                // TODO xLog.throwing(Level.DEBUG, e);
+                throw;
+            }
         }
 
         protected override BuildPlan GetBuildPlan()

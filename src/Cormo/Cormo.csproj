@@ -62,6 +62,9 @@
     <Compile Include="Weld\Components\InjectionPointComponent.cs" />
     <Compile Include="Weld\Components\ManagedComponent.cs" />
     <Compile Include="Weld\Components\Mixin.cs" />
+    <Compile Include="Weld\Contexts\AbstractManagedContext.cs" />
+    <Compile Include="Weld\Contexts\AbstractSharedContext.cs" />
+    <Compile Include="Weld\Contexts\ConcurrentDictionaryComponentStore.cs" />
     <Compile Include="Weld\Contexts\Container.cs" />
     <Compile Include="Weld\Contexts\DependentContext.cs" />
     <Compile Include="Weld\Contexts\ForwardingContextual.cs" />
@@ -95,6 +98,7 @@
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
     <Compile Include="Utils\AttributeUtils.cs" />
     <Compile Include="Utils\CacheUtils.cs" />
+    <Compile Include="Weld\Contexts\IManagedContext.cs" />
     <Compile Include="Weld\Contexts\ISingletonContext.cs" />
     <Compile Include="Weld\Contexts\IWeldCreationalContext.cs" />
     <Compile Include="Weld\Contexts\SerializableContextual.cs" />
