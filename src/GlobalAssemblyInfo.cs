@@ -6,7 +6,7 @@
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[Assembly: AssemblyVersion(AssemblyConstants.VERSION)]
+[assembly: AssemblyVersion(AssemblyConstants.VERSION)]
 [assembly: AssemblyFileVersion(AssemblyConstants.VERSION)]
 
 // Version information for an assembly consists of the following four values:
