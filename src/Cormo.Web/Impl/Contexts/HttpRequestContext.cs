@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Web;
 using Cormo.Contexts;
-using Cormo.Weld.Contexts;
+using Cormo.Impl.Weld.Contexts;
 
 namespace Cormo.Web.Impl.Contexts
 {

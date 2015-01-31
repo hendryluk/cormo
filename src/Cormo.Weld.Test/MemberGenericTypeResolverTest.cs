@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Cormo.Weld.Utils;
+using Cormo.Impl.Weld.Utils;
 using NUnit.Framework;
 
 namespace Cormo.Weld.Test

@@ -1,4 +1,5 @@
-﻿using Cormo.Injects;
+﻿using Cormo.Impl.Weld;
+using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using NUnit.Framework;
 

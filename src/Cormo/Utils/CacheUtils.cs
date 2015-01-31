@@ -1,6 +1,5 @@
 ﻿using System.Runtime.Remoting.Contexts;
-using Cormo.Weld.Components;
-using Cormo.Weld.Injections;
+using Cormo.Impl.Weld.Components;
 
 namespace Cormo.Utils
 {

@@ -1,4 +1,4 @@
-﻿using Cormo.Weld;
+﻿using Cormo.Impl.Weld;
 
 namespace Cormo
 {
