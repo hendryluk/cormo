@@ -37,7 +37,7 @@ namespace Cormo.Impl.Weld.Injections
         {
             var manager = DeclaringComponent.Manager;
             var component = Component;
-            if (IsCacheable)
+            if (IsCacheable || component.IsProxyRequired)
             {
                 return CacheUtils.Cache((context, ip) => manager.GetInjectableReference(ip, component, context));
             }

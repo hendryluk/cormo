@@ -21,6 +21,7 @@ namespace Cormo.Impl.Weld.Components
             Manager = manager;
             Qualifiers = qualifierSet;
             Scope = scope;
+            IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope);
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
         }
 

@@ -22,7 +22,7 @@ namespace Cormo.Impl.Weld.Components
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _components.Select(x => x.Manager.GetReference(x, _creationalContext)).Cast<T>().GetEnumerator();
+            return _components.Select(x => x.Manager.GetReference(null, x, _creationalContext)).Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

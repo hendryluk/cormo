@@ -53,7 +53,8 @@ namespace Cormo.Weld.Test.Injection
         private T GetInstance<T>()
         {
             _deployer.Deploy();
-            return (T)_manager.GetReference(typeof(T));
+            var component = _manager.GetComponent(typeof(T));
+            return (T)_manager.GetReference(null, component, _manager.CreateCreationalContext(component));
         }
     }
 }

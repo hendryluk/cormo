@@ -48,39 +48,6 @@ namespace Cormo.Impl.Weld.Components
             return component;
         }
 
-        public class CormoNamingScope : INamingScope
-        {
-            private readonly INamingScope _delegate;
-
-            public CormoNamingScope()
-            {
-                _delegate = new NamingScope();
-            }
-            private CormoNamingScope(CormoNamingScope cormoNamingScope)
-            {
-                ParentScope = cormoNamingScope;
-                _delegate = cormoNamingScope._delegate.SafeSubScope();
-            }
-
-            public string GetUniqueName(string suggestedName)
-            {
-                var name = _delegate.GetUniqueName(suggestedName);
-                return name.Replace("Castle.Proxies", PROXY_PREFIX);
-            }
-
-            public INamingScope SafeSubScope()
-            {
-                return new CormoNamingScope(this);
-            }
-
-            public INamingScope ParentScope { get; private set; }
-        }
-
-        private const string PROXY_PREFIX = "Cormo.Weld.Proxies";
-        private static readonly ProxyGenerator ProxyGenerator =
-            new ProxyGenerator(new DefaultProxyBuilder(new ModuleScope(false, false, new CormoNamingScope(), 
-                PROXY_PREFIX, PROXY_PREFIX, PROXY_PREFIX, PROXY_PREFIX)));
-
         private readonly Lazy<IComponent[]> _lazyMixins;
 
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
@@ -94,12 +61,9 @@ namespace Cormo.Impl.Weld.Components
             {
                 return (context, ip) =>
                 {
-                    var pgo = new ProxyGenerationOptions();
-                    foreach (var mixin in Mixins)
-                        pgo.AddMixinInstance(Manager.GetReference(mixin, context));
-                    
                     var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
-                    return ProxyGenerator.CreateClassProxy(Type, pgo, paramVals);
+                    var mixinObjects = Mixins.Select(x => Manager.GetReference(x.Type, x, context)).ToArray();
+                    return CormoProxyGenerator.CreateMixins(Type, mixinObjects, paramVals);
                 };
             }
         

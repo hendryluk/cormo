@@ -46,9 +46,9 @@ namespace Cormo.Impl.Weld
         {
             var assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-            var types = (from assembly in 
-                             WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName)
-                             .AsParallel()
+            var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName);
+
+            var types = (from assembly in assemblies.AsParallel()
                             from type in assembly.GetLoadableTypes()
                             where type.IsVisible && type.IsClass && !type.IsPrimitive
                             select type).ToArray();
@@ -70,12 +70,18 @@ namespace Cormo.Impl.Weld
                                       where property.HasAttributeRecursive<ProducesAttribute>()
                                       select property).ToArray();
 
+            var assemblyConfigs = (from assembly in assemblies.AsParallel()
+                                  from import in assembly.GetAttributesRecursive<ImportAttribute>()
+                                  from type in import.Types
+                                  select type).ToArray();
+
             AddTypes(componentTypes);
             AddProducerMethods(producerMethods);
             AddProducerFields(producerFields);
             AddProducerProperties(producerProperties);
 
-            var configs = GetConfigs(_environment.Components);
+            var configs = GetConfigs(_environment.Components, assemblyConfigs);
+
             foreach (var c in configs)
                 _environment.AddConfiguration(c);
         }
@@ -116,11 +122,12 @@ namespace Cormo.Impl.Weld
         }
         
 
-        private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components)
+        private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components, Type[] assemblyConfigs)
         {
             var componentMap = components.ToDictionary(x => x.Type, x => x);
             var configs = new List<IWeldComponent>();
-            var newConfigs = componentMap.Values.Where(x => x.Type.HasAttributeRecursive<ConfigurationAttribute>()).ToArray();
+            var newConfigs = componentMap.Values
+                .Where(x => assemblyConfigs.Contains(x.Type) || x.Type.HasAttributeRecursive<ConfigurationAttribute>()).ToArray();
 
             while (newConfigs.Any())
             {

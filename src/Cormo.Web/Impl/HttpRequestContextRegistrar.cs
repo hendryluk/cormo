@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Web;
+using System.Runtime.Remoting.Contexts;
 using System.Web.Caching;
 using Cormo.Injects;
 using Cormo.Web.Impl.Contexts;
@@ -9,21 +9,17 @@ using Owin;
 namespace Cormo.Web.Impl
 {
     [Configuration]
-    public class HttpContextLifecycle
+    public class HttpRequestContextRegistrar
     {
         [Inject]
         void PostConstruct(IServiceRegistry serviceRegistry, IAppBuilder appBuilder)
         {
             var requestContext = serviceRegistry.GetService<HttpRequestContext>();
-            var sessionContext = serviceRegistry.GetService<HttpSessionContext>();
             
             appBuilder.Use(async(context, next) =>
             {
                 try
                 {
-                    if(sessionContext.IsActive)
-                        sessionContext.Activate();
-
                     requestContext.Activate();
                     await next();
                 }
@@ -32,7 +28,7 @@ namespace Cormo.Web.Impl
                     requestContext.Deactivate();
                 }
             });
-            appBuilder.UseStageMarker(PipelineStage.Authenticate);
+            appBuilder.UseStageMarker(PipelineStage.Authorize);
         }
     }
 }

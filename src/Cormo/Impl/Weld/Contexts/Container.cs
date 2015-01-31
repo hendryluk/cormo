@@ -16,10 +16,5 @@ namespace Cormo.Impl.Weld.Contexts
         {
             _componentManager = componentManager;
         }
-
-        public T GetReference<T>()
-        {
-            return _componentManager.GetReference<T>();
-        }
     }
 }

@@ -12,5 +12,6 @@ namespace Cormo.Injects
         IEnumerable<QualifierAttribute> Qualifiers { get; }
         IEnumerable<IInjectionPoint> InjectionPoints { get; }
         Type Scope { get; }
+        bool IsProxyRequired { get; }
     }
 }

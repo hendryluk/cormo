@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Utils;
@@ -36,6 +38,67 @@ namespace Cormo.Impl.Weld.Utils
             if (property.SetMethod == null)
             {
                 throw new InjectionPointException(property, "Injection property must have a setter");
+            }
+        }
+
+        private static readonly ConcurrentDictionary<Type, string> _checkedProxyableTypes = new ConcurrentDictionary<Type, string>();
+        public static void ValidateProxiable(Type type, IInjectionPoint injectionPoint)
+        {
+            var error = _checkedProxyableTypes.GetOrAdd(type, _ =>
+            {
+                if (type.IsInterface /* || typeof (MulticastDelegate).IsAssignableFrom(type.BaseType) */)
+                {
+                    return null;
+                }
+
+                var builder = new StringBuilder();
+                if (type.IsValueType)
+                {
+                    builder.Append("value type");
+                }
+
+                if (type.IsPrimitive)
+                {
+                    builder.Append("primitive type");
+                }
+
+                if (type.IsSealed)
+                {
+                    builder.Append("class is sealed");
+                }
+
+                if (!TypeUtils.HasAccessibleDefaultConstructor(type))
+                {
+                    builder.Append("No public/protected parameterless constructor");
+                }
+
+                var sealedMembers = TypeUtils.GetSealedPublicMembers(type);
+                if (sealedMembers.Any())
+                {
+                    builder.Append(
+                        string.Format("These public members must be virtual: {0}",
+                            string.Join(",/n", sealedMembers.Select(x => x.ToString()))));
+                }
+
+                var publicFields = TypeUtils.GetPublicFields(type);
+                if (publicFields.Any())
+                {
+                    builder.Append(
+                        string.Format("Must not have public fields: {0}",
+                            string.Join(",/n", publicFields.Select(x => x.ToString()))));
+                }
+
+                if (builder.Length == 0)
+                    return null;
+                return builder.ToString();
+            });
+
+            if (error != null)
+            {
+                var message = string.Format("Normal-scoped component must be proxyable, consider using IInstance<> instead. {0}Reason: {1}", 
+                    injectionPoint==null?"": "Injected at: " + injectionPoint + ".", 
+                    error);
+                throw new NonProxiableTypeException(type, message);
             }
         }
     }

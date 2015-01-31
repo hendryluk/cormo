@@ -55,6 +55,7 @@
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
     <Compile Include="Impl\Weld\Components\ComponentIdentifier.cs" />
+    <Compile Include="Impl\Weld\CormoProxyGenerator.cs" />
     <Compile Include="Injects\IServiceRegistry.cs" />
     <Compile Include="Injects\IMethodParameterInjectionPoint.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />

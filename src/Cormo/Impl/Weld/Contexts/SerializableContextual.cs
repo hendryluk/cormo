@@ -52,7 +52,7 @@ namespace Cormo.Impl.Weld.Contexts
         private IContextualStore GetContextualStore()
         {
             return _cachedContextualStore ??
-                   (_cachedContextualStore = Container.Instance.GetReference<IContextualStore>());
+                   (_cachedContextualStore = Container.Instance.ContextualStore);
         }
 
         public override bool Equals(object obj)

@@ -7,6 +7,7 @@ using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Serialization;
+using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
@@ -80,22 +81,14 @@ namespace Cormo.Impl.Weld
             return components.Single();
         }
 
-        public object GetReference(IComponent component, ICreationalContext creationalContext)
+        public object GetReference(Type proxyType, IComponent component, ICreationalContext creationalContext)
         {
-            return GetInjectableReference(null, component, creationalContext);
+            return GetInjectableReference(proxyType, null, component, creationalContext);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)
         {
             return new WeldCreationalContext(contextual);
-        }
-
-        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
-        {
-            creationalContext = creationalContext.GetCreationalContext(component);
-            
-            //TODO proxy
-            return GetContext(component.Scope).Get(component, creationalContext, injectionPoint);
         }
 
         public void Deploy(WeldEnvironment environment)
@@ -116,8 +109,25 @@ namespace Cormo.Impl.Weld
         {
             foreach (var config in environment.Configurations)
             {
-                GetReference(config, CreateCreationalContext(config));
+                GetReference(null, config, CreateCreationalContext(config));
             }
+        }
+
+        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
+        {
+            return GetInjectableReference(injectionPoint.ComponentType, injectionPoint, component, creationalContext);
+        }
+        private object GetInjectableReference(Type proxyType, IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
+        {
+            if (proxyType!=null && component.IsProxyRequired)
+            {
+                InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
+                return CormoProxyGenerator.CreateProxy(injectionPoint.ComponentType,
+                    () => GetContext(component.Scope).Get(component, creationalContext, injectionPoint));
+            }
+
+            creationalContext = creationalContext.GetCreationalContext(component);
+            return GetContext(component.Scope).Get(component, creationalContext, injectionPoint);
         }
 
         private void ValidateComponents()
@@ -163,25 +173,15 @@ namespace Cormo.Impl.Weld
             return IsWrappedType(type) ? type.GetGenericArguments()[0] : type;
         }
 
-        public bool IsProxyRequired(IComponent component)
-        {
-            return IsNormalScope(component.Scope);
-        }
-
-        private bool IsNormalScope(Type scope)
-        {
-            return typeof(NormalScopeAttribute).IsAssignableFrom(scope);
-        }
-
-        public T GetReference<T>(params QualifierAttribute[] qualifiers)
-        {
-            return (T)GetReference(typeof(T), qualifiers);
-        }
-        public object GetReference(Type type, params QualifierAttribute[] qualifiers)
-        {
-            var component = GetComponent(type, qualifiers);
-            return GetReference(component, CreateCreationalContext(component));
-        }
+        //public T GetReference<T>(params QualifierAttribute[] qualifiers)
+        //{
+        //    return (T)GetReference(typeof(T), qualifiers);
+        //}
+        //public object GetReference(Type type, params QualifierAttribute[] qualifiers)
+        //{
+        //    var component = GetComponent(type, qualifiers);
+        //    return GetReference(component, CreateCreationalContext(component));
+        //}
 
         public string Id { get; private set; }
 

@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Web.Http;
+using System.Web.ModelBinding;
 using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Web.Api;
+
+[assembly:EnableHttpSessionState]
 
 namespace SampleWebApp
 {
@@ -36,29 +39,28 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
-    [Singleton]
-    public class UpperCaseGreeter : IGreeter<string>
+    public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] private string Accept;
         
-        public string Greet(string val)
+        public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Accept: {2}", val.ToUpper(), GetHashCode(), Accept);
         }
-    }
-
-    public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>, IDisposable
-    {
-        public string Greet(IEnumerable<T> vals)
-        {
-            return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
-        }
-
 
         public void Dispose()
         {
             // Clear some resources here
             Debug.WriteLine("Disposed EnumerableeGreeter: " + this);
+        }
+    }
+
+    [SessionScoped]
+    public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>
+    {
+        public string Greet(IEnumerable<T> vals)
+        {
+            return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }
     }
 }
