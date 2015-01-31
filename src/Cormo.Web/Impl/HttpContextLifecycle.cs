@@ -1,5 +1,6 @@
-﻿using Cormo.Contexts;
-using Cormo.Impl.Weld.Contexts;
+﻿using System;
+using System.Web;
+using System.Web.Caching;
 using Cormo.Injects;
 using Cormo.Web.Impl.Contexts;
 using Microsoft.Owin.Extensions;
@@ -14,10 +15,15 @@ namespace Cormo.Web.Impl
         void PostConstruct(IServiceRegistry serviceRegistry, IAppBuilder appBuilder)
         {
             var requestContext = serviceRegistry.GetService<HttpRequestContext>();
+            var sessionContext = serviceRegistry.GetService<HttpSessionContext>();
+            
             appBuilder.Use(async(context, next) =>
             {
                 try
                 {
+                    if(sessionContext.IsActive)
+                        sessionContext.Activate();
+
                     requestContext.Activate();
                     await next();
                 }
@@ -26,6 +32,7 @@ namespace Cormo.Web.Impl
                     requestContext.Deactivate();
                 }
             });
+            appBuilder.UseStageMarker(PipelineStage.Authenticate);
         }
     }
 }

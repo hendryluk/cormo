@@ -6,9 +6,10 @@ using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Contexts
 {
+    [Serializable]
     public class ConcurrentDictionaryComponentStore : IComponentStore
     {
-        private ConcurrentDictionary<ComponentIdentifier, IContextualInstance> _instances = new ConcurrentDictionary<ComponentIdentifier, IContextualInstance>();
+        private readonly ConcurrentDictionary<ComponentIdentifier, IContextualInstance> _instances = new ConcurrentDictionary<ComponentIdentifier, IContextualInstance>();
         public IContextualInstance Get(ComponentIdentifier id)
         {
             return _instances.GetOrDefault(id);

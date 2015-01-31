@@ -78,6 +78,7 @@
     <Compile Include="CormoOwinStartup.cs" />
     <Compile Include="Api\CookieParamAttribute.cs" />
     <Compile Include="Api\RestControllerAttribute.cs" />
+    <Compile Include="Impl\Contexts\HttpSessionContext.cs" />
     <Compile Include="Impl\CormoDependencyResolver.cs" />
     <Compile Include="Impl\CormoHttpControllerSelector.cs" />
     <Compile Include="Impl\ApiControllerMixin.cs" />
