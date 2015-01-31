@@ -33,7 +33,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return (_,__) => _instance;
+            return _ => _instance;
         }
 
         public override string ToString()

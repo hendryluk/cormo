@@ -22,7 +22,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return (context, ip) => ip;
+            return context => Manager.GetService<CurrentInjectionPoint>().Peek();
         }
 
         public override bool IsConcrete

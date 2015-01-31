@@ -10,7 +10,7 @@ namespace Cormo.Impl.Weld.Contexts
         public abstract bool IsActive { get; }
         protected abstract IComponentStore ComponentStore { get; }
 
-        public object Get(IContextual contextual, ICreationalContext creationalContext, IInjectionPoint injectionPoint)
+        public object Get(IContextual contextual, ICreationalContext creationalContext)
         {
             if(!IsActive)
                 throw new ContextNotActiveException(Scope);
@@ -25,7 +25,7 @@ namespace Cormo.Impl.Weld.Contexts
             var id = contextualStore.PutIfAbsent(contextual);
             var instance = store.GetOrPut(id, _ =>
             {
-                var i = contextual.Create(creationalContext, injectionPoint);
+                var i = contextual.Create(creationalContext);
                 return new SerializableContextualInstance(contextual, i, creationalContext, contextualStore);
             });
             if (instance != null)
@@ -35,7 +35,7 @@ namespace Cormo.Impl.Weld.Contexts
 
         public object Get(IContextual contextual)
         {
-            return Get(contextual, null, null);
+            return Get(contextual, null);
         }
     }
 }

@@ -77,9 +77,9 @@ namespace Cormo.Impl.Weld.Components
 
         public abstract IWeldComponent Resolve(Type requestedType);
 
-        public object Create(ICreationalContext context, IInjectionPoint injectionPoint)
+        public object Create(ICreationalContext context)
         {
-            return _lazyBuildPlan.Value(context, injectionPoint);
+            return _lazyBuildPlan.Value(context);
         }
 
         public abstract void Destroy(object instance, ICreationalContext creationalContext);

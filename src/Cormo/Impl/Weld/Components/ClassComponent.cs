@@ -59,17 +59,17 @@ namespace Cormo.Impl.Weld.Components
             
             if (Mixins.Any())
             {
-                return (context, ip) =>
+                return context =>
                 {
-                    var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
+                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                     var mixinObjects = Mixins.Select(x => Manager.GetReference(x.Type, x, context)).ToArray();
                     return CormoProxyGenerator.CreateMixins(Type, mixinObjects, paramVals);
                 };
             }
         
-            return (context, ip) =>
+            return context =>
             {
-                var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
         }

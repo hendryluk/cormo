@@ -67,13 +67,13 @@ namespace Cormo.Impl.Weld.Components
             var methodInject = InjectMethods(paramInject.Where(x => !x.IsConstructor)).ToArray();
             var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
 
-            return (context, ip) =>
+            return context =>
             {
-                var instance = constructPlan(context, ip);
+                var instance = constructPlan(context);
                 foreach (var i in otherInjects)
                     i.Inject(instance, context);
                 foreach (var i in methodInject)
-                    i(instance, context, ip);
+                    i(instance, context);
                 foreach (var post in PostConstructs)
                     post.Invoke(instance, new object[0]);
 
@@ -88,9 +88,9 @@ namespace Cormo.Impl.Weld.Components
             return from g in injects.GroupBy(x => x.Member)
                 let method = (MethodInfo)g.Key
                 let paramInjects = g.OrderBy(x => x.Position).ToArray()
-                select (InjectPlan)((target, context, ip) =>
+                select (InjectPlan)((target, context) =>
                 {
-                    var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
+                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                     return method.Invoke(target, paramVals);
                 });
         }

@@ -26,9 +26,9 @@ namespace Cormo.Impl.Weld.Components
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
 
-            return (context, ip) =>
+            return context =>
             {
-                var paramVals = paramInjects.Select(p => p.GetValue(context, p)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
         }

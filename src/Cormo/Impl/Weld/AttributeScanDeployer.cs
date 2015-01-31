@@ -44,7 +44,7 @@ namespace Cormo.Impl.Weld
 
         public void AutoScan()
         {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName();
+            var assemblyName = typeof(IComponentManager).Assembly.GetName();
 
             var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName);
 

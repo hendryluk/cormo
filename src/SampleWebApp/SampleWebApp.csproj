@@ -40,6 +40,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer">
+      <HintPath>..\packages\EntityFramework.6.1.2\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Owin, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -99,6 +105,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Cormo.Data.EntityFramework\Cormo.Data.EntityFramework.csproj">
+      <Project>{9B25F359-BBEC-4D1F-89D8-4901CDC735B3}</Project>
+      <Name>Cormo.Data.EntityFramework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Cormo.Web\Cormo.Web.csproj">
       <Project>{60518361-ae9d-46b9-afc2-5294052da3b1}</Project>
       <Name>Cormo.Web</Name>

@@ -19,9 +19,8 @@ namespace Cormo.Contexts
         /// </summary>
         /// <param name="contextual">the contextual type</param>
         /// <param name="creationalContext">the context in which the new instance will be created</param>
-        /// <param name="injectionPoint"></param>
         /// <returns>the contextual instance, or a null value</returns>
-        object Get(IContextual contextual, ICreationalContext creationalContext, IInjectionPoint injectionPoint);
+        object Get(IContextual contextual, ICreationalContext creationalContext);
         
         /// <summary>
         /// Return an existing instance of a certain contextual type or a null value.

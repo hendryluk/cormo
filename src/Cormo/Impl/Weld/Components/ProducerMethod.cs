@@ -35,10 +35,10 @@ namespace Cormo.Impl.Weld.Components
                 .Where(x => x.Member == _method)
                 .OrderBy(x => x.Position).ToArray();
 
-            return (context, ip) =>
+            return context =>
             {
                 var containingObject = Manager.GetReference(null, DeclaringComponent, context);
-                var paramVals = paramInjects.Select(p => p.GetValue(context, ip)).ToArray();
+                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
 
                 return _method.Invoke(containingObject, paramVals);
             };

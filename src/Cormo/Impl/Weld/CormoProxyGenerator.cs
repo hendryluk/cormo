@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using Castle.DynamicProxy;
 using Castle.DynamicProxy.Contributors;
 using Castle.DynamicProxy.Generators;
@@ -72,7 +74,15 @@ namespace Cormo.Impl.Weld
 
             public void Intercept(IInvocation invocation)
             {
-                invocation.ReturnValue = invocation.GetConcreteMethod().Invoke(_underlyingObject(), invocation.Arguments);
+                try
+                {
+                    invocation.ReturnValue = invocation.GetConcreteMethod()
+                        .Invoke(_underlyingObject(), invocation.Arguments);
+                }
+                catch (TargetInvocationException e)
+                {
+                    ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                }
             }
         }
     }

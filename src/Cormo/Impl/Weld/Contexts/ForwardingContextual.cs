@@ -7,9 +7,9 @@ namespace Cormo.Impl.Weld.Contexts
     {
         protected abstract IContextual Delegate { get;  }
 
-        public object Create(ICreationalContext context, IInjectionPoint ip)
+        public object Create(ICreationalContext context)
         {
-            return Delegate.Create(context, ip);
+            return Delegate.Create(context);
         }
 
         public void Destroy(object instance, ICreationalContext creationalContext)

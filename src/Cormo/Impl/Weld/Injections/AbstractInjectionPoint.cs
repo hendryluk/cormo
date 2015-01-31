@@ -37,12 +37,13 @@ namespace Cormo.Impl.Weld.Injections
         {
             var manager = DeclaringComponent.Manager;
             var component = Component;
+            var isDbContext = component.Type.Name.EndsWith("DbContexts");
             if (IsCacheable || component.IsProxyRequired)
             {
-                return CacheUtils.Cache((context, ip) => manager.GetInjectableReference(ip, component, context));
+                return CacheUtils.Cache(context => manager.GetInjectableReference(this, component, context));
             }
 
-            return (context, ip) => manager.GetInjectableReference(this, component, context);
+            return context => manager.GetInjectableReference(this, component, context);
         }
 
         public MemberInfo Member { get; private set; }
@@ -55,9 +56,9 @@ namespace Cormo.Impl.Weld.Injections
         private readonly Lazy<IComponent> _lazyComponents;
         private readonly Lazy<BuildPlan> _lazyGetValuePlan;
 
-        public object GetValue(ICreationalContext context, IInjectionPoint ip)
+        public object GetValue(ICreationalContext context)
         {
-            return _lazyGetValuePlan.Value(context, ip);
+            return _lazyGetValuePlan.Value(context);
         }
 
         private IComponent ResolveComponents()
@@ -77,7 +78,7 @@ namespace Cormo.Impl.Weld.Injections
 
         public void Inject(object target, ICreationalContext context)
         {
-            _lazyInjectPlan.Value(target, context, this);
+            _lazyInjectPlan.Value(target, context);
         }
     }
 }

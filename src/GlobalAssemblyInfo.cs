@@ -6,7 +6,7 @@
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
-[assembly: AssemblyVersion(AssemblyConstants.VERSION)]
+[Assembly: AssemblyVersion(AssemblyConstants.VERSION)]
 [assembly: AssemblyFileVersion(AssemblyConstants.VERSION)]
 
 // Version information for an assembly consists of the following four values:
@@ -21,5 +21,5 @@
 // [assembly: AssemblyVersion("1.0.*")]
 internal static class AssemblyConstants
 {
-    public const string VERSION = "0.0.1.1";
+    public const string VERSION = "0.0.1.2";
 }

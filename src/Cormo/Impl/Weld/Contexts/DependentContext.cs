@@ -13,14 +13,14 @@ namespace Cormo.Impl.Weld.Contexts
             get { return typeof (DependentAttribute); }
         }
 
-        public object Get(IContextual contextual, ICreationalContext creationalContext, IInjectionPoint injectionPoint)
+        public object Get(IContextual contextual, ICreationalContext creationalContext)
         {
             if (!IsActive) 
             {
                 throw new ContextNotActiveException(Scope);
             }
             if (creationalContext != null) {
-                var instance = contextual.Create(creationalContext, injectionPoint);
+                var instance = contextual.Create(creationalContext);
                 var weldContext = creationalContext as IWeldCreationalContext;
                 if (weldContext != null) {
                     AddDependentInstance(instance, contextual, weldContext);
@@ -63,7 +63,7 @@ namespace Cormo.Impl.Weld.Contexts
 
         public object Get(IContextual contextual)
         {
-            return Get(contextual, null, null);
+            return Get(contextual, null);
         }
     }
 }

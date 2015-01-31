@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>http://raw.githubusercontent.com/hendryluk/cormo/master/LICENSE</licenseUrl>
+    <iconUrl>http://raw.githubusercontent.com/hendryluk/cormo/master/ICON.png</iconUrl>
+    <projectUrl>http://github.com/hendryluk/cormo</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Initial preview version.</releaseNotes>
+    <copyright>Copyright 2015</copyright>
+    <tags>entity-framework spring-boot spring-data CDI dependency-injection j2ee java-ee jboss jboss-weld</tags>
+	<dependencies>
+	  <group>
+	    <dependency id="cormo" version="$version$" />
+	  </group>
+	</dependencies>
+  </metadata>
+</package>

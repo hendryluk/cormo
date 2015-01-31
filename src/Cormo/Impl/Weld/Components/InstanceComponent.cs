@@ -28,7 +28,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return (context, ip) => Activator.CreateInstance(Type, 
+            return context => Activator.CreateInstance(Type, 
                 Qualifiers.ToArray(), _components, context);
         }
 

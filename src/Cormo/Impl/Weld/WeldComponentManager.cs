@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
@@ -11,6 +12,7 @@ using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Utils;
 
 namespace Cormo.Impl.Weld
 {
@@ -19,8 +21,8 @@ namespace Cormo.Impl.Weld
         public WeldComponentManager(string id)
         {
             Id = id;
-            _contextualStore = new ContextualStore();
-            _services.Add(_contextualStore);
+            _services.Add(typeof(ContextualStore), _contextualStore = new ContextualStore());
+            _services.Add(typeof(CurrentInjectionPoint), _currentInjectionPoint = new CurrentInjectionPoint());
         }
         private ConcurrentBag<IWeldComponent> _allComponents;
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
@@ -28,7 +30,8 @@ namespace Cormo.Impl.Weld
         private readonly IContextualStore _contextualStore;
         private bool _isDeployed = false;
         private IWeldComponent[] _allMixins;
-        private readonly ConcurrentBag<object> _services = new ConcurrentBag<object>();
+        private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
+        private CurrentInjectionPoint _currentInjectionPoint;
 
         public IContextualStore ContextualStore
         {
@@ -69,6 +72,7 @@ namespace Cormo.Impl.Weld
 
         public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
         {
+            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
             var components = GetComponents(type, qualifiers).ToArray();
             ResolutionValidator.ValidateSingleResult(type, qualifiers, components);
             return components.Single();
@@ -117,22 +121,50 @@ namespace Cormo.Impl.Weld
         {
             return GetInjectableReference(injectionPoint.ComponentType, injectionPoint, component, creationalContext);
         }
+
         private object GetInjectableReference(Type proxyType, IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
         {
-            if (proxyType!=null && component.IsProxyRequired)
-            {
-                InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
-                return CormoProxyGenerator.CreateProxy(injectionPoint.ComponentType,
-                    () => GetContext(component.Scope).Get(component, creationalContext, injectionPoint));
-            }
+            var pushInjectionPoint = injectionPoint != null && injectionPoint.ComponentType != typeof (IInjectionPoint);
 
-            creationalContext = creationalContext.GetCreationalContext(component);
-            return GetContext(component.Scope).Get(component, creationalContext, injectionPoint);
+            try
+            {
+                if (pushInjectionPoint)
+                    _currentInjectionPoint.Push(injectionPoint);
+
+                if (proxyType != null && component.IsProxyRequired)
+                {
+                    InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
+                    return CormoProxyGenerator.CreateProxy(injectionPoint.ComponentType,
+                        () =>
+                        {
+                            try
+                            {
+                                if (pushInjectionPoint)
+                                    _currentInjectionPoint.Push(injectionPoint);
+                                return GetContext(component.Scope).Get(component, creationalContext);
+                            }
+                            finally
+                            {
+                                if (pushInjectionPoint)
+                                    _currentInjectionPoint.Pop();
+                            }
+                        });
+                }
+
+                creationalContext = creationalContext.GetCreationalContext(component);
+                return GetContext(component.Scope).Get(component, creationalContext);
+            }
+            finally
+            {
+                if (pushInjectionPoint)
+                    _currentInjectionPoint.Pop();
+            }
+           
         }
 
         private void ValidateComponents()
         {
-            foreach (var component in _allComponents.ToArray())
+            foreach (var component in _allComponents.Where(x=> x.IsConcrete).ToArray())
             {
                 Validate(component, new IComponent[0]);
             }
@@ -187,13 +219,13 @@ namespace Cormo.Impl.Weld
 
         public void AddContext(IContext context)
         {
-            _services.Add(context);
+            _services.Add(context.GetType(), context);
             _contexts.GetOrAdd(context.Scope, _=> new List<IContext>()).Add(context);
         }
 
         public T GetService<T>()
         {
-            return _services.OfType<T>().FirstOrDefault();
+            return (T) _services.GetOrDefault(typeof (T));
         }
 
         public IContext GetContext(Type scope)

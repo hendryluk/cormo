@@ -25,7 +25,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            return (context, ip) =>
+            return context =>
             {
                 var containingObject = Manager.GetReference(null, DeclaringComponent, context);
                 return _field.GetValue(containingObject);

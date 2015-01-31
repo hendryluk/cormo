@@ -26,9 +26,9 @@ namespace Cormo.Impl.Weld.Injections
 
         protected override InjectPlan BuildInjectPlan(IComponent component)
         {
-           return (target, context, ip) =>
+           return (target, context) =>
            {
-               var value = GetValue(context, ip);
+               var value = GetValue(context);
                return SetValue(target, value);
             };
         }

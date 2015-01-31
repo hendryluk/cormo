@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Web.Http;
 using System.Web.ModelBinding;
 using Cormo.Contexts;
+using Cormo.Data.EntityFramework.Api;
 using Cormo.Injects;
 using Cormo.Web.Api;
 
@@ -41,11 +43,15 @@ namespace SampleWebApp
 
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
-        [Inject, HeaderParam] private string Accept;
+        [Inject, HeaderParam] string Accept;
+        [Inject, EntityContext] IDbSet<Person> _persons; 
         
         public virtual string Greet(string val)
         {
-            return string.Format("Hello {0} ({1}). Accept: {2}", val.ToUpper(), GetHashCode(), Accept);
+            return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
+                GetHashCode(), 
+                _persons.Count(), 
+                Accept);
         }
 
         public void Dispose()
@@ -53,6 +59,12 @@ namespace SampleWebApp
             // Clear some resources here
             Debug.WriteLine("Disposed EnumerableeGreeter: " + this);
         }
+    }
+
+    public class Person
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
     }
 
     [SessionScoped]

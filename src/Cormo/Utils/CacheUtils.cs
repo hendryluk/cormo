@@ -7,14 +7,14 @@ namespace Cormo.Utils
     {
         public static BuildPlan Cache(BuildPlan plan)
         {
-            BuildPlan nextPlan = (context, ip) =>
+            BuildPlan nextPlan = context =>
             {
-                var result = plan(context, ip);
-                nextPlan = (_, __) => result;
+                var result = plan(context);
+                nextPlan = _ => result;
                 return result;
             };
 
-            return (context, ip) => nextPlan(context, ip);
+            return context => nextPlan(context);
         }
     }
 }
