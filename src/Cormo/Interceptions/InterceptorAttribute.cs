@@ -25,7 +25,7 @@ namespace Cormo.Interceptions
         
     }
 
-    [AttributeUsage(AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public abstract class InterceptorBinding : Attribute, IInterceptorBinding
     {
     }
