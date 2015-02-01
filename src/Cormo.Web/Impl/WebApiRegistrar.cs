@@ -1,5 +1,6 @@
 ﻿using System.Web.Http;
 using System.Web.Http.Dependencies;
+using Cormo.Contexts;
 using Cormo.Injects;
 using Owin;
 
@@ -18,8 +19,7 @@ namespace Cormo.Web.Impl
         {
             [Inject] private IDependencyResolver _resolver;
 
-            [Produces]
-            [ConditionalOnMissingComponent]
+            [Produces, Singleton, ConditionalOnMissingComponent]
             public virtual HttpConfiguration GetHttpConfiguration()
             {
                 var config = new HttpConfiguration();

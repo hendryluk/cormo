@@ -112,7 +112,7 @@ namespace Cormo.Impl.Weld
 
         private void ExecuteConfigurations(WeldEnvironment environment)
         {
-            foreach (var config in environment.Configurations)
+            foreach (var config in environment.Configurations.OrderBy(x=> x.Type.Name))
             {
                 GetReference(config, CreateCreationalContext(config));
             }
