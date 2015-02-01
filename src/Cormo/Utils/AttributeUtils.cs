@@ -13,6 +13,11 @@ namespace Cormo.Utils
             return GetAttributesRecursive(attributeProvider, type).Any();
         }
 
+        public static bool HasAttribute<T>(this ICustomAttributeProvider attributeProvider)
+        {
+            return attributeProvider.GetCustomAttributes(typeof(T), true).Any();
+        }
+
         public static bool HasAttributeRecursive<T>(this ICustomAttributeProvider attributeProvider)
         {
             return HasAttributeRecursive(attributeProvider, typeof(T));

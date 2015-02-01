@@ -56,9 +56,11 @@
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
     <Compile Include="Impl\Weld\Components\ComponentIdentifier.cs" />
+    <Compile Include="Impl\Weld\Components\Interceptor.cs" />
     <Compile Include="Impl\Weld\CormoProxyGenerator.cs" />
     <Compile Include="Impl\Weld\CurrentInjectionPoint.cs" />
     <Compile Include="Injects\IBinderAttribute.cs" />
+    <Compile Include="Interceptions\InterceptorAttribute.cs" />
     <Compile Include="Mixins\IMixinBinder.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />
     <Compile Include="Injects\IServiceRegistry.cs" />

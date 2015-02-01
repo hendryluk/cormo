@@ -4,8 +4,6 @@ using System.Configuration;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
-using System.Security.AccessControl;
-using System.Threading.Tasks;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api;
 using Cormo.Injects;
@@ -15,7 +13,7 @@ namespace Cormo.Data.EntityFramework.Impl
     [Configuration]
     public class EntityContextProducer
     {
-        [PostConstruct]
+        [Inject]
         public void Init()
         {
             if (ConfigurationManager.ConnectionStrings.Count == 0)
@@ -24,14 +22,22 @@ namespace Cormo.Data.EntityFramework.Impl
             }
         }
 
+        static readonly ConcurrentDictionary<Type, EntityInfo> _entityInfos = new ConcurrentDictionary<Type, EntityInfo>(); 
+        public static EntityInfo GetEntityInfo(IComponentManager manager, Type type)
+        {
+            return _entityInfos.GetOrAdd(type, _ => new EntityInfo(manager, type));
+        }
+
         [RequestScoped]
         public class DbContexts
         {
+            [Inject] IComponentManager _manager;
             private readonly ConcurrentDictionary<string, DbContext> _contexts = new ConcurrentDictionary<string, DbContext>(); 
             public virtual DbContext GetContext(IInjectionPoint injectionPoint)
             {
                 var connectionName = GetConnectionName(injectionPoint);
-                return _contexts.GetOrAdd(connectionName, new CormoDbContext(connectionName));
+                return _contexts.GetOrAdd(connectionName, new CormoDbContext(connectionName,
+                    _entityTypes.Select(x => GetEntityInfo(_manager, x)).ToArray()));
             }
 
             private string GetConnectionName(IInjectionPoint injectionPoint)
@@ -43,7 +49,8 @@ namespace Cormo.Data.EntityFramework.Impl
             }
         }
 
-        private static readonly ConcurrentBag<Type> _entityTypes = new ConcurrentBag<Type>(); 
+        private static readonly ConcurrentBag<Type> _entityTypes = new ConcurrentBag<Type>();
+        
         public class EntityType<T> where T:class
         {
             static EntityType()
@@ -51,29 +58,14 @@ namespace Cormo.Data.EntityFramework.Impl
                 _entityTypes.Add(typeof (T));
             }
 
-            [Produces, RequestScoped, EntityContext]
+            [Produces, RequestScoped, Default, EntityContext]
             public IDbSet<T> GetDbSet(DbContexts contexts, IInjectionPoint injectionPoint)
             {
                 return contexts.GetContext(injectionPoint).Set<T>();
             }
         }
 
-        public class CormoDbContext : DbContext
-        {
-            public CormoDbContext(string connectionName): base(connectionName)
-            {
-            }
-
-            protected override void OnModelCreating(DbModelBuilder modelBuilder)
-            {
-                foreach (var type in _entityTypes)
-                    modelBuilder.RegisterEntityType(type);
-
-                base.OnModelCreating(modelBuilder);
-            }
-        }
-
-        [Produces, RequestScoped, EntityContext]
+        [Produces, RequestScoped, Default, EntityContext]
         DbContext GetDbContext(DbContexts contexts, IInjectionPoint injectionPoint)
         {
             return contexts.GetContext(injectionPoint);
@@ -81,6 +73,4 @@ namespace Cormo.Data.EntityFramework.Impl
 
         
     }
-
-    
 }

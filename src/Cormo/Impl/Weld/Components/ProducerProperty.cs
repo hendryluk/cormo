@@ -27,7 +27,7 @@ namespace Cormo.Impl.Weld.Components
         {
             return context =>
             {
-                var containingObject = Manager.GetReference(DeclaringComponent, context, null);
+                var containingObject = Manager.GetReference(DeclaringComponent, context);
                 return _property.GetValue(containingObject);
             };
         }

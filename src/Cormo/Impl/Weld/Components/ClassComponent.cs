@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Castle.DynamicProxy;
-using Castle.DynamicProxy.Generators;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Interceptions;
+using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -18,17 +18,53 @@ namespace Cormo.Impl.Weld.Components
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
             _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
+
+            _lazyInterceptors = new Lazy<Interceptor[]>(() => new Interceptor[0]);
+            //_lazyInterceptors = new Lazy<Interceptor[]>(() => Manager.GetInterceptors(this));
+            //_interceptedMethods = InitInterceptedMethods();
+        }
+
+        private MethodInfo[] InitInterceptedMethods()
+        {
+            var methods = Type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
+
+            var typeBindings = Type.GetAttributesRecursive<IInterceptorBinding>().ToArray();
+            
+            IDictionary<MethodInfo, IInterceptorBinding[]> methodBindings = new Dictionary<MethodInfo, IInterceptorBinding[]>();
+
+            if (typeBindings.Any())
+            {
+                methodBindings = methods.Where(x => !x.IsPrivate && !x.IsStatic).ToDictionary(x => x, _ => typeBindings);
+            }
+            else
+            {
+                var onMethods = (from method in methods
+                                let bindings = method.GetAttributesRecursive<IInterceptorBinding>().ToArray()
+                                where methodBindings.Any()
+                                select new {method, bindings})
+                                .ToDictionary(x=> x.method, x=> x.bindings);
+
+            }
+                
+            TypeUtils.ValidateInterceptable(methods);
+            return methods;
         }
 
         public ClassComponent(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
             : base(type, binders, scope, manager, postConstructs)
         {
             _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
+            _lazyInterceptors = new Lazy<Interceptor[]>(() => new Interceptor[0]);
         }
 
         public IEnumerable<Mixin> Mixins
         {
             get { return _lazyMixins.Value; }
+        }
+
+        public IEnumerable<Interceptor> Interceptors
+        {
+            get { return _lazyInterceptors.Value; }
         }
 
         public override IWeldComponent Resolve(Type requestedType)
@@ -49,6 +85,8 @@ namespace Cormo.Impl.Weld.Components
         }
 
         private readonly Lazy<Mixin[]> _lazyMixins;
+        private readonly Lazy<Interceptor[]> _lazyInterceptors;
+        private MethodInfo[] _interceptedMethods;
 
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
@@ -57,16 +95,16 @@ namespace Cormo.Impl.Weld.Components
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
             
-            if (Mixins.Any())
+            if (Mixins.Any()) // todo: interceptors
             {
                 return context =>
                 {
                     var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                     var mixinObjects = (from mixin in Mixins
-                        let reference = Manager.GetReference(mixin, context, mixin.InterfaceTypes)
-                        from interfaceType in mixin.InterfaceTypes
-                        select new {interfaceType, reference})
-                        .ToDictionary(x => x.interfaceType, x => x.reference);
+                            let reference = Manager.GetReference(mixin, context, mixin.InterfaceTypes)
+                            from interfaceType in mixin.InterfaceTypes
+                            select new {interfaceType, reference})
+                            .ToDictionary(x => x.interfaceType, x => x.reference);
 
                     return CormoProxyGenerator.CreateMixins(Type, mixinObjects, paramVals);
                 };

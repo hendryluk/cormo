@@ -9,6 +9,7 @@ using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Interceptions;
 using Cormo.Mixins;
 using Cormo.Utils;
 
@@ -195,12 +196,20 @@ namespace Cormo.Impl.Weld
 
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
-
-            var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
-            var component = mixinAttr==null? (ManagedComponent)
+            
+            ManagedComponent component;
+            if (typeof (IAroundnvokeInterceptor).IsAssignableFrom(type))
+            {
+                component = new Interceptor(type, binders, scope, _manager, postConstructs);
+            }
+            else
+            {
+                var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
+                component = mixinAttr==null? (ManagedComponent)
                 new ClassComponent(type, binders, scope, _manager, postConstructs):
                 new Mixin(mixinAttr.InterfaceTypes, type, binders, scope, _manager, postConstructs);
-
+            }
+            
             var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
             var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
             var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetBinders())).ToArray();

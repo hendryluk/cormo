@@ -49,7 +49,7 @@ namespace Cormo.Weld.Test.Injection
         {
             _deployer.Deploy();
             var component = _manager.GetComponent(typeof (T));
-            return (T)_manager.GetReference(component, _manager.CreateCreationalContext(component), null);
+            return (T)_manager.GetReference(component, _manager.CreateCreationalContext(component));
         }
 
         [Test]

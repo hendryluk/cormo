@@ -45,7 +45,7 @@ namespace SampleWebApp
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] string Accept;
-        [Inject, EntityContext] IDbSet<Person> _persons; 
+        [Inject] IDbSet<Person> _persons; 
         
         public virtual string Greet(string val)
         {

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
@@ -31,7 +30,8 @@ namespace Cormo.Impl.Weld
         private bool _isDeployed = false;
         private Mixin[] _allMixins;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
-        private CurrentInjectionPoint _currentInjectionPoint;
+        private readonly CurrentInjectionPoint _currentInjectionPoint;
+        private Interceptor[] _allInterceptors;
 
         public IContextualStore ContextualStore
         {
@@ -101,8 +101,9 @@ namespace Cormo.Impl.Weld
             environment.AddValue(this, new IQualifier[0], this);
             environment.AddValue(new ContextualStore(), new IQualifier[0], this);
             
-            _allMixins = new ConcurrentBag<Mixin>(environment.Components.OfType<Mixin>()).ToArray();
-            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins));
+            _allMixins = environment.Components.OfType<Mixin>().ToArray();
+            _allInterceptors = environment.Components.OfType<Interceptor>().ToArray();
+            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins).Except(_allInterceptors));
             
             ValidateComponents();
             ExecuteConfigurations(environment);
@@ -113,7 +114,7 @@ namespace Cormo.Impl.Weld
         {
             foreach (var config in environment.Configurations)
             {
-                GetReference(config, CreateCreationalContext(config), null);
+                GetReference(config, CreateCreationalContext(config));
             }
         }
 
@@ -131,7 +132,7 @@ namespace Cormo.Impl.Weld
                 if (pushInjectionPoint)
                     _currentInjectionPoint.Push(injectionPoint);
 
-                if (proxyTypes != null && component.IsProxyRequired)
+                if (proxyTypes.Any() && component.IsProxyRequired)
                 {
                     foreach(var proxyType in proxyTypes)
                         InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
@@ -186,9 +187,9 @@ namespace Cormo.Impl.Weld
             if (classComponent != null)
             {
                 foreach (var mixin in classComponent.Mixins)
-                {
                     Validate(mixin, nextPath);
-                }
+                foreach (var interceptor in classComponent.Interceptors)
+                    Validate(interceptor, nextPath);
             }
                 
             foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
@@ -244,6 +245,11 @@ namespace Cormo.Impl.Weld
                 throw new ContextException(string.Format("Duplicate contexts: [{0}]", scope.Name));
 
             return activeContexts.Single();
+        }
+
+        public Interceptor[] GetInterceptors(IComponent component)
+        {
+            return _allInterceptors.Where(x => x.CanIntercept(component)).ToArray();
         }
     }
 }

@@ -1,22 +1,24 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
-using Cormo.Mixins;
+using Cormo.Interceptions;
+using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Components
 {
-    public class Mixin : ManagedComponent
-    {
-        private readonly IEnumerable<Type> _mixinBinders;
+    public delegate object InterceptorFunc();
 
-        public Mixin(Type[] interfaceTypes, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
+    public class Interceptor : ManagedComponent
+    {
+        private readonly IEnumerable<Type> _interceptorBinders;
+
+        public Interceptor(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(type, binders, scope, manager, postConstructs)
         {
-            _mixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
-            InterfaceTypes = interfaceTypes;
+            _interceptorBinders = binders.OfType<IInterceptorBinding>().Select(x => x.GetType());
         }
 
         public Type[] InterfaceTypes { get; private set; }
@@ -40,9 +42,14 @@ namespace Cormo.Impl.Weld.Components
             };
         }
 
-        public bool CanMixTo(IComponent component)
+        public bool CanIntercept(IComponent component)
         {
-            return _mixinBinders.Any(component.Binders.Select(x=> x.GetType()).Contains);
+            return _interceptorBinders.Any(component.Binders.Select(x => x.GetType()).Contains);
+        }
+
+        public bool CanIntercept(MethodInfo method)
+        {
+            return _interceptorBinders.Any(method.HasAttributeRecursive);
         }
     }
 }
