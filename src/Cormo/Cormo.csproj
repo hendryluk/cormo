@@ -47,6 +47,7 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Contexts\ScopeAttribute.cs" />
     <Compile Include="CormoApplication.cs" />
     <Compile Include="Contexts\ContextException.cs" />
     <Compile Include="Contexts\ContextNotActiveException.cs" />
@@ -57,11 +58,13 @@
     <Compile Include="Impl\Weld\Components\ComponentIdentifier.cs" />
     <Compile Include="Impl\Weld\CormoProxyGenerator.cs" />
     <Compile Include="Impl\Weld\CurrentInjectionPoint.cs" />
+    <Compile Include="Injects\IBinderAttribute.cs" />
+    <Compile Include="Mixins\IMixinBinder.cs" />
+    <Compile Include="Injects\StereotypeAttribute.cs" />
     <Compile Include="Injects\IServiceRegistry.cs" />
     <Compile Include="Injects\IMethodParameterInjectionPoint.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />
-    <Compile Include="Injects\MixinAttribute.cs" />
-    <Compile Include="Mixins\MixinBindingAttribute.cs" />
+    <Compile Include="Mixins\MixinAttribute.cs" />
     <Compile Include="Utils\DictionaryUtils.cs" />
     <Compile Include="Impl\Weld\Components\InjectionPointComponent.cs" />
     <Compile Include="Impl\Weld\Components\ManagedComponent.cs" />
@@ -97,7 +100,7 @@
     <Compile Include="Injects\Exceptions\NonProxiableTypeException.cs" />
     <Compile Include="Injects\PostConstructAttribute.cs" />
     <Compile Include="Injects\ProducesAttribute.cs" />
-    <Compile Include="Injects\QualifierAttribute.cs" />
+    <Compile Include="Injects\IQualifier.cs" />
     <Compile Include="Injects\Exceptions\UnsatisfiedDependencyException.cs" />
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
     <Compile Include="Utils\AttributeUtils.cs" />

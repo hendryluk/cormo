@@ -10,35 +10,38 @@ namespace Cormo.Impl.Weld.Components
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        private AbstractComponent(Type type, IEnumerable<QualifierAttribute> qualifiers,
+        private AbstractComponent(Type type, IEnumerable<IBinderAttribute> binders,
             Type scope, WeldComponentManager manager)
         {
-            var qualifierSet = new HashSet<QualifierAttribute>(qualifiers);
+            var qualifierSet = new HashSet<IQualifier>(binders.OfType<IQualifier>());
             if (qualifierSet.All(x => (x is AnyAttribute)))
                 qualifierSet.Add(DefaultAttribute.Instance);
 
             Type = type;
             Manager = manager;
+            Binders = binders;
             Qualifiers = qualifierSet;
             Scope = scope;
             IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope);
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
         }
 
-        protected AbstractComponent(ComponentIdentifier id, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope,
+        public IEnumerable<IBinderAttribute> Binders { get; private set; }
+
+        protected AbstractComponent(ComponentIdentifier id, Type type, IEnumerable<IBinderAttribute> binders, Type scope,
             WeldComponentManager manager)
-            : this(type, qualifiers, scope, manager)
+            : this(type, binders, scope, manager)
         {
             _id = id;
         }
 
-        protected AbstractComponent(string idSuffix, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager)
-            : this(type, qualifiers, scope, manager)
+        protected AbstractComponent(string idSuffix, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+            : this(type, binders, scope, manager)
         {
             _id = new ComponentIdentifier(string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix));
         }
 
-        public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
+        public IEnumerable<IQualifier> Qualifiers { get; set; }
         public Type Scope { get; private set; }
         public Type Type { get; set; }
 
@@ -66,7 +69,7 @@ namespace Cormo.Impl.Weld.Components
 
         public bool IsProxyRequired { get; private set; }
 
-        public bool CanSatisfy(IEnumerable<QualifierAttribute> qualifiers)
+        public bool CanSatisfy(IEnumerable<IQualifier> qualifiers)
         {
             var qualifierTypes = qualifiers.Select(x => x.GetType()).ToArray();
             if (qualifierTypes.Contains(typeof (AnyAttribute)))

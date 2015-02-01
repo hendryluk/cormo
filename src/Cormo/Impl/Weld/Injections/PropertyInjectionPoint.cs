@@ -11,8 +11,8 @@ namespace Cormo.Impl.Weld.Injections
     {
         private readonly PropertyInfo _property;
 
-        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, QualifierAttribute[] qualifiers):
-            base(declaringComponent, property, property.PropertyType, qualifiers)
+        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinderAttribute[] binders):
+            base(declaringComponent, property, property.PropertyType, binders)
         {
             InjectionValidator.Validate(property);
             _property = property;
@@ -21,7 +21,7 @@ namespace Cormo.Impl.Weld.Injections
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
             var property = GenericUtils.TranslatePropertyType(_property, translations);
-            return new PropertyInjectionPoint(component, property, Qualifiers.ToArray());
+            return new PropertyInjectionPoint(component, property, Binders);
         }
 
         protected override InjectPlan BuildInjectPlan(IComponent component)

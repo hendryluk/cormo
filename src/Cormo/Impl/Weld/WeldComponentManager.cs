@@ -29,7 +29,7 @@ namespace Cormo.Impl.Weld
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
         private readonly IContextualStore _contextualStore;
         private bool _isDeployed = false;
-        private IWeldComponent[] _allMixins;
+        private Mixin[] _allMixins;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
         private CurrentInjectionPoint _currentInjectionPoint;
 
@@ -39,12 +39,12 @@ namespace Cormo.Impl.Weld
         }
 
 
-        public IWeldComponent[] GetMixins(IComponent component)
+        public Mixin[] GetMixins(IComponent component)
         {
-            return _allMixins.Where(x => x.CanSatisfy(component.Qualifiers)).ToArray();
+            return _allMixins.Where(x => x.CanMixTo(component)).ToArray();
         }
 
-        public IEnumerable<IComponent> GetComponents(Type type, QualifierAttribute[] qualifiers)
+        public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifiers)
         {
             qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
 
@@ -70,7 +70,7 @@ namespace Cormo.Impl.Weld
             return matched;
         }
 
-        public IComponent GetComponent(Type type, params QualifierAttribute[] qualifiers)
+        public IComponent GetComponent(Type type, params IQualifier[] qualifiers)
         {
             qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
             var components = GetComponents(type, qualifiers).ToArray();
@@ -85,9 +85,9 @@ namespace Cormo.Impl.Weld
             return components.Single();
         }
 
-        public object GetReference(Type proxyType, IComponent component, ICreationalContext creationalContext)
+        public object GetReference(IComponent component, ICreationalContext creationalContext, params Type[] proxyTypes)
         {
-            return GetInjectableReference(proxyType, null, component, creationalContext);
+            return GetInjectableReference(null, component, creationalContext, proxyTypes);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)
@@ -98,10 +98,10 @@ namespace Cormo.Impl.Weld
         public void Deploy(WeldEnvironment environment)
         {
             Container.Instance.Initialize(this);
-            environment.AddValue(this, new QualifierAttribute[0], this);
-            environment.AddValue(new ContextualStore(), new QualifierAttribute[0], this);
+            environment.AddValue(this, new IQualifier[0], this);
+            environment.AddValue(new ContextualStore(), new IQualifier[0], this);
             
-            _allMixins = new ConcurrentBag<IWeldComponent>(environment.Components.OfType<Mixin>()).ToArray();
+            _allMixins = new ConcurrentBag<Mixin>(environment.Components.OfType<Mixin>()).ToArray();
             _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins));
             
             ValidateComponents();
@@ -113,16 +113,16 @@ namespace Cormo.Impl.Weld
         {
             foreach (var config in environment.Configurations)
             {
-                GetReference(null, config, CreateCreationalContext(config));
+                GetReference(config, CreateCreationalContext(config), null);
             }
         }
 
         public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
         {
-            return GetInjectableReference(injectionPoint.ComponentType, injectionPoint, component, creationalContext);
+            return GetInjectableReference(injectionPoint, component, creationalContext, injectionPoint.ComponentType);
         }
 
-        private object GetInjectableReference(Type proxyType, IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
+        private object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext, params Type[] proxyTypes)
         {
             var pushInjectionPoint = injectionPoint != null && injectionPoint.ComponentType != typeof (IInjectionPoint);
 
@@ -131,10 +131,12 @@ namespace Cormo.Impl.Weld
                 if (pushInjectionPoint)
                     _currentInjectionPoint.Push(injectionPoint);
 
-                if (proxyType != null && component.IsProxyRequired)
+                if (proxyTypes != null && component.IsProxyRequired)
                 {
-                    InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
-                    return CormoProxyGenerator.CreateProxy(injectionPoint.ComponentType,
+                    foreach(var proxyType in proxyTypes)
+                        InjectionValidator.ValidateProxiable(proxyType, injectionPoint);
+
+                    return CormoProxyGenerator.CreateProxy(proxyTypes,
                         () =>
                         {
                             try
@@ -205,11 +207,11 @@ namespace Cormo.Impl.Weld
             return IsWrappedType(type) ? type.GetGenericArguments()[0] : type;
         }
 
-        //public T GetReference<T>(params QualifierAttribute[] qualifiers)
+        //public T GetReference<T>(params IQualifier[] qualifiers)
         //{
         //    return (T)GetReference(typeof(T), qualifiers);
         //}
-        //public object GetReference(Type type, params QualifierAttribute[] qualifiers)
+        //public object GetReference(Type type, params IQualifier[] qualifiers)
         //{
         //    var component = GetComponent(type, qualifiers);
         //    return GetReference(component, CreateCreationalContext(component));

@@ -9,11 +9,11 @@ namespace Cormo.Impl.Weld.Components
 {
     public class Instance<T>: IInstance<T>
     {
-        private readonly QualifierAttribute[] _qualifiers;
+        private readonly IQualifier[] _qualifiers;
         private readonly IWeldComponent[] _components;
         private readonly ICreationalContext _creationalContext;
 
-        public Instance(QualifierAttribute[] qualifiers, IWeldComponent[] components, ICreationalContext creationalContext)
+        public Instance(IQualifier[] qualifiers, IWeldComponent[] components, ICreationalContext creationalContext)
         {
             _qualifiers = qualifiers;
             _components = components;
@@ -22,7 +22,7 @@ namespace Cormo.Impl.Weld.Components
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _components.Select(x => x.Manager.GetReference(null, x, _creationalContext)).Cast<T>().GetEnumerator();
+            return _components.Select(x => x.Manager.GetReference(x, _creationalContext, null)).Cast<T>().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

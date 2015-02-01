@@ -7,7 +7,7 @@ namespace Cormo.Impl.Weld.Validations
 {
     public static class ResolutionValidator
     {
-        public static void ValidateSingleResult(Type type, QualifierAttribute[] qualifiers, IComponent[] components)
+        public static void ValidateSingleResult(Type type, IQualifier[] qualifiers, IComponent[] components)
         {
             if (components.Length > 1)
             {

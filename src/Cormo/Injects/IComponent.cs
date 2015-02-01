@@ -9,9 +9,10 @@ namespace Cormo.Injects
     {
         IComponentManager Manager { get; }
         Type Type { get; }
-        IEnumerable<QualifierAttribute> Qualifiers { get; }
+        IEnumerable<IQualifier> Qualifiers { get; }
         IEnumerable<IInjectionPoint> InjectionPoints { get; }
         Type Scope { get; }
         bool IsProxyRequired { get; }
+        IEnumerable<IBinderAttribute> Binders { get; }
     }
 }

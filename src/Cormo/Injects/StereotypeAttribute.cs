@@ -3,7 +3,7 @@
 namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class MixinAttribute: Attribute
+    public abstract class StereotypeAttribute: Attribute, IBinderAttribute
     {
     }
 }

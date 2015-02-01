@@ -4,15 +4,19 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
+using Cormo.Mixins;
 
 namespace Cormo.Impl.Weld.Components
 {
     public class Mixin : ManagedComponent
     {
-        public Mixin(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(type, qualifiers, scope, manager, postConstructs)
+        public Mixin(Type[] interfaceTypes, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
+            : base(type, binders, scope, manager, postConstructs)
         {
+            InterfaceTypes = interfaceTypes;
         }
+
+        public Type[] InterfaceTypes { get; private set; }
 
         public override IWeldComponent Resolve(Type requestedType)
         {
@@ -31,6 +35,12 @@ namespace Cormo.Impl.Weld.Components
                 var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
+        }
+
+        public bool CanMixTo(IComponent component)
+        {
+            return Binders.OfType<IMixinBinder>().Select(x=> x.GetType())
+                .Any(component.Binders.Select(x=> x.GetType()).Contains);
         }
     }
 }

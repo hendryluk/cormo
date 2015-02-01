@@ -22,10 +22,10 @@ namespace Cormo.Impl.Weld
             _configurations.Add(component);
         }
 
-        public void AddValue(object instance, QualifierAttribute[] qualifiers, WeldComponentManager manager)
+        public void AddValue(object instance, IBinderAttribute[] binders, WeldComponentManager manager)
         {
             AddComponent(new ValueComponent(instance,
-                new QualifierAttribute[0], typeof (DependentAttribute),
+                new IQualifier[0], typeof (DependentAttribute),
                 manager));
         }
     }

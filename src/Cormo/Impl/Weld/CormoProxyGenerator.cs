@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Castle.DynamicProxy;
@@ -44,23 +45,50 @@ namespace Cormo.Impl.Weld
             public INamingScope ParentScope { get; private set; }
         }
 
-        public static object CreateMixins(Type type, object[] mixins, object[] ctorParams)
+        public static object CreateMixins(Type type, IDictionary<Type, object> mixins, object[] ctorParams)
         {
-            var pgo = new ProxyGenerationOptions();
-            foreach (var mixin in mixins)
-                pgo.AddMixinInstance(mixin);
+            //var pgo = new ProxyGenerationOptions();
+            //foreach (var mixin in mixins)
+            //    pgo.AddMixinInstance(mixin);
 
-            return ProxyGenerator.CreateClassProxy(type, pgo, ctorParams);
+            return ProxyGenerator.CreateClassProxy(type, mixins.Keys.ToArray(), new ProxyGenerationOptions(), ctorParams, new MixinInterceptor(mixins));
         }
 
-        public static object CreateProxy(Type type, Func<object> underlyingObject)
+        public class MixinInterceptor: IInterceptor
         {
-            if (type.IsInterface)
+            private readonly IDictionary<Type, object> _mixins;
+
+            public MixinInterceptor(IDictionary<Type, object> mixins)
             {
-                return ProxyGenerator.CreateInterfaceProxyWithoutTarget(type,
+                _mixins = mixins;
+            }
+
+            public void Intercept(IInvocation invocation)
+            {
+                object mixin;
+                if (_mixins.TryGetValue(invocation.Method.DeclaringType, out mixin))
+                {
+                    invocation.ReturnValue = invocation.Method.Invoke(mixin, invocation.Arguments);
+                }
+                else
+                {
+                    invocation.Proceed();
+                } 
+            }
+        }
+
+        public static object CreateProxy(Type[] types, Func<object> underlyingObject)
+        {
+            var classType = types.FirstOrDefault(x => !x.IsInterface);
+            if (classType == null)
+            {
+                return ProxyGenerator.CreateInterfaceProxyWithoutTarget(
+                    types.First(), types.Skip(1).ToArray(),
                     new ForwardingInterceptor(underlyingObject));
             }
-            return ProxyGenerator.CreateClassProxy(type, new ForwardingInterceptor(underlyingObject));
+            return ProxyGenerator.CreateClassProxy(classType, 
+                types.Except(new[]{classType}).ToArray(), 
+                new ForwardingInterceptor(underlyingObject));
         }
 
         public class ForwardingInterceptor : IInterceptor

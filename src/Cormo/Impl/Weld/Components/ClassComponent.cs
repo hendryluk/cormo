@@ -12,21 +12,21 @@ namespace Cormo.Impl.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        private ClassComponent(ClassComponent parent, Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
-            : base(new ComponentIdentifier(parent.Id.Key, type), type, qualifiers, scope, manager,
+        private ClassComponent(ClassComponent parent, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
+            : base(new ComponentIdentifier(parent.Id.Key, type), type, binders, scope, manager,
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
-            _lazyMixins = new Lazy<IComponent[]>(() => Manager.GetMixins(this));
+            _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
         }
 
-        public ClassComponent(Type type, IEnumerable<QualifierAttribute> qualifiers, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
-            : base(type, qualifiers, scope, manager, postConstructs)
+        public ClassComponent(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+            : base(type, binders, scope, manager, postConstructs)
         {
-            _lazyMixins = new Lazy<IComponent[]>(() => Manager.GetMixins(this));
+            _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
         }
 
-        public IEnumerable<IComponent> Mixins
+        public IEnumerable<Mixin> Mixins
         {
             get { return _lazyMixins.Value; }
         }
@@ -42,13 +42,13 @@ namespace Cormo.Impl.Weld.Components
 
             var component = new ClassComponent(this, 
                 resolution.ResolvedType, 
-                Qualifiers, 
+                Binders, 
                 Scope, Manager, resolution);
 
             return component;
         }
 
-        private readonly Lazy<IComponent[]> _lazyMixins;
+        private readonly Lazy<Mixin[]> _lazyMixins;
 
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
@@ -62,7 +62,12 @@ namespace Cormo.Impl.Weld.Components
                 return context =>
                 {
                     var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                    var mixinObjects = Mixins.Select(x => Manager.GetReference(x.Type, x, context)).ToArray();
+                    var mixinObjects = (from mixin in Mixins
+                        let reference = Manager.GetReference(mixin, context, mixin.InterfaceTypes)
+                        from interfaceType in mixin.InterfaceTypes
+                        select new {interfaceType, reference})
+                        .ToDictionary(x => x.interfaceType, x => x.reference);
+
                     return CormoProxyGenerator.CreateMixins(Type, mixinObjects, paramVals);
                 };
             }

@@ -2,8 +2,12 @@
 
 namespace Cormo.Injects
 {
+    public interface IQualifier : IBinderAttribute
+    {
+    }
+
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Parameter)]
-    public abstract class QualifierAttribute : Attribute
+    public abstract class QualifierAttribute : Attribute, IQualifier
     {
         public override string ToString()
         {

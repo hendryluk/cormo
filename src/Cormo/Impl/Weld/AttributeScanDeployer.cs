@@ -9,6 +9,7 @@ using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Mixins;
 using Cormo.Utils;
 
 namespace Cormo.Impl.Weld
@@ -116,9 +117,9 @@ namespace Cormo.Impl.Weld
                 
         }
 
-        public void AddValue(object instance, params QualifierAttribute[] qualifiers)
+        public void AddValue(object instance, params IBinderAttribute[] binders)
         {
-            _environment.AddValue(instance, qualifiers, _manager);
+            _environment.AddValue(instance, binders, _manager);
         }
         
 
@@ -154,26 +155,26 @@ namespace Cormo.Impl.Weld
 
         public IWeldComponent MakeProducerField(FieldInfo field)
         {
-            var qualifiers = field.GetQualifiers();
+            var binders = field.GetBinders();
             var scope = field.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            return new ProducerField(field, qualifiers, scope, _manager);
+            return new ProducerField(field, binders, scope, _manager);
         }
 
         public IWeldComponent MakeProducerProperty(PropertyInfo property)
         {
-            var qualifiers = property.GetQualifiers();
+            var binders = property.GetBinders();
             var scope = property.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            return new ProducerProperty(property, qualifiers, scope, _manager);
+            return new ProducerProperty(property, binders, scope, _manager);
         }
 
         public IWeldComponent MakeProducerMethod(MethodInfo method)
         {
-            var qualifiers = method.GetQualifiers();
+            var binders = method.GetBinders();
             var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            var producer = new ProducerMethod(method, qualifiers, scope, _manager);
+            var producer = new ProducerMethod(method, binders, scope, _manager);
             var injects = ToMethodInjections(producer, method).ToArray();
             producer.AddInjectionPoints(injects);
             return producer;
@@ -181,7 +182,7 @@ namespace Cormo.Impl.Weld
 
         public IWeldComponent MakeComponent(Type type)
         {
-            var qualifiers = type.GetQualifiers();
+            var binders = type.GetBinders();
             
             var methods = type.GetMethods(AllBindingFlags).ToArray();
 
@@ -195,14 +196,15 @@ namespace Cormo.Impl.Weld
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
 
-            var component = type.HasAttributeRecursive<MixinAttribute>()? (ManagedComponent)
-                new Mixin(type, qualifiers, scope, _manager, postConstructs) : 
-                new ClassComponent(type, qualifiers, scope, _manager, postConstructs);
+            var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
+            var component = mixinAttr==null? (ManagedComponent)
+                new ClassComponent(type, binders, scope, _manager, postConstructs):
+                new Mixin(mixinAttr.InterfaceTypes, type, binders, scope, _manager, postConstructs);
 
             var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
             var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
-            var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetQualifiers())).ToArray();
-            var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetQualifiers())).ToArray();
+            var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetBinders())).ToArray();
+            var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetBinders())).ToArray();
             
             component.AddInjectionPoints(methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects).ToArray());
             return component;
@@ -211,7 +213,7 @@ namespace Cormo.Impl.Weld
         private IEnumerable<IWeldInjetionPoint> ToMethodInjections(IComponent component, MethodBase method)
         {
             var parameters = method.GetParameters();
-            return parameters.Select(p => new MethodParameterInjectionPoint(component, p, p.GetQualifiers()));
+            return parameters.Select(p => new MethodParameterInjectionPoint(component, p, p.GetBinders()));
         }
 
         public void Deploy()

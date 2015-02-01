@@ -7,7 +7,7 @@ namespace Cormo.Injects.Exceptions
 {
     public class UnsatisfiedDependencyException: InjectionException
     {
-        public QualifierAttribute[] Qualifiers { get; private set; }
+        public IQualifier[] Qualifiers { get; private set; }
         public Type Type { get; private set; }
         public IInjectionPoint InjectionPoint { get; private set; }
 
@@ -19,7 +19,7 @@ namespace Cormo.Injects.Exceptions
             InjectionPoint = inject;
         }
 
-        public UnsatisfiedDependencyException(Type type, QualifierAttribute[] qualifiers) : 
+        public UnsatisfiedDependencyException(Type type, IQualifier[] qualifiers) : 
             base(string.Format("Unsatisfied dependency for type [{0}], qualifiers: [{1}]", type, string.Join(",", qualifiers.AsEnumerable())))
         {
             Type = type;

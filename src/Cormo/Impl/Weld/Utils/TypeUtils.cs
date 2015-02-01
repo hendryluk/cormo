@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Mixins;
 using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Utils

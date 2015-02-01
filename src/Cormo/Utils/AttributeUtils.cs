@@ -13,7 +13,7 @@ namespace Cormo.Utils
             return GetAttributesRecursive(attributeProvider, type).Any();
         }
 
-        public static bool HasAttributeRecursive<T>(this ICustomAttributeProvider attributeProvider) where T : Attribute
+        public static bool HasAttributeRecursive<T>(this ICustomAttributeProvider attributeProvider)
         {
             return HasAttributeRecursive(attributeProvider, typeof(T));
         }
@@ -30,17 +30,12 @@ namespace Cormo.Utils
 
         public static IEnumerable<Attribute> GetAttributesRecursive(this IEnumerable<Attribute> attributes)
         {
-            foreach (var attr in attributes)
-            {
-                yield return attr;
-                foreach (var r in GetAttributesRecursive(attr.GetType()))
-                {
-                    yield return r;
-                }
-            }
+            var cormoAttributes = attributes.ToArray();
+            return cormoAttributes.Union(
+                    cormoAttributes.OfType<StereotypeAttribute>().SelectMany(x => GetAttributesRecursive(x.GetType())));
         }
 
-        public static IEnumerable<T> GetAttributesRecursive<T>(this IEnumerable<Attribute> attributes)
+        public static IEnumerable<T> GetAttributesRecursive<T>(this IEnumerable<Attribute> attributes) where T:IBinderAttribute
         {
             return GetAttributesRecursive(attributes).OfType<T>();
         }
@@ -65,15 +60,16 @@ namespace Cormo.Utils
                     }
 
                     yield return attribute;
-                    list.AddLast(attribute.GetType());
 
+                    if(attribute is StereotypeAttribute)
+                        list.AddLast(attribute.GetType());
                 }
         }
 
-        public static QualifierAttribute[] GetQualifiers(this ICustomAttributeProvider attributeProvider)
+        public static IBinderAttribute[] GetBinders(this ICustomAttributeProvider attributeProvider)
         {
             return (
-                from attribute in attributeProvider.GetAttributesRecursive<QualifierAttribute>()
+                from attribute in attributeProvider.GetAttributesRecursive<IBinderAttribute>()
                 select attribute).ToArray();
         }
     }

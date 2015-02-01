@@ -14,9 +14,9 @@ namespace Cormo.Impl.Weld.Components
         private readonly Lazy<IComponent> _lazyDeclaringComponent;
 
         protected AbstractProducer(MemberInfo member, Type returnType,
-            IEnumerable<QualifierAttribute> qualifiers, Type scope,
+            IEnumerable<IBinderAttribute> binders, Type scope,
             WeldComponentManager manager)
-            : base(member.ToString(), returnType, qualifiers, scope, manager)
+            : base(member.ToString(), returnType, binders, scope, manager)
         {
             _member = member;
             _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(member);

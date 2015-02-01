@@ -13,8 +13,8 @@ namespace Cormo.Impl.Weld.Injections
 
         public ParameterInfo ParameterInfo { get { return _param; } }
         
-        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, QualifierAttribute[] qualifiers) 
-            : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, qualifiers)
+        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, IBinderAttribute[] binders) 
+            : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, binders)
         {
             _param = paramInfo;
             IsConstructor = _param.Member is ConstructorInfo;
@@ -31,14 +31,14 @@ namespace Cormo.Impl.Weld.Injections
                 var ctor = (ConstructorInfo) _param.Member;
                 ctor = GenericUtils.TranslateConstructorGenericArguments(ctor, translations);
                 var param = ctor.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Qualifiers.ToArray());
+                return new MethodParameterInjectionPoint(component, param, Binders.ToArray());
             }
             else
             {
                 var method = (MethodInfo)_param.Member;
                 method = GenericUtils.TranslateMethodGenericArguments(method, translations);
                 var param = method.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Qualifiers.ToArray());
+                return new MethodParameterInjectionPoint(component, param, Binders.ToArray());
             }
         }
 

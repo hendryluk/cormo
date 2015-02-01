@@ -14,7 +14,7 @@ using Cormo.Web.Api;
 
 namespace SampleWebApp
 {
-    [RestController]
+    [RestController, Singleton]
     public class MyController
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
@@ -25,7 +25,7 @@ namespace SampleWebApp
         [Route("test"), HttpGet]
         public string Test()
         {
-            return _stringService.Greet("World");
+            return _stringService.Greet("World") + "/" + GetHashCode();
         }
 
         [Route("testMany"), HttpGet]
@@ -41,6 +41,7 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
+    [RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] string Accept;

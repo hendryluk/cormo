@@ -14,19 +14,22 @@ namespace Cormo.Impl.Weld.Injections
     {
         protected readonly bool IsCacheable;
         
-        protected AbstractInjectionPoint(IComponent declaringComponent, MemberInfo member, Type type, QualifierAttribute[] qualifiers)
+        protected AbstractInjectionPoint(IComponent declaringComponent, MemberInfo member, Type type, IBinderAttribute[] binders)
         {
-            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+            binders = binders.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
 
             DeclaringComponent = declaringComponent;
             Member = member;
             ComponentType = type;
-            Qualifiers = qualifiers;
+            Binders = binders;
+            Qualifiers = binders.OfType<IQualifier>();
             IsCacheable = IsCacheableType(type);
             _lazyComponents = new Lazy<IComponent>(ResolveComponents);
             _lazyInjectPlan = new Lazy<InjectPlan>(()=> BuildInjectPlan(Component));
             _lazyGetValuePlan = new Lazy<BuildPlan>(BuildGetValuePlan);
         }
+
+        public IBinderAttribute[] Binders { get; private set; }
 
         private static bool IsCacheableType(Type type)
         {
@@ -49,7 +52,7 @@ namespace Cormo.Impl.Weld.Injections
         public MemberInfo Member { get; private set; }
         public IComponent DeclaringComponent { get; private set; }
         public Type ComponentType { get; set; }
-        public IEnumerable<QualifierAttribute> Qualifiers { get; set; }
+        public IEnumerable<IQualifier> Qualifiers { get; set; }
         public abstract IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         protected abstract InjectPlan BuildInjectPlan(IComponent components);
         private readonly Lazy<InjectPlan> _lazyInjectPlan;
