@@ -10,8 +10,8 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly FieldInfo _field;
 
-        public ProducerField(FieldInfo field, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
-            : base(field, field.FieldType, binders, scope, manager)
+        public ProducerField(IWeldComponent component, FieldInfo field, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+            : base(component, field, field.FieldType, binders, scope, manager)
         {
             _field = field;
         }
@@ -20,7 +20,7 @@ namespace Cormo.Impl.Weld.Components
         protected override AbstractProducer TranslateTypes(GenericUtils.Resolution resolution)
         {
             var resolvedField = GenericUtils.TranslateFieldType(_field, resolution.GenericParameterTranslations);
-            return new ProducerField(resolvedField, Binders, Scope, Manager);
+            return new ProducerField(DeclaringComponent.Resolve(resolvedField.DeclaringType), resolvedField, Binders, Scope, Manager);
         }
 
         protected override BuildPlan GetBuildPlan()

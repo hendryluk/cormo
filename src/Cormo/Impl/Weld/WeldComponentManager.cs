@@ -50,8 +50,8 @@ namespace Cormo.Impl.Weld
 
             var unwrappedType = UnwrapType(type);
             var isWrapped = unwrappedType != type;
-            
-            var components = _typeComponents.GetOrAdd(type, t => 
+
+            var components = _typeComponents.GetOrAdd(unwrappedType, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
             var matched = components.Where(x => x.CanSatisfy(qualifiers)).ToArray();
@@ -65,7 +65,7 @@ namespace Cormo.Impl.Weld
             }
              
             if (isWrapped)
-                matched = new IWeldComponent[] { new InstanceComponent(type, qualifiers, this, matched) };
+                matched = new IWeldComponent[] { new InstanceComponent(unwrappedType, qualifiers, this, matched) };
             
             return matched;
         }

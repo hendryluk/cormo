@@ -10,8 +10,8 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly PropertyInfo _property;
 
-        public ProducerProperty(PropertyInfo property, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
-            : base(property, property.PropertyType, binders, scope, manager)
+        public ProducerProperty(IWeldComponent component, PropertyInfo property, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+            : base(component, property, property.PropertyType, binders, scope, manager)
         {
             _property = property;
         }
@@ -20,7 +20,7 @@ namespace Cormo.Impl.Weld.Components
         protected override AbstractProducer TranslateTypes(GenericUtils.Resolution resolution)
         {
             var resolvedProperty = GenericUtils.TranslatePropertyType(_property, resolution.GenericParameterTranslations);
-            return new ProducerProperty(resolvedProperty, Binders, Scope, Manager);
+            return new ProducerProperty(DeclaringComponent.Resolve(resolvedProperty.DeclaringType), resolvedProperty, Binders, Scope, Manager);
         }
 
         protected override BuildPlan GetBuildPlan()

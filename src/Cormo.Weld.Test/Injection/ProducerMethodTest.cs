@@ -46,7 +46,6 @@ namespace Cormo.Weld.Test.Injection
         public void CanInjectFromProducer()
         {
             _deployer.AddTypes(typeof(RepoProducer), typeof(Target));
-            _deployer.AddProducerMethods(typeof(RepoProducer).GetMethod("ProduceRepo"));
             Assert.IsInstanceOf<RepositoryImpl>(GetInstance<Target>()._repo);
         }
 
@@ -54,7 +53,7 @@ namespace Cormo.Weld.Test.Injection
         {
             _deployer.Deploy();
             var component = _manager.GetComponent(typeof(T));
-            return (T)_manager.GetReference(component, _manager.CreateCreationalContext(component), null);
+            return (T)_manager.GetReference(component, _manager.CreateCreationalContext(component));
         }
     }
 }

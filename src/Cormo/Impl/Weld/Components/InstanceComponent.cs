@@ -8,11 +8,13 @@ namespace Cormo.Impl.Weld.Components
 {
     public class InstanceComponent : AbstractComponent
     {
+        private readonly Type _baseType;
         private readonly IWeldComponent[] _components;
 
         public InstanceComponent(Type baseType, IEnumerable<IBinderAttribute> binders, WeldComponentManager manager, IWeldComponent[] components)
             : base("", typeof(Instance<>).MakeGenericType(baseType), binders, typeof(DependentAttribute), manager)
         {
+            _baseType = baseType;
             _components = components;
         }
 

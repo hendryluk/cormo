@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -19,16 +20,18 @@ using Owin;
 
 namespace SampleWebApp
 {
-    [RestController, Singleton]
+    [RestController]
     public class MyController
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
     {
         [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter
         [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
-        
+
+        [Inject, QueryParam] private string id;
+
         [Route("test"), HttpGet]
-        public string Test()
+        public string Test(HttpRequestMessage msg)
         {
             return _stringService.Greet("World") + "/" + GetHashCode();
         }
@@ -50,12 +53,13 @@ namespace SampleWebApp
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] string Accept;
-        [Inject] IDbSet<Person> _persons; 
+        [Inject] IDbSet<Person> _persons;
+        [Inject] private IPrincipal _principal;
         
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
-                GetHashCode(), 
+                _principal.Identity.Name, 
                 _persons.Count(), 
                 Accept);
         }

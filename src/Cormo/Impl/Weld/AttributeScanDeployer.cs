@@ -57,65 +57,43 @@ namespace Cormo.Impl.Weld
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
 
-            var producerFields = (from type in types.AsParallel()
-                                    from field in type.GetFields(AllBindingFlags)
-                                    where field.HasAttributeRecursive<ProducesAttribute>()
-                                    select field).ToArray();
-
-            var producerMethods = (from type in types.AsParallel()
-                                    from method in type.GetMethods(AllBindingFlags)
-                                    where method.HasAttributeRecursive<ProducesAttribute>()
-                                    select method).ToArray();
-
-            var producerProperties = (from type in types.AsParallel()
-                                      from property in type.GetProperties(AllBindingFlags)
-                                      where property.HasAttributeRecursive<ProducesAttribute>()
-                                      select property).ToArray();
-
             var assemblyConfigs = (from assembly in assemblies.AsParallel()
                                   from import in assembly.GetAttributesRecursive<ImportAttribute>()
                                   from type in import.Types
                                   select type).ToArray();
-
+            
             AddTypes(componentTypes);
-            AddProducerMethods(producerMethods);
-            AddProducerFields(producerFields);
-            AddProducerProperties(producerProperties);
-
             var configs = GetConfigs(_environment.Components, assemblyConfigs);
 
             foreach (var c in configs)
                 _environment.AddConfiguration(c);
         }
 
-        public void AddProducerMethods(params MethodInfo[] methods)
-        {
-            var components = methods.AsParallel().Select(MakeProducerMethod).ToArray();
-            foreach(var c in components)
-                _environment.AddComponent(c);
-        }
-
-        public void AddProducerFields(params FieldInfo[] fields)
-        {
-            var components = fields.AsParallel().Select(MakeProducerField).ToArray();
-            foreach (var c in components)
-                _environment.AddComponent(c);
-        }
-
-        public void AddProducerProperties(params PropertyInfo[] properties)
-        {
-            var components = properties.AsParallel().Select(MakeProducerProperty).ToArray();
-            foreach (var c in components)
-                _environment.AddComponent(c);
-        }
-
         public void AddTypes(params Type[] types)
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
 
-            foreach (var c in components)
-                _environment.AddComponent(c);
-                
+            var producerFields = (from component in components.AsParallel()
+                                  let type = component.Type
+                                  from field in type.GetFields(AllBindingFlags)
+                                  where field.HasAttributeRecursive<ProducesAttribute>()
+                                  select MakeProducerField(component, field)).ToArray();
+
+            var producerMethods = (from component in components.AsParallel()
+                                   let type = component.Type
+                                   from method in type.GetMethods(AllBindingFlags)
+                                   where method.HasAttributeRecursive<ProducesAttribute>()
+                                   select MakeProducerMethod(component, method)).ToArray();
+
+            var producerProperties = (from component in components.AsParallel()
+                                      let type = component.Type
+                                      from property in type.GetProperties(AllBindingFlags)
+                                      where property.HasAttributeRecursive<ProducesAttribute>()
+                                      select MakeProducerProperty(component, property)).ToArray();
+
+            foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
+                _environment.AddComponent(c);   
+
         }
 
         public void AddValue(object instance, params IBinderAttribute[] binders)
@@ -126,10 +104,11 @@ namespace Cormo.Impl.Weld
 
         private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components, Type[] assemblyConfigs)
         {
-            var componentMap = components.ToDictionary(x => x.Type, x => x);
-            var configs = new List<IWeldComponent>();
+            var componentMap = components.OfType<ClassComponent>().ToDictionary(x => x.Type, x => x);
+            var configs = new List<ClassComponent>();
             var newConfigs = componentMap.Values
-                .Where(x => assemblyConfigs.Contains(x.Type) || x.Type.HasAttributeRecursive<ConfigurationAttribute>()).ToArray();
+                .Where(x => assemblyConfigs.Contains(x.Type) || x.Type.HasAttributeRecursive<ConfigurationAttribute>())
+                .ToArray();
 
             while (newConfigs.Any())
             {
@@ -142,7 +121,7 @@ namespace Cormo.Impl.Weld
 
                 newConfigs = imports.Select(x =>
                 {
-                    IWeldComponent component;
+                    ClassComponent component;
                     if (componentMap.TryGetValue(x.importType, out component))
                         return component;
                     throw new InvalidComponentException(x.importType,
@@ -154,28 +133,28 @@ namespace Cormo.Impl.Weld
             return configs;
         }
 
-        public IWeldComponent MakeProducerField(FieldInfo field)
+        public IWeldComponent MakeProducerField(IWeldComponent component, FieldInfo field)
         {
             var binders = field.GetBinders();
             var scope = field.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            return new ProducerField(field, binders, scope, _manager);
+            return new ProducerField(component, field, binders, scope, _manager);
         }
 
-        public IWeldComponent MakeProducerProperty(PropertyInfo property)
+        public IWeldComponent MakeProducerProperty(IWeldComponent component, PropertyInfo property)
         {
             var binders = property.GetBinders();
             var scope = property.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            return new ProducerProperty(property, binders, scope, _manager);
+            return new ProducerProperty(component, property, binders, scope, _manager);
         }
 
-        public IWeldComponent MakeProducerMethod(MethodInfo method)
+        public IWeldComponent MakeProducerMethod(IWeldComponent component, MethodInfo method)
         {
             var binders = method.GetBinders();
             var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            var producer = new ProducerMethod(method, binders, scope, _manager);
+            var producer = new ProducerMethod(component, method, binders, scope, _manager);
             var injects = ToMethodInjections(producer, method).ToArray();
             producer.AddInjectionPoints(injects);
             return producer;

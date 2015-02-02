@@ -5,7 +5,6 @@ using System.Web.Http.Dependencies;
 using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
-using Castle.DynamicProxy;
 
 namespace Cormo.Web.Impl
 {

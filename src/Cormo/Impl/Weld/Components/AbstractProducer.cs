@@ -11,21 +11,13 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly MemberInfo _member;
         private readonly bool _containsGenericParameters;
-        private readonly Lazy<IComponent> _lazyDeclaringComponent;
-
-        protected AbstractProducer(MemberInfo member, Type returnType,
-            IEnumerable<IBinderAttribute> binders, Type scope,
-            WeldComponentManager manager)
+        
+        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
             : base(member.ToString(), returnType, binders, scope, manager)
         {
             _member = member;
             _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(member);
-            _lazyDeclaringComponent = new Lazy<IComponent>(GetDeclaringComponent);
-        }
-
-        private IComponent GetDeclaringComponent()
-        {
-            return Manager.GetComponent(_member.ReflectedType);
+            DeclaringComponent = declaringComponent;
         }
 
         public override bool IsConcrete
@@ -33,11 +25,8 @@ namespace Cormo.Impl.Weld.Components
             get { return !_containsGenericParameters; }
         }
 
-        public IComponent DeclaringComponent
-        {
-            get { return _lazyDeclaringComponent.Value; }
-        }
-
+        public IWeldComponent DeclaringComponent { get; private set; }
+        
         public override IWeldComponent Resolve(Type requestedType)
         {
             if (IsConcrete)
