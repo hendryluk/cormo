@@ -77,7 +77,7 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
-# Cormo.Data.EntityFramework
+# Entity Framework
 [Read more here](http://github.com/hendryluk/cormo/wiki/Cormo.Data.EntityFramework)
 
 # Further Reading
