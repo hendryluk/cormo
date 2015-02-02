@@ -11,7 +11,7 @@ namespace Cormo.Web.Impl
     public class CormoDependencyResolver: IDependencyResolver
     {
         private readonly IComponentManager _componentManager;
-        private ICreationalContext _creationalContext;
+        private readonly ICreationalContext _creationalContext;
 
         [Inject]
         public CormoDependencyResolver(IComponentManager componentManager):
@@ -35,7 +35,7 @@ namespace Cormo.Web.Impl
             try
             {
                 var component = _componentManager.GetComponent(serviceType);
-                return _componentManager.GetReference(component, _creationalContext, component.Type);
+                return _componentManager.GetReference(component, _creationalContext, serviceType);
             }
             catch (UnsatisfiedDependencyException)
             {

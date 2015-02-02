@@ -1,9 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Linq;
-using System.Net.Http;
-using System.Security.Principal;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
@@ -49,41 +45,15 @@ namespace Cormo.Web.Impl
         }
     }
 
-    [GlobalFilter]
-    public class RequestProducerHandler : DelegatingHandler
-    {
-        [RequestScoped]
-        public class RequestProducer
-        {
-            [Produces, RequestScoped]
-            private HttpRequestMessage _request;
-
-            public virtual void SetRequest(HttpRequestMessage request)
-            {
-                _request = request;
-            }
-
-            [Produces, RequestScoped]
-            public virtual IPrincipal GetPrincipal()
-            {
-                return _request.GetRequestContext().Principal;
-            }
-        }
-
-        [Inject] private RequestProducer _requestProducer;
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            _requestProducer.SetRequest(request);
-            return base.SendAsync(request, cancellationToken);
-        }
-    }
-
     [RestController]
     [RequestScoped]
-    [Mixin(typeof(IHttpController))]
-    public class ApiControllerMixin : ApiController
+    [Mixin(typeof(IHttpController), typeof(ICormoHttpController))]
+    public class ApiControllerMixin : ApiController, ICormoHttpController
     {
         
+    }
+
+    public interface ICormoHttpController
+    {
     }
 }

@@ -31,7 +31,7 @@ namespace SampleWebApp
         [Inject, QueryParam] private string id;
 
         [Route("test"), HttpGet]
-        public string Test(HttpRequestMessage msg)
+        public string Test(HttpRequestMessage msg, UpperCaseGreeter stringService)
         {
             return _stringService.Greet("World") + "/" + GetHashCode();
         }
@@ -49,7 +49,7 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
-    [RequestScoped]
+    //[RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] string Accept;
@@ -59,7 +59,7 @@ namespace SampleWebApp
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
-                _principal.Identity.Name, 
+                _principal.Identity, 
                 _persons.Count(), 
                 Accept);
         }
@@ -71,6 +71,7 @@ namespace SampleWebApp
         }
     }
 
+    [FromBody]
     public class Person
     {
         public Guid Id { get; set; }

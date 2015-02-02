@@ -90,6 +90,7 @@
     <Compile Include="Impl\HeaderParamProducer.cs" />
     <Compile Include="Impl\HttpRequestContextRegistrar.cs" />
     <Compile Include="Impl\HttpSessionContextRegistrar.cs" />
+    <Compile Include="Impl\RequestProducerHandler.cs" />
     <Compile Include="Impl\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
