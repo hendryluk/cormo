@@ -77,6 +77,9 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
+# Cormo.Data.EntityFramework
+[Read more here](http://github.com/hendryluk/cormo/wiki/Cormo.Data.EntityFramework)
+
 # Further Reading
 Cormo combines ideas from these following frameworks. Each comes with great documentation far beyond what Cormo has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Cormo (or what Cormo will come to be), so check them out. Just replace the word "Bean" with "Component".
 * [JBoss Weld](http://weld.cdi-spec.org)  [ [Doc](https://docs.jboss.org/weld/reference/latest/en-US/html/) ]
