@@ -10,5 +10,6 @@ namespace Cormo.Impl.Weld.Injections
         IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations);
         void Inject(object target, ICreationalContext context);
         Type Scope { get; }
+        bool Unwraps { get; }
     }
 }

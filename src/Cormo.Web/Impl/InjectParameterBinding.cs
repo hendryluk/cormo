@@ -14,6 +14,7 @@ namespace Cormo.Web.Impl
 {
     public class InjectParameterBinding : HttpParameterBinding
     {
+        static readonly UnwrapAttribute UnwrapAttributeInstance = new UnwrapAttribute();
         private MethodParameterInjectionPoint _injectionPoint;
 
         public InjectParameterBinding(IComponentManager manager, HttpParameterDescriptor descriptor)
@@ -28,7 +29,9 @@ namespace Cormo.Web.Impl
                      var controllerType = param.Member.ReflectedType;
                      
                      var declaringComponent = manager.GetComponent(controllerType);
-                     var binders = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IBinderAttribute>().ToArray();
+                     var binders = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IBinderAttribute>()
+                         .Union(new []{UnwrapAttributeInstance})
+                         .ToArray();
 
                      var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, binders);
                      var component = injectionPoint.Component;

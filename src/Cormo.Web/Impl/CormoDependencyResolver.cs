@@ -73,7 +73,7 @@ namespace Cormo.Web.Impl
 
         public object GetReference(IInjectionPoint injectionPoint)
         {
-            return _componentManager.GetInjectableReference(injectionPoint, injectionPoint.Component, _creationalContext);
+            return _componentManager.GetInjectableReference(injectionPoint, _creationalContext);
         }
     }
 }

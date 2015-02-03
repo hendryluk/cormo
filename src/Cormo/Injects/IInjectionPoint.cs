@@ -11,5 +11,6 @@ namespace Cormo.Injects
         Type ComponentType { get; }
         IEnumerable<IQualifier> Qualifiers { get; }
         IComponent Component { get; }
+
     }
 }

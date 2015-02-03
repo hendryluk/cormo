@@ -24,6 +24,7 @@ namespace Cormo.Impl.Weld.Injections
             Binders = binders;
             Qualifiers = binders.OfType<IQualifier>();
             IsCacheable = IsCacheableType(type);
+            Unwraps = binders.OfType<UnwrapAttribute>().Any();
             _lazyComponents = new Lazy<IComponent>(ResolveComponents);
             _lazyInjectPlan = new Lazy<InjectPlan>(()=> BuildInjectPlan(Component));
             _lazyGetValuePlan = new Lazy<BuildPlan>(BuildGetValuePlan);
@@ -40,13 +41,12 @@ namespace Cormo.Impl.Weld.Injections
         {
             var manager = DeclaringComponent.Manager;
             var component = Component;
-            var isDbContext = component.Type.Name.EndsWith("DbContexts");
             if (IsCacheable || component.IsProxyRequired)
             {
-                return CacheUtils.Cache(context => manager.GetInjectableReference(this, component, context));
+                return CacheUtils.Cache(context => manager.GetInjectableReference(this, context));
             }
 
-            return context => manager.GetInjectableReference(this, component, context);
+            return context => manager.GetInjectableReference(this, context);
         }
 
         public MemberInfo Member { get; private set; }
@@ -78,6 +78,8 @@ namespace Cormo.Impl.Weld.Injections
         {
             get { return Component.Scope; }
         }
+
+        public bool Unwraps { get; private set; }
 
         public void Inject(object target, ICreationalContext context)
         {

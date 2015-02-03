@@ -31,7 +31,7 @@ namespace Cormo.Impl.Weld.Components
         protected override BuildPlan GetBuildPlan()
         {
             return context => Activator.CreateInstance(Type, 
-                Qualifiers.ToArray(), _components, context);
+                Manager, Qualifiers.ToArray(), _components, context);
         }
 
         public override bool IsConcrete

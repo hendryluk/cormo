@@ -95,7 +95,7 @@ namespace Cormo.Impl.Weld
 
         public object GetReference(IComponent component, ICreationalContext creationalContext, params Type[] proxyTypes)
         {
-            return GetInjectableReference(null, component, creationalContext, proxyTypes);
+            return GetReference(null, component, creationalContext, proxyTypes);
         }
 
         public ICreationalContext CreateCreationalContext(IContextual contextual)
@@ -126,12 +126,17 @@ namespace Cormo.Impl.Weld
             }
         }
 
-        public object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext)
+        public object GetInjectableReference(IInjectionPoint injectionPoint, ICreationalContext creationalContext)
         {
-            return GetInjectableReference(injectionPoint, component, creationalContext, injectionPoint.ComponentType);
+            var proxyTypes = new []{injectionPoint.ComponentType};
+            var weldIp = injectionPoint as IWeldInjetionPoint;
+            if (weldIp != null && weldIp.Unwraps)
+                proxyTypes = new Type[0];
+
+            return GetReference(injectionPoint, injectionPoint.Component, creationalContext, proxyTypes);
         }
 
-        private object GetInjectableReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext, params Type[] proxyTypes)
+        private object GetReference(IInjectionPoint injectionPoint, IComponent component, ICreationalContext creationalContext, params Type[] proxyTypes)
         {
             var pushInjectionPoint = injectionPoint != null && injectionPoint.ComponentType != typeof (IInjectionPoint);
 
@@ -153,7 +158,7 @@ namespace Cormo.Impl.Weld
                             {
                                 if (pushInjectionPoint)
                                     _currentInjectionPoint.Push(injectionPoint);
-                                return GetInjectableReference(injectionPoint, component, creationalContext, new Type[0]);
+                                return GetReference(injectionPoint, component, creationalContext, new Type[0]);
                             }
                             finally
                             {
