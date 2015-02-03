@@ -46,9 +46,11 @@ namespace Cormo.Impl.Weld
 
         public void AutoScan()
         {
-            var assemblyName = typeof(IComponentManager).Assembly.GetName();
+            var cormo = typeof(IComponentManager).Assembly;
+            var assemblyName = cormo.GetName();
 
-            var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName);
+            var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName)
+                .Union(new[]{cormo}).ToArray();
 
             var types = (from assembly in assemblies.AsParallel()
                             from type in assembly.GetLoadableTypes()

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Web;
 using Cormo.Injects;
@@ -21,11 +22,18 @@ namespace Cormo.Web.Impl
             if (context == null || converter == null)
                 throw new UnsatisfiedDependencyException(ip);
 
-            var header = context.Request.Headers.Get(GetHeaderName(ip));
-            if (header == null)
-                return GetDefaultValue<T>(ip);
+            try
+            {
+                var header = context.Request.Headers.Get(GetHeaderName(ip));
+                if (header != null)
+                    return (T) converter.ConvertFromString(header);
+            }
+            catch (Exception)
+            {
+                // TODO: LOG
+            }
 
-            return (T)converter.ConvertFromString(header);
+            return GetDefaultValue<T>(ip);
         }
 
         protected string GetHeaderName(IInjectionPoint ip)

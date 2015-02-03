@@ -53,6 +53,11 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
+    [Value("limit", Default = 50)]
+    public class LimitAttribute : StereotypeAttribute
+    {
+    }
+
     [RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
@@ -62,6 +67,8 @@ namespace SampleWebApp
 
         [Inject, RouteParam]
         private int id;
+
+        [Inject, Limit] private int xxxx;
 
         public virtual string Greet(string val)
         {

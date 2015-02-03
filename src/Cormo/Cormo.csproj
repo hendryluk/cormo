@@ -36,6 +36,7 @@
       <HintPath>..\packages\Castle.Core.3.3.3\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -55,11 +56,14 @@
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
+    <Compile Include="Impl\ValueProvider.cs" />
     <Compile Include="Impl\Weld\Components\ComponentIdentifier.cs" />
     <Compile Include="Impl\Weld\Components\Interceptor.cs" />
     <Compile Include="Impl\Weld\CormoProxyGenerator.cs" />
     <Compile Include="Impl\Weld\CurrentInjectionPoint.cs" />
     <Compile Include="Injects\IBinderAttribute.cs" />
+    <Compile Include="Injects\IValueProvider.cs" />
+    <Compile Include="Injects\ValueAttribute.cs" />
     <Compile Include="Interceptions\InterceptorAttribute.cs" />
     <Compile Include="Mixins\IMixinBinder.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />

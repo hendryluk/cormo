@@ -16,6 +16,9 @@ namespace Cormo.Web.Impl
         [Produces, RouteParamAttribute]
         T GetRouteParam<T>(IInjectionPoint ip, HttpRequestMessage request)
         {
+            if (ip == null)
+                throw new InjectionException("RouteParam needs injection point");
+            
             var converter = TypeDescriptor.GetConverter(typeof(T));
             if (request == null || converter == null)
                 throw new UnsatisfiedDependencyException(ip);
