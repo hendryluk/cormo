@@ -55,6 +55,14 @@ namespace Cormo.Impl.Weld
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
             var matched = components.Where(x => x.CanSatisfy(qualifiers)).ToArray();
+            if (matched.Length > 1)
+            {
+                var onMissings = matched.Where(x => x.IsConditionalOnMissing).ToArray();
+                var others = matched.Except(onMissings).ToArray();
+
+                matched = others.Any() ? others: onMissings.Take(1).ToArray();
+            }
+
             var newComponents = matched.Where(x => !_allComponents.Contains(x));
             foreach (var c in newComponents)
             {

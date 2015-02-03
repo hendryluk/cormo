@@ -24,6 +24,7 @@ namespace Cormo.Impl.Weld.Components
             Scope = scope;
             IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope);
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
+            IsConditionalOnMissing = binders.OfType<ConditionalOnMissingComponentAttribute>().Any();
         }
 
         public IEnumerable<IBinderAttribute> Binders { get; private set; }
@@ -52,6 +53,8 @@ namespace Cormo.Impl.Weld.Components
 
         public WeldComponentManager Manager { get; set; }
         public abstract bool IsConcrete { get; }
+        public bool IsConditionalOnMissing { get; private set; }
+
         public IEnumerable<IInjectionPoint> InjectionPoints
         {
             get { return _injectionPoints; }

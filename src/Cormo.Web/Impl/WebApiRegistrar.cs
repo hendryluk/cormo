@@ -37,7 +37,7 @@ namespace Cormo.Web.Impl
         [Singleton]
         public class Defaults
         {
-            [Produces, Singleton, ConditionalOnMissingComponent]
+            [Produces, Singleton]
             private readonly HttpConfiguration _configuration = GlobalConfiguration.Configuration;
 
             [Produces, Singleton, ConditionalOnMissingComponent]

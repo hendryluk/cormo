@@ -11,5 +11,6 @@ namespace Cormo.Impl.Weld.Components
 
         bool IsProxyRequired { get; }
         bool IsConcrete { get; }
+        bool IsConditionalOnMissing { get; }
     }
 }
