@@ -20,7 +20,7 @@ using Owin;
 
 namespace SampleWebApp
 {
-    [RestController]
+    [RestController, RequestScoped]
     public class MyController
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
@@ -41,7 +41,7 @@ namespace SampleWebApp
         }
 
         [Route("testMany"), HttpGet]
-        public string TestMany()
+        public string TestMany([Value(Default = 100)]int aaa)
         {
             return _integersService.Greet(new[] { 1, 2, 3, 4, 5 });
         }
@@ -61,11 +61,12 @@ namespace SampleWebApp
     [RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
+
         [Inject, HeaderParam] string Accept;
         [Inject] IDbSet<Person> _persons;
         [Inject] private IPrincipal _principal;
 
-        [Inject, RouteParam]
+        //[Inject, RouteParam]
         private int id;
 
         [Inject, Limit] private int xxxx;
@@ -83,6 +84,10 @@ namespace SampleWebApp
             // Clear some resources here
             Debug.WriteLine("Disposed EnumerableeGreeter: " + this);
         }
+    }
+
+    public class BlahAttribute : QualifierAttribute
+    {
     }
 
     [FromBody]

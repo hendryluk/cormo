@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using System.Web.Http.Metadata;
+using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Utils;
@@ -13,34 +14,41 @@ namespace Cormo.Web.Impl
 {
     public class InjectParameterBinding : HttpParameterBinding
     {
-        private readonly IComponentManager _manager;
-        private readonly IComponent _component = null;
+        private MethodParameterInjectionPoint _injectionPoint;
 
         public InjectParameterBinding(IComponentManager manager, HttpParameterDescriptor descriptor)
             : base(descriptor)
         {
-            _manager = manager;
+            var reflectedDescriptor = descriptor as ReflectedHttpParameterDescriptor;
+            if (reflectedDescriptor != null)
+            {
+                 try
+                {
+                     var param = reflectedDescriptor.ParameterInfo;
+                     var controllerType = param.Member.ReflectedType;
+                     
+                     var declaringComponent = manager.GetComponent(controllerType);
+                     var binders = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IBinderAttribute>().ToArray();
 
-            try
-            {
-                var qualifiers = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IQualifier>().ToArray();
-                _component = _manager.GetComponent(descriptor.ParameterType, qualifiers);
+                     var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, binders);
+                     var component = injectionPoint.Component;
+                    _injectionPoint = injectionPoint;
+                }
+                catch (UnsatisfiedDependencyException)
+                {
+                    // Not managed by cormo. Nothing here
+                }
             }
-            catch (UnsatisfiedDependencyException)
-            {
-                // Not managed by cormo. Nothing here
-            }
-           
         }
 
         public override Task ExecuteBindingAsync(ModelMetadataProvider metadataProvider, HttpActionContext actionContext, CancellationToken cancellationToken)
         {
-            if (_component != null)
+            if (_injectionPoint != null)
             {
-                var resolver = actionContext.Request.GetDependencyScope() as CormoDependencyResolver;
+                var resolver = actionContext.Request.GetDependencyScope() as ICormoDependencyResolver;
                 if (resolver != null)
                 {
-                    var resolved = resolver.GetReference(_component, Descriptor.ParameterType);
+                    var resolved = resolver.GetReference(_injectionPoint);
                     actionContext.ActionArguments[Descriptor.ParameterName] = resolved;
                 }
                

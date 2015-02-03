@@ -8,7 +8,14 @@ using Cormo.Injects.Exceptions;
 
 namespace Cormo.Web.Impl
 {
-    public class CormoDependencyResolver: IDependencyResolver
+    public interface ICormoDependencyResolver : IDependencyResolver
+    {
+        object GetReference(IComponent component, params Type[] proxyTypes);
+        object GetReference(Type serviceType, params Type[] proxyType);
+        object GetReference(IInjectionPoint injectionPoint);
+    }
+
+    public class CormoDependencyResolver : ICormoDependencyResolver
     {
         private readonly IComponentManager _componentManager;
         private readonly ICreationalContext _creationalContext;
@@ -32,15 +39,7 @@ namespace Cormo.Web.Impl
 
         public object GetService(Type serviceType)
         {
-            try
-            {
-                var component = _componentManager.GetComponent(serviceType);
-                return GetReference(component, serviceType);
-            }
-            catch (UnsatisfiedDependencyException)
-            {
-                return null;
-            }
+            return GetReference(serviceType, serviceType);
         }
 
         public IEnumerable<object> GetServices(Type serviceType)
@@ -54,9 +53,27 @@ namespace Cormo.Web.Impl
             return new CormoDependencyResolver(_componentManager, _creationalContext.GetCreationalContext(null));
         }
 
-        public object GetReference(IComponent component, Type serviceType)
+        public object GetReference(Type serviceType, params Type[] proxyTypes)
         {
-            return _componentManager.GetReference(component, _creationalContext, serviceType);
+            try
+            {
+                var component = _componentManager.GetComponent(serviceType);
+                return GetReference(component, proxyTypes);
+            }
+            catch (UnsatisfiedDependencyException)
+            {
+                return null;
+            }
+        }
+
+        public object GetReference(IComponent component, params Type[] proxyTypes)
+        {
+            return _componentManager.GetReference(component, _creationalContext, proxyTypes);
+        }
+
+        public object GetReference(IInjectionPoint injectionPoint)
+        {
+            return _componentManager.GetInjectableReference(injectionPoint, injectionPoint.Component, _creationalContext);
         }
     }
 }

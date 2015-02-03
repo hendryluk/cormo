@@ -5,7 +5,7 @@ using Cormo.Web.Impl;
 namespace Cormo.Web.Api
 {
     [Import(typeof(HttpSessionContextRegistrar))]
-    public class EnableHttpSessionStateAttribute : Attribute
+    public class EnableHttpSessionStateAttribute : StereotypeAttribute
     {
     }
 }

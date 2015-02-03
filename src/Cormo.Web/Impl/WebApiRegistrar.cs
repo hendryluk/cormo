@@ -1,6 +1,9 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Web.Http;
+using System.Web.Http.Controllers;
 using System.Web.Http.Dependencies;
+using System.Web.Http.Dispatcher;
 using System.Web.Http.Filters;
 using Cormo.Contexts;
 using Cormo.Injects;
@@ -39,6 +42,19 @@ namespace Cormo.Web.Impl
 
             [Produces, Singleton, ConditionalOnMissingComponent]
             private readonly IContractResolver _contractResolver = new CamelCasePropertyNamesContractResolver();
+        }
+    }
+
+    public class CormoControllerActivator : IHttpControllerActivator
+    {
+        public IHttpController Create(HttpRequestMessage request, HttpControllerDescriptor controllerDescriptor, Type controllerType)
+        {
+            var cormoResolver = request.GetDependencyScope() as ICormoDependencyResolver;
+            if(cormoResolver == null)
+                return null;
+
+            // No proxy
+            return (IHttpController) cormoResolver.GetReference(controllerType);
         }
     }
 }

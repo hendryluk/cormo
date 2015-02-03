@@ -10,5 +10,6 @@ namespace Cormo.Injects
         MemberInfo Member { get; }
         Type ComponentType { get; }
         IEnumerable<IQualifier> Qualifiers { get; }
+        IComponent Component { get; }
     }
 }

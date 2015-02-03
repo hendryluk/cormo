@@ -33,7 +33,7 @@ namespace Cormo.Impl.Weld.Injections
 
         private static bool IsCacheableType(Type type)
         {
-            return typeof(IInjectionPoint).IsAssignableFrom(type) || typeof(IInstance<>).IsAssignableFrom(GenericUtils.OpenIfGeneric(type));
+            return typeof(IInstance<>).IsAssignableFrom(GenericUtils.OpenIfGeneric(type));
         }
 
         private BuildPlan BuildGetValuePlan()
