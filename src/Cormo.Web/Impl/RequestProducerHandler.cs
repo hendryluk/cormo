@@ -14,7 +14,7 @@ namespace Cormo.Web.Impl
         [RequestScoped]
         public class RequestProducer
         {
-            [Produces, RequestScoped]
+            [Produces]
             private HttpRequestMessage _request;
 
             public virtual void SetRequest(HttpRequestMessage request)

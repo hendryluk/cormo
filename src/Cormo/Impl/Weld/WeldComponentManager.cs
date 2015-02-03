@@ -132,6 +132,7 @@ namespace Cormo.Impl.Weld
                 if (pushInjectionPoint)
                     _currentInjectionPoint.Push(injectionPoint);
 
+                
                 if (proxyTypes.Any() && component.IsProxyRequired)
                 {
                     foreach(var proxyType in proxyTypes)
@@ -144,7 +145,7 @@ namespace Cormo.Impl.Weld
                             {
                                 if (pushInjectionPoint)
                                     _currentInjectionPoint.Push(injectionPoint);
-                                return GetContext(component.Scope).Get(component, creationalContext);
+                                return GetInjectableReference(injectionPoint, component, creationalContext, new Type[0]);
                             }
                             finally
                             {
@@ -154,6 +155,13 @@ namespace Cormo.Impl.Weld
                         });
                 }
 
+                var context = creationalContext as IWeldCreationalContext;
+                if (context != null)
+                {
+                    var incompleteInstance = context.GetIncompleteInstance(component);
+                    if (incompleteInstance != null)
+                        return incompleteInstance;
+                }
                 creationalContext = creationalContext.GetCreationalContext(component);
                 return GetContext(component.Scope).Get(component, creationalContext);
             }

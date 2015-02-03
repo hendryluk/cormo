@@ -15,8 +15,8 @@ namespace Cormo.Web.Impl
         void PostConstruct(IServiceRegistry serviceRegistry, IAppBuilder appBuilder)
         {
             var requestContext = serviceRegistry.GetService<HttpRequestContext>();
-            
-            appBuilder.Use(async(context, next) =>
+
+            appBuilder.Use(async (context, next) =>
             {
                 try
                 {
@@ -28,7 +28,7 @@ namespace Cormo.Web.Impl
                     requestContext.Deactivate();
                 }
             });
-            appBuilder.UseStageMarker(PipelineStage.Authorize);
+            appBuilder.UseStageMarker(PipelineStage.MapHandler);
         }
     }
 }

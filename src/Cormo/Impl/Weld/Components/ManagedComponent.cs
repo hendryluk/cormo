@@ -70,6 +70,8 @@ namespace Cormo.Impl.Weld.Components
             return context =>
             {
                 var instance = constructPlan(context);
+                context.Push(instance);
+
                 foreach (var i in otherInjects)
                     i.Inject(instance, context);
                 foreach (var i in methodInject)

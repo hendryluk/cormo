@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Cormo.Contexts;
+using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Contexts
 {
@@ -36,6 +37,11 @@ namespace Cormo.Impl.Weld.Contexts
         public void Push(object incompleteInstance)
         {
             _incompleteInstanceMap.Add(_contextual, incompleteInstance);
+        }
+
+        public object GetIncompleteInstance(IContextual contextual)
+        {
+            return _incompleteInstanceMap.GetOrDefault(contextual);
         }
 
         public void Release()

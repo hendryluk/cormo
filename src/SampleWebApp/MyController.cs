@@ -28,10 +28,14 @@ namespace SampleWebApp
         [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter
         [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
 
-        [Inject, QueryParam] private string id;
+        [Route("test/{id}"), HttpGet]
+        public string TestWithId(HttpRequestMessage msg)
+        {
+            return _stringService.Greet("World") + "/" + GetHashCode();
+        }
 
         [Route("test"), HttpGet]
-        public string Test(HttpRequestMessage msg, UpperCaseGreeter stringService)
+        public string Test(HttpRequestMessage msg)
         {
             return _stringService.Greet("World") + "/" + GetHashCode();
         }
@@ -49,19 +53,22 @@ namespace SampleWebApp
         string Greet(T val);
     }
 
-    //[RequestScoped]
+    [RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject, HeaderParam] string Accept;
         [Inject] IDbSet<Person> _persons;
         [Inject] private IPrincipal _principal;
-        
+
+        [Inject, RouteParam]
+        private int id;
+
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity, 
                 _persons.Count(), 
-                Accept);
+                Accept) + "/" + id;
         }
 
         public void Dispose()

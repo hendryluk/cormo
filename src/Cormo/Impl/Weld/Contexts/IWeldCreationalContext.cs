@@ -8,5 +8,6 @@ namespace Cormo.Impl.Weld.Contexts
         IEnumerable<IContextualInstance> DependentInstances { get; }
         void AddDependentInstance(IContextualInstance contextualInstance);
         void Release(IContextual contextual, object instance);
+        object GetIncompleteInstance(IContextual contextual);
     }
 }

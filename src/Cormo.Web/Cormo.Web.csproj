@@ -64,6 +64,10 @@
     <Reference Include="System.Web.Http.Owin">
       <HintPath>..\packages\Microsoft.AspNet.WebApi.Owin.5.2.2\lib\net45\System.Web.Http.Owin.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Http.WebHost, Version=5.2.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.AspNet.WebApi.WebHost.5.2.2\lib\net45\System.Web.Http.WebHost.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -77,6 +81,7 @@
     <Compile Include="Api\EnableHttpSessionAttribute.cs" />
     <Compile Include="Api\GlobalFilterAttribute.cs" />
     <Compile Include="Api\HeaderParamAttribute.cs" />
+    <Compile Include="Api\RouteParamAttribute.cs" />
     <Compile Include="Api\QueryParamAttribute.cs" />
     <Compile Include="CormoOwinStartup.cs" />
     <Compile Include="Api\CookieParamAttribute.cs" />
@@ -90,6 +95,9 @@
     <Compile Include="Impl\HeaderParamProducer.cs" />
     <Compile Include="Impl\HttpRequestContextRegistrar.cs" />
     <Compile Include="Impl\HttpSessionContextRegistrar.cs" />
+    <Compile Include="Impl\InjectParameterBinding.cs" />
+    <Compile Include="Impl\RouteParamProducer.cs" />
+    <Compile Include="Impl\QueryParamProducer.cs" />
     <Compile Include="Impl\RequestProducerHandler.cs" />
     <Compile Include="Impl\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

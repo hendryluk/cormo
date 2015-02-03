@@ -35,7 +35,7 @@ namespace Cormo.Web.Impl
             try
             {
                 var component = _componentManager.GetComponent(serviceType);
-                return _componentManager.GetReference(component, _creationalContext, serviceType);
+                return GetReference(component, serviceType);
             }
             catch (UnsatisfiedDependencyException)
             {
@@ -46,12 +46,17 @@ namespace Cormo.Web.Impl
         public IEnumerable<object> GetServices(Type serviceType)
         {
             return _componentManager.GetComponents(serviceType)
-                    .Select(x => _componentManager.GetReference(x, _creationalContext, serviceType));
+                    .Select(x => GetReference(x, serviceType));
         }
 
         public IDependencyScope BeginScope()
         {
             return new CormoDependencyResolver(_componentManager, _creationalContext.GetCreationalContext(null));
+        }
+
+        public object GetReference(IComponent component, Type serviceType)
+        {
+            return _componentManager.GetReference(component, _creationalContext, serviceType);
         }
     }
 }
