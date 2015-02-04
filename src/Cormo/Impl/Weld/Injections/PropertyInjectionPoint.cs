@@ -11,7 +11,7 @@ namespace Cormo.Impl.Weld.Injections
     {
         private readonly PropertyInfo _property;
 
-        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinderAttribute[] binders):
+        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinders binders):
             base(declaringComponent, property, property.PropertyType, binders)
         {
             InjectionValidator.Validate(property);

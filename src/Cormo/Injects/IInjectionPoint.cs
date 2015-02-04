@@ -9,7 +9,7 @@ namespace Cormo.Injects
         IComponent DeclaringComponent { get; }
         MemberInfo Member { get; }
         Type ComponentType { get; }
-        IEnumerable<IQualifier> Qualifiers { get; }
+        IQualifiers Qualifiers { get; }
         IComponent Component { get; }
 
     }

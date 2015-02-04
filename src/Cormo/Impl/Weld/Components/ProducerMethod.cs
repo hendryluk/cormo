@@ -12,7 +12,7 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly MethodInfo _method;
 
-        public ProducerMethod(IWeldComponent declaringComponent, MethodInfo method, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+        public ProducerMethod(IWeldComponent declaringComponent, MethodInfo method, IBinders binders, Type scope, WeldComponentManager manager)
             : base(declaringComponent, method, method.ReturnType, binders, scope, manager)
         {
             _method = method;

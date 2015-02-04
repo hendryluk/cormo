@@ -7,7 +7,7 @@ namespace Cormo.Impl.Weld.Components
     public class InjectionPointComponent: AbstractComponent
     {
         public InjectionPointComponent(WeldComponentManager manager) : 
-            base("", typeof(IInjectionPoint), new IQualifier[0], typeof(DependentAttribute), manager)
+            base("", typeof(IInjectionPoint), Weld.Binders.Empty, typeof(DependentAttribute), manager)
         {
         }
 

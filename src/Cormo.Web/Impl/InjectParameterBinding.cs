@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http.Controllers;
 using System.Web.Http.Metadata;
+using Cormo.Impl.Weld;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
@@ -33,7 +34,7 @@ namespace Cormo.Web.Impl
                          .Union(new []{UnwrapAttributeInstance})
                          .ToArray();
 
-                     var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, binders);
+                     var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, new Binders(binders));
                      var component = injectionPoint.Component;
                     _injectionPoint = injectionPoint;
                 }

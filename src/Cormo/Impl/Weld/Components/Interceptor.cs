@@ -15,7 +15,7 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly IEnumerable<Type> _interceptorBinders;
 
-        public Interceptor(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
+        public Interceptor(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(type, binders, scope, manager, postConstructs)
         {
             _interceptorBinders = binders.OfType<IInterceptorBinding>().Select(x => x.GetType());

@@ -15,7 +15,7 @@ namespace Cormo.Impl.Weld.Components
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
         protected readonly bool ContainsGenericParameters;
 
-        protected ManagedComponent(ComponentIdentifier id, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+        protected ManagedComponent(ComponentIdentifier id, Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
             : base(id, type, binders, scope, manager)
         {
             PostConstructs = postConstructs;
@@ -25,7 +25,7 @@ namespace Cormo.Impl.Weld.Components
             ValidateMethodSignatures();
         }
 
-        protected ManagedComponent(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
+        protected ManagedComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(type.FullName, type, binders, scope, manager)
         {
             PostConstructs = postConstructs;

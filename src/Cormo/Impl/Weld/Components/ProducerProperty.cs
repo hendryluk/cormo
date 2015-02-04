@@ -10,7 +10,7 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly PropertyInfo _property;
 
-        public ProducerProperty(IWeldComponent component, PropertyInfo property, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+        public ProducerProperty(IWeldComponent component, PropertyInfo property, IBinders binders, Type scope, WeldComponentManager manager)
             : base(component, property, property.PropertyType, binders, scope, manager)
         {
             _property = property;

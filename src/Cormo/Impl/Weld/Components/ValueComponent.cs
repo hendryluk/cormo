@@ -9,8 +9,8 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly object _instance;
 
-        public ValueComponent(object instance, IEnumerable<IQualifier> qualifiers, Type scope, WeldComponentManager manager)
-            : base(instance.GetType().FullName, instance.GetType(), qualifiers, scope, manager)
+        public ValueComponent(object instance, IBinders binders, Type scope, WeldComponentManager manager)
+            : base(instance.GetType().FullName, instance.GetType(), binders, scope, manager)
         {
             _instance = instance;
         }

@@ -11,7 +11,7 @@ namespace Cormo.Impl.Weld.Injections
     {
         private readonly FieldInfo _field;
 
-        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, IBinderAttribute[] binders) :
+        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, IBinders binders) :
             base(declaringComponent, field, field.FieldType, binders)
         {
             InjectionValidator.Validate(field);
@@ -21,7 +21,7 @@ namespace Cormo.Impl.Weld.Injections
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
             var field = GenericUtils.TranslateFieldType(_field, translations);
-            return new FieldInjectionPoint(component, field, Binders.ToArray());
+            return new FieldInjectionPoint(component, field, Binders);
         }
 
         protected override InjectPlan BuildInjectPlan(IComponent component)

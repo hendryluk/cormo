@@ -10,7 +10,7 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly FieldInfo _field;
 
-        public ProducerField(IWeldComponent component, FieldInfo field, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+        public ProducerField(IWeldComponent component, FieldInfo field, IBinders binders, Type scope, WeldComponentManager manager)
             : base(component, field, field.FieldType, binders, scope, manager)
         {
             _field = field;

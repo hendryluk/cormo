@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Cormo.Impl.Weld;
 using Cormo.Injects;
 
 namespace Cormo.Utils
@@ -71,11 +72,11 @@ namespace Cormo.Utils
                 }
         }
 
-        public static IBinderAttribute[] GetBinders(this ICustomAttributeProvider attributeProvider)
+        public static IBinders GetBinders(this ICustomAttributeProvider attributeProvider)
         {
-            return (
+            return new Binders(
                 from attribute in attributeProvider.GetAttributesRecursive<IBinderAttribute>()
-                select attribute).ToArray();
+                select attribute);
         }
     }
 }

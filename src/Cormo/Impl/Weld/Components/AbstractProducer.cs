@@ -12,7 +12,7 @@ namespace Cormo.Impl.Weld.Components
         private readonly MemberInfo _member;
         private readonly bool _containsGenericParameters;
         
-        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IBinders binders, Type scope, WeldComponentManager manager)
             : base(member.ToString(), returnType, binders, scope, manager)
         {
             _member = member;

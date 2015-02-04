@@ -12,15 +12,14 @@ namespace Cormo.Impl.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        private ClassComponent(ClassComponent parent, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
+        private ClassComponent(ClassComponent parent, Type type, IBinders binders, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
             : base(new ComponentIdentifier(parent.Id.Key, type), type, binders, scope, manager,
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
             _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
 
-            _lazyInterceptors = new Lazy<Interceptor[]>(() => new Interceptor[0]);
-            //_lazyInterceptors = new Lazy<Interceptor[]>(() => Manager.GetInterceptors(this));
+            _lazyInterceptors = new Lazy<Interceptor[]>(() => Manager.GetInterceptors(this));
             //_interceptedMethods = InitInterceptedMethods();
         }
 
@@ -50,7 +49,7 @@ namespace Cormo.Impl.Weld.Components
             return methods;
         }
 
-        public ClassComponent(Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+        public ClassComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
             : base(type, binders, scope, manager, postConstructs)
         {
             _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
@@ -95,7 +94,7 @@ namespace Cormo.Impl.Weld.Components
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
             
-            if (Mixins.Any()) // todo: interceptors
+            if (Mixins.Any() || Interceptors.Any())
             {
                 return context =>
                 {

@@ -73,7 +73,7 @@ namespace Cormo.Impl.Weld
             }
              
             if (isWrapped)
-                matched = new IWeldComponent[] { new InstanceComponent(unwrappedType, qualifiers, this, matched) };
+                matched = new IWeldComponent[] { new InstanceComponent(unwrappedType, new Binders(qualifiers), this, matched) };
             
             return matched;
         }

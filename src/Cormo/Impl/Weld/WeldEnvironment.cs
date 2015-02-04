@@ -25,7 +25,7 @@ namespace Cormo.Impl.Weld
         public void AddValue(object instance, IBinderAttribute[] binders, WeldComponentManager manager)
         {
             AddComponent(new ValueComponent(instance,
-                new IQualifier[0], typeof (DependentAttribute),
+               Binders.Empty, typeof (DependentAttribute),
                 manager));
         }
     }

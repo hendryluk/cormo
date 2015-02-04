@@ -10,7 +10,7 @@ namespace Cormo.Impl.Weld.Components
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        private AbstractComponent(Type type, IEnumerable<IBinderAttribute> binders,
+        private AbstractComponent(Type type, IBinders binders,
             Type scope, WeldComponentManager manager)
         {
             var qualifierSet = new HashSet<IQualifier>(binders.OfType<IQualifier>());
@@ -20,29 +20,28 @@ namespace Cormo.Impl.Weld.Components
             Type = type;
             Manager = manager;
             Binders = binders;
-            Qualifiers = qualifierSet;
             Scope = scope;
             IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope);
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
             IsConditionalOnMissing = binders.OfType<ConditionalOnMissingComponentAttribute>().Any();
         }
 
-        public IEnumerable<IBinderAttribute> Binders { get; private set; }
+        public IBinders Binders { get; private set; }
 
-        protected AbstractComponent(ComponentIdentifier id, Type type, IEnumerable<IBinderAttribute> binders, Type scope,
+        protected AbstractComponent(ComponentIdentifier id, Type type, IBinders binders, Type scope,
             WeldComponentManager manager)
             : this(type, binders, scope, manager)
         {
             _id = id;
         }
 
-        protected AbstractComponent(string idSuffix, Type type, IEnumerable<IBinderAttribute> binders, Type scope, WeldComponentManager manager)
+        protected AbstractComponent(string idSuffix, Type type, IBinders binders, Type scope, WeldComponentManager manager)
             : this(type, binders, scope, manager)
         {
             _id = new ComponentIdentifier(string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix));
         }
 
-        public IEnumerable<IQualifier> Qualifiers { get; set; }
+        public IQualifiers Qualifiers { get { return Binders.Qualifiers; }}
         public Type Scope { get; private set; }
         public Type Type { get; set; }
 
