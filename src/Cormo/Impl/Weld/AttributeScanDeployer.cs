@@ -179,7 +179,7 @@ namespace Cormo.Impl.Weld
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
             
             ManagedComponent component;
-            if (typeof (IAroundnvokeInterceptor).IsAssignableFrom(type))
+            if (typeof (IAroundInvokeInterceptor).IsAssignableFrom(type))
             {
                 component = new Interceptor(type, binders, scope, _manager, postConstructs);
             }

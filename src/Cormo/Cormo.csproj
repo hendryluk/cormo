@@ -65,6 +65,9 @@
     <Compile Include="Injects\IValueProvider.cs" />
     <Compile Include="Injects\UnwrapAttribute.cs" />
     <Compile Include="Injects\ValueAttribute.cs" />
+    <Compile Include="Interceptions\IAroundInvokeInterceptor.cs" />
+    <Compile Include="Interceptions\IInterceptorBinding.cs" />
+    <Compile Include="Interceptions\IInvocationContext.cs" />
     <Compile Include="Interceptions\InterceptorAttribute.cs" />
     <Compile Include="Mixins\IMixinBinder.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />
