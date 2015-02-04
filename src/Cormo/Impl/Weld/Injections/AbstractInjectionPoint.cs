@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
+using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
-using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Injections
 {

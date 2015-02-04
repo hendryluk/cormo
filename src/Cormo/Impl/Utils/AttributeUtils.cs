@@ -5,7 +5,7 @@ using System.Reflection;
 using Cormo.Impl.Weld;
 using Cormo.Injects;
 
-namespace Cormo.Utils
+namespace Cormo.Impl.Utils
 {
     public static class AttributeUtils
     {

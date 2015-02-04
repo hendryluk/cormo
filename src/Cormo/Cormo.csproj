@@ -78,7 +78,7 @@
     <Compile Include="Injects\IMethodParameterInjectionPoint.cs" />
     <Compile Include="Injects\IPassivationCapable.cs" />
     <Compile Include="Mixins\MixinAttribute.cs" />
-    <Compile Include="Utils\DictionaryUtils.cs" />
+    <Compile Include="Impl\Utils\DictionaryUtils.cs" />
     <Compile Include="Impl\Weld\Components\InjectionPointComponent.cs" />
     <Compile Include="Impl\Weld\Components\ManagedComponent.cs" />
     <Compile Include="Impl\Weld\Components\Mixin.cs" />
@@ -116,8 +116,8 @@
     <Compile Include="Injects\IQualifier.cs" />
     <Compile Include="Injects\Exceptions\UnsatisfiedDependencyException.cs" />
     <Compile Include="Injects\Exceptions\InjectionException.cs" />
-    <Compile Include="Utils\AttributeUtils.cs" />
-    <Compile Include="Utils\CacheUtils.cs" />
+    <Compile Include="Impl\Utils\AttributeUtils.cs" />
+    <Compile Include="Impl\Utils\CacheUtils.cs" />
     <Compile Include="Impl\Weld\Contexts\IManagedContext.cs" />
     <Compile Include="Impl\Weld\Contexts\ISingletonContext.cs" />
     <Compile Include="Impl\Weld\Contexts\IWeldCreationalContext.cs" />

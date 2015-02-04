@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Cormo.Contexts;
+using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Injects;
-using Cormo.Utils;
 
 namespace Cormo.Impl.Weld.Serialization
 {

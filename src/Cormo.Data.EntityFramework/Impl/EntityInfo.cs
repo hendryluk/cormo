@@ -2,9 +2,9 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Cormo.Data.EntityFramework.Api.Audits;
+using Cormo.Impl.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
-using Cormo.Utils;
 
 namespace Cormo.Data.EntityFramework.Impl
 {

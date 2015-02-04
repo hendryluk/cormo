@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
+using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
@@ -11,7 +12,6 @@ using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
 using Cormo.Mixins;
-using Cormo.Utils;
 
 namespace Cormo.Impl.Weld
 {

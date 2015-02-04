@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Cormo.Contexts;
-using Cormo.Utils;
+using Cormo.Impl.Utils;
 
 namespace Cormo.Impl.Weld.Contexts
 {

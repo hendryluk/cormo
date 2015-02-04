@@ -1,7 +1,6 @@
-﻿using System.Runtime.Remoting.Contexts;
-using Cormo.Impl.Weld.Components;
+﻿using Cormo.Impl.Weld.Components;
 
-namespace Cormo.Utils
+namespace Cormo.Impl.Utils
 {
     public static class CacheUtils
     {

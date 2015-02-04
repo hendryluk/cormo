@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Cormo.Utils
+namespace Cormo.Impl.Utils
 {
     public static class DictionaryUtils
     {
