@@ -71,15 +71,6 @@ namespace Cormo.Impl.Weld.Components
 
         public bool IsProxyRequired { get; private set; }
 
-        public bool CanSatisfy(IEnumerable<IQualifier> qualifiers)
-        {
-            var qualifierTypes = qualifiers.Select(x => x.GetType()).ToArray();
-            if (qualifierTypes.Contains(typeof (AnyAttribute)))
-                return true;
-
-            return qualifierTypes.All(Qualifiers.Select(x=> x.GetType()).Contains);
-        }
-
         public abstract IWeldComponent Resolve(Type requestedType);
 
         public object Create(ICreationalContext context)

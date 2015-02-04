@@ -44,17 +44,16 @@ namespace Cormo.Impl.Weld
             return _allMixins.Where(x => x.CanMixTo(component)).ToArray();
         }
 
-        public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifiers)
+        public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
-            qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
-
+            var qualifiers = new Qualifiers(qualifierArray);
             var unwrappedType = UnwrapType(type);
             var isWrapped = unwrappedType != type;
 
             var components = _typeComponents.GetOrAdd(unwrappedType, t => 
                 _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
-            var matched = components.Where(x => x.CanSatisfy(qualifiers)).ToArray();
+            var matched = components.Where(x => x.Qualifiers.CanSatisfy(qualifiers)).ToArray();
             if (matched.Length > 1)
             {
                 var onMissings = matched.Where(x => x.IsConditionalOnMissing).ToArray();

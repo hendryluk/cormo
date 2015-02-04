@@ -32,7 +32,7 @@ namespace Cormo.Impl.Weld
     {
         private readonly IQualifier[] _qualifiers;
 
-        public Qualifiers(IQualifier[] qualifiers)
+        public Qualifiers(IEnumerable<IQualifier> qualifiers)
         {
             _qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
         }
