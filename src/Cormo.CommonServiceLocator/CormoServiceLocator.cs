@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Cormo.Contexts;
 using Cormo.Injects;
 using Microsoft.Practices.ServiceLocation;
 
@@ -10,16 +11,18 @@ namespace Cormo.CommonServiceLocator
     public class ServiceLocatorRegistrar
     {
         [Inject]
-        void SetupServiceLocator(IComponentManager manager)
+        void SetupServiceLocator(CormoServiceLocator serviceLocator)
         {
-            ServiceLocator.SetLocatorProvider(()=> new CormoServiceLocator(manager));
+            ServiceLocator.SetLocatorProvider(() => serviceLocator);
         }
     }
 
+    [Singleton]
     public class CormoServiceLocator: IServiceLocator
     {
         private readonly IComponentManager _manager;
 
+        [Inject]
         public CormoServiceLocator(IComponentManager manager)
         {
             _manager = manager;
