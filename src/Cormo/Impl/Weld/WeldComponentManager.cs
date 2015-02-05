@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Cormo.Contexts;
 using Cormo.Impl.Utils;
@@ -12,6 +13,8 @@ using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Container = Cormo.Impl.Weld.Contexts.Container;
+using IComponent = Cormo.Injects.IComponent;
 
 namespace Cormo.Impl.Weld
 {
@@ -23,11 +26,8 @@ namespace Cormo.Impl.Weld
             _services.Add(typeof(ContextualStore), _contextualStore = new ContextualStore());
             _services.Add(typeof(CurrentInjectionPoint), _currentInjectionPoint = new CurrentInjectionPoint());
         }
-        private ConcurrentBag<IWeldComponent> _allComponents;
-        private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
         private readonly IContextualStore _contextualStore;
-        private bool _isDeployed = false;
         private Mixin[] _allMixins;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
         private readonly CurrentInjectionPoint _currentInjectionPoint;
@@ -44,37 +44,11 @@ namespace Cormo.Impl.Weld
             return _allMixins.Where(x => x.CanMixTo(component)).ToArray();
         }
 
+        private ComponentResolver _componentResolver; 
+
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
-            var qualifiers = new Qualifiers(qualifierArray);
-            var unwrappedType = UnwrapType(type);
-            var isWrapped = unwrappedType != type;
-
-            var components = _typeComponents.GetOrAdd(unwrappedType, t => 
-                _allComponents.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
-
-            var matched = components.Where(x => x.Qualifiers.CanSatisfy(qualifiers)).ToArray();
-            if (matched.Length > 1)
-            {
-                var onMissings = matched.Where(x => x.IsConditionalOnMissing).ToArray();
-                var others = matched.Except(onMissings).ToArray();
-
-                matched = others.Any() ? others: onMissings.Take(1).ToArray();
-            }
-
-            var newComponents = matched.Where(x => !_allComponents.Contains(x));
-            foreach (var c in newComponents)
-            {
-                _allComponents.Add(c);
-                ContextualStore.PutIfAbsent(c);
-                if (_isDeployed)
-                    Validate(c, new IComponent[0]);
-            }
-             
-            if (isWrapped)
-                matched = new IWeldComponent[] { new InstanceComponent(unwrappedType, new Binders(qualifiers), this, matched) };
-            
-            return matched;
+            return _componentResolver.Resolve(new Resolvable(type, qualifierArray));
         }
 
         public IComponent GetComponent(Type type, params IQualifier[] qualifiers)
@@ -110,11 +84,10 @@ namespace Cormo.Impl.Weld
             
             _allMixins = environment.Components.OfType<Mixin>().ToArray();
             _allInterceptors = environment.Components.OfType<Interceptor>().ToArray();
-            _allComponents = new ConcurrentBag<IWeldComponent>(environment.Components.Except(_allMixins).Except(_allInterceptors));
+            _componentResolver = new ComponentResolver(this, environment.Components.Except(_allMixins).Except(_allInterceptors));
             
-            ValidateComponents();
+            _componentResolver.Validate();
             ExecuteConfigurations(environment);
-            _isDeployed = true;
         }
 
         private void ExecuteConfigurations(WeldEnvironment environment)
@@ -185,48 +158,7 @@ namespace Cormo.Impl.Weld
            
         }
 
-        private void ValidateComponents()
-        {
-            foreach (var component in _allComponents.Where(x=> x.IsConcrete).ToArray())
-            {
-                Validate(component, new IComponent[0]);
-            }
-        }
-
-        private void Validate(IComponent component, IComponent[] path)
-        {
-            var nextPath = path.Concat(new []{component}).ToArray();
-
-            if (path.Contains(component))
-                throw new CircularDependenciesException(nextPath);
-
-            var producer = component as AbstractProducer;
-            if (producer != null)
-                Validate(producer.DeclaringComponent, nextPath);
-            var classComponent = component as ClassComponent;
-            if (classComponent != null)
-            {
-                foreach (var mixin in classComponent.Mixins)
-                    Validate(mixin, nextPath);
-                foreach (var interceptor in classComponent.Interceptors)
-                    Validate(interceptor, nextPath);
-            }
-                
-            foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
-            {
-                Validate(inject.Component, (inject.Scope is NormalScopeAttribute)? new IComponent[0] : nextPath);
-            }
-        }
-
-        public bool IsWrappedType(Type type)
-        {
-            return type.IsGenericType && typeof (IInstance<>).IsAssignableFrom(type.GetGenericTypeDefinition());
-        }
-
-        public Type UnwrapType(Type type)
-        {
-            return IsWrappedType(type) ? type.GetGenericArguments()[0] : type;
-        }
+       
 
         //public T GetReference<T>(params IQualifier[] qualifiers)
         //{
