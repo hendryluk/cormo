@@ -2,7 +2,7 @@
 
 namespace Cormo.Data.EntityFramework.Api
 {
-    public class TransactionalAttribute: InterceptorBinding
+    public class TransactionalAttribute: InterceptorBindingAttribute
     {
          
     }

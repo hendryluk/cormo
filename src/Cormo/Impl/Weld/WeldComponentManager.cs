@@ -1,20 +1,18 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
+using Cormo.Impl.Weld.Resolutions;
 using Cormo.Impl.Weld.Serialization;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
-using Cormo.Injects.Exceptions;
-using Container = Cormo.Impl.Weld.Contexts.Container;
-using IComponent = Cormo.Injects.IComponent;
 
 namespace Cormo.Impl.Weld
 {
@@ -28,11 +26,9 @@ namespace Cormo.Impl.Weld
         }
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
         private readonly IContextualStore _contextualStore;
-        private Mixin[] _allMixins;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
         private readonly CurrentInjectionPoint _currentInjectionPoint;
-        private Interceptor[] _allInterceptors;
-
+        
         public IContextualStore ContextualStore
         {
             get { return _contextualStore; }
@@ -41,14 +37,16 @@ namespace Cormo.Impl.Weld
 
         public Mixin[] GetMixins(IComponent component)
         {
-            return _allMixins.Where(x => x.CanMixTo(component)).ToArray();
+            return _mixinResolver.Resolve(new MixinResolvable(component)).ToArray();
         }
 
-        private ComponentResolver _componentResolver; 
+        private ComponentResolver _componentResolver;
+        private MixinResolver _mixinResolver;
+        private InterceptorResolver _interceptorResolver;
 
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
-            return _componentResolver.Resolve(new Resolvable(type, qualifierArray));
+            return _componentResolver.Resolve(new ComponentResolvable(type, qualifierArray));
         }
 
         public IComponent GetComponent(Type type, params IQualifier[] qualifiers)
@@ -79,12 +77,15 @@ namespace Cormo.Impl.Weld
         public void Deploy(WeldEnvironment environment)
         {
             Container.Instance.Initialize(this);
-            environment.AddValue(this, new IQualifier[0], this);
-            environment.AddValue(new ContextualStore(), new IQualifier[0], this);
+            environment.AddValue(this, new IBinderAttribute[0], this);
+            environment.AddValue(new ContextualStore(), new IBinderAttribute[0], this);
+
+            var mixins = environment.Components.OfType<Mixin>().ToArray();
+            var interceptors = environment.Components.OfType<Interceptor>().ToArray();
             
-            _allMixins = environment.Components.OfType<Mixin>().ToArray();
-            _allInterceptors = environment.Components.OfType<Interceptor>().ToArray();
-            _componentResolver = new ComponentResolver(this, environment.Components.Except(_allMixins).Except(_allInterceptors));
+            _mixinResolver = new MixinResolver(this, mixins);
+            _interceptorResolver = new InterceptorResolver(this, interceptors);
+            _componentResolver = new ComponentResolver(this, environment.Components.Except(mixins).Except(interceptors));
             
             _componentResolver.Validate();
             ExecuteConfigurations(environment);
@@ -199,9 +200,12 @@ namespace Cormo.Impl.Weld
             return activeContexts.Single();
         }
 
-        public Interceptor[] GetInterceptors(IComponent component)
+        public IEnumerable<Interceptor> GetMethodInterceptors(Type interceptorType, MethodInfo methodInfo)
         {
-            return _allInterceptors.Where(x => x.CanIntercept(component)).ToArray();
+            var intercetorResolvable = new IntercetorResolvable(interceptorType, methodInfo);
+            if (!intercetorResolvable.Bindings.Any())
+                return Enumerable.Empty<Interceptor>();
+            return _interceptorResolver.Resolve(intercetorResolvable);
         }
     }
 }

@@ -13,6 +13,7 @@ using System.Web.ModelBinding;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api;
 using Cormo.Injects;
+using Cormo.Interceptions;
 using Cormo.Web.Api;
 using Owin;
 
@@ -50,6 +51,7 @@ namespace SampleWebApp
     // ============= SERVICES BELOW ===============
     public interface IGreeter<T>
     {
+        [Logged]
         string Greet(T val);
     }
 
@@ -58,12 +60,25 @@ namespace SampleWebApp
     {
     }
 
+    public class LoggedAttribute : InterceptorBindingAttribute
+    {
+    }
+
+    [Logged]
+    public class LoggingInterceptor: IAroundInvokeInterceptor
+    {
+        public async Task<object> AroundInvoke(IInvocationContext invocationContext)
+        {
+            return "abc";
+        }
+    }
+
     [RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
 
         [Inject, HeaderParam] string Accept;
-        [Inject] IDbSet<Person> _persons;
+        //[Inject] IDbSet<Person> _persons;
         [Inject] private IPrincipal _principal;
 
         //[Inject, RouteParam]
@@ -71,11 +86,12 @@ namespace SampleWebApp
 
         [Inject, Limit] private int xxxx;
 
+        //[Logged]
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity, 
-                _persons.Count(), 
+                0, //_persons.Count(), 
                 Accept) + "/" + id;
         }
 

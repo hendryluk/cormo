@@ -4,9 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using Castle.DynamicProxy;
-using Castle.DynamicProxy.Contributors;
 using Castle.DynamicProxy.Generators;
-using Cormo.Injects;
+using Cormo.Impl.Weld.Interceptions;
 
 namespace Cormo.Impl.Weld
 {
@@ -45,35 +44,40 @@ namespace Cormo.Impl.Weld
             public INamingScope ParentScope { get; private set; }
         }
 
-        public static object CreateMixins(Type type, IDictionary<Type, object> mixins, object[] ctorParams)
+        public static object CreateComponentProxy(Type type, IDictionary<Type, object> mixins, Dictionary<MethodInfo, InterceptorMethodHandler> aroundMethodInterceptors, object[] ctorParams)
         {
-            //var pgo = new ProxyGenerationOptions();
-            //foreach (var mixin in mixins)
-            //    pgo.AddMixinInstance(mixin);
-
-            return ProxyGenerator.CreateClassProxy(type, mixins.Keys.ToArray(), new ProxyGenerationOptions(), ctorParams, new MixinInterceptor(mixins));
+            return ProxyGenerator.CreateClassProxy(type, mixins.Keys.ToArray(), new ProxyGenerationOptions(), ctorParams,
+                new ComponentInterceptor(mixins, aroundMethodInterceptors));
         }
 
-        public class MixinInterceptor: IInterceptor
+        public class ComponentInterceptor: IInterceptor
         {
             private readonly IDictionary<Type, object> _mixins;
+            private readonly Dictionary<MethodInfo, InterceptorMethodHandler> _methodInterceptorHandlers;
 
-            public MixinInterceptor(IDictionary<Type, object> mixins)
+            public ComponentInterceptor(IDictionary<Type, object> mixins, Dictionary<MethodInfo, InterceptorMethodHandler> aroundMethodInterceptors)
             {
                 _mixins = mixins;
+                _methodInterceptorHandlers = aroundMethodInterceptors;
             }
 
             public void Intercept(IInvocation invocation)
             {
                 object mixin;
+                InterceptorMethodHandler handler;
+                    
                 if (_mixins.TryGetValue(invocation.Method.DeclaringType, out mixin))
                 {
                     invocation.ReturnValue = invocation.Method.Invoke(mixin, invocation.Arguments);
                 }
+                else if (_methodInterceptorHandlers.TryGetValue(invocation.Method, out handler))
+                {
+                    handler.Invoke(invocation);
+                }
                 else
                 {
                     invocation.Proceed();
-                } 
+                }
             }
         }
 
@@ -114,6 +118,4 @@ namespace Cormo.Impl.Weld
             }
         }
     }
-
-    
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
@@ -13,13 +14,18 @@ namespace Cormo.Impl.Weld.Components
 
     public class Interceptor : ManagedComponent
     {
-        private readonly IEnumerable<Type> _interceptorBinders;
+        private static Type[] AllInterceptorTypes = {typeof (IAroundInvokeInterceptor)};
+
+        public Type[] InterceptorBindings { get; private set; }
 
         public Interceptor(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(type, binders, scope, manager, postConstructs)
         {
-            _interceptorBinders = binders.OfType<IInterceptorBinding>().Select(x => x.GetType());
+            InterceptorBindings = binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
+            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type)).ToArray();
         }
+
+        public Type[] InterceptorTypes { get; private set; }
 
         public Type[] InterfaceTypes { get; private set; }
 
@@ -40,16 +46,6 @@ namespace Cormo.Impl.Weld.Components
                 var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
-        }
-
-        public bool CanIntercept(IComponent component)
-        {
-            return _interceptorBinders.Any(component.Binders.Select(x => x.GetType()).Contains);
-        }
-
-        public bool CanIntercept(MethodInfo method)
-        {
-            return _interceptorBinders.Any(method.HasAttributeRecursive);
         }
     }
 }

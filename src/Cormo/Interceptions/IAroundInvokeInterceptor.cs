@@ -1,7 +1,9 @@
-﻿namespace Cormo.Interceptions
+﻿using System.Threading.Tasks;
+
+namespace Cormo.Interceptions
 {
     public interface IAroundInvokeInterceptor
     {
-        object AroundInvoke(IInvocationContext invocationContext);
+        Task<object> AroundInvoke(IInvocationContext invocationContext);
     }
 }

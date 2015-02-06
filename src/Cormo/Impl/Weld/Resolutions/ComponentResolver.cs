@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Cormo.Impl.Weld.Components;
 
-namespace Cormo.Impl.Weld
+namespace Cormo.Impl.Weld.Resolutions
 {
-    public class ComponentResolver : TypeSafeResolver<IWeldComponent, IResolvable>
+    public class ComponentResolver : TypeSafeResolver<IWeldComponent, ComponentResolvable>
     {
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
@@ -15,7 +15,7 @@ namespace Cormo.Impl.Weld
         {
         }
 
-        protected override IEnumerable<IWeldComponent> Resolve(IResolvable resolvable, ref IEnumerable<IWeldComponent> components)
+        protected override IEnumerable<IWeldComponent> Resolve(ComponentResolvable resolvable, ref IEnumerable<IWeldComponent> components)
         {
             var results = components.ToArray();
             var unwrappedType = UnwrapType(resolvable.Type);
@@ -24,7 +24,7 @@ namespace Cormo.Impl.Weld
             results = _typeComponents.GetOrAdd(unwrappedType, t =>
                 results.Select(x => x.Resolve(t)).Where(x => x != null).ToArray());
 
-            results = results.Where(x => x.Qualifiers.CanSatisfy(resolvable.Qualifiers)).ToArray();
+            results = results.Where(c => c.Qualifiers.CanSatisfy(resolvable.Qualifiers)).ToArray();
 
             if (results.Length > 1)
             {

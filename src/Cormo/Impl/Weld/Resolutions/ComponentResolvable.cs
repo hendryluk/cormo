@@ -2,33 +2,27 @@
 using System.Collections.Generic;
 using Cormo.Injects;
 
-namespace Cormo.Impl.Weld
+namespace Cormo.Impl.Weld.Resolutions
 {
-    public interface IResolvable
-    {
-        IQualifiers Qualifiers { get; }
-        Type Type { get; }
-    }
-
-    public class Resolvable: IResolvable
+    public class ComponentResolvable: IResolvable
     {
         public Type Type { get; private set; }
-        public IQualifiers Qualifiers { get; private set; }
+        public IQualifiers Qualifiers { get; set; }
 
-        public Resolvable(Type type, IEnumerable<IQualifier> qualifiers):
+        public ComponentResolvable(Type type, IEnumerable<IQualifier> qualifiers):
             this(type, new Qualifiers(qualifiers))
         {
         }
 
-        public Resolvable(Type type, IQualifiers qualifiers)
+        public ComponentResolvable(Type type, IQualifiers qualifiers)
         {
             Type = type;
             Qualifiers = qualifiers;
         }
 
-        protected bool Equals(Resolvable other)
+        protected bool Equals(ComponentResolvable other)
         {
-            return Type == other.Type && Equals(Qualifiers, other.Qualifiers);
+            return Type == other.Type && Equals(Qualifiers.Types, other.Qualifiers.Types);
         }
 
         public override bool Equals(object obj)
@@ -36,14 +30,14 @@ namespace Cormo.Impl.Weld
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Resolvable) obj);
+            return Equals((ComponentResolvable) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Type != null ? Type.GetHashCode() : 0)*397) ^ (Qualifiers != null ? Qualifiers.GetHashCode() : 0);
+                return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Qualifiers.Types != null ? Qualifiers.Types.GetHashCode() : 0);
             }
         }
     }

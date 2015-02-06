@@ -8,7 +8,7 @@ using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 
-namespace Cormo.Impl.Weld
+namespace Cormo.Impl.Weld.Resolutions
 {
     public abstract class TypeSafeResolver<TComponent, TResolvable> 
         where TComponent:IWeldComponent where TResolvable:IResolvable
@@ -54,14 +54,16 @@ namespace Cormo.Impl.Weld
             var producer = component as AbstractProducer;
             if (producer != null)
                 Validate(producer.DeclaringComponent, nextPath);
-            var classComponent = component as ClassComponent;
-            if (classComponent != null)
-            {
-                foreach (var mixin in classComponent.Mixins)
-                    Validate(mixin, nextPath);
-                foreach (var interceptor in classComponent.Interceptors)
-                    Validate(interceptor, nextPath);
-            }
+
+            // This may not be needed since we allow injections of incomplete instance
+            //var classComponent = component as ClassComponent;
+            //if (classComponent != null)
+            //{
+            //    foreach (var mixin in classComponent.Mixins)
+            //        Validate(mixin, nextPath);
+            //    foreach (var interceptor in classComponent.Interceptors)
+            //        Validate(interceptor, nextPath);
+            //}
                 
             foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
             {

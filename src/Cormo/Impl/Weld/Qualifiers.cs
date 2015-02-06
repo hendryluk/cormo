@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Cormo.Injects;
@@ -9,11 +10,13 @@ namespace Cormo.Impl.Weld
     {
         private readonly IBinderAttribute[] _binders;
         public IQualifiers Qualifiers { get; private set; }
+        public Type[] Types { get; private set; }
 
         public static readonly Binders Empty = new Binders(new IBinderAttribute[0]);
         public Binders (IEnumerable<IBinderAttribute> binders)
         {
             _binders = binders.ToArray();
+            Types = _binders.Select(x => x.GetType()).ToArray();
             Qualifiers = new Qualifiers(_binders.OfType<IQualifier>().ToArray());
         }
 
@@ -35,6 +38,7 @@ namespace Cormo.Impl.Weld
         public Qualifiers(IEnumerable<IQualifier> qualifiers)
         {
             _qualifiers = qualifiers.DefaultIfEmpty(DefaultAttribute.Instance).ToArray();
+            Types = _qualifiers.Select(x => x.GetType()).ToArray();
         }
 
         public IEnumerator<IQualifier> GetEnumerator()
@@ -44,13 +48,14 @@ namespace Cormo.Impl.Weld
 
         public bool CanSatisfy(IQualifiers qualifiers)
         {
-            var qualifierTypes = qualifiers.Select(x => x.GetType()).ToArray();
-            return qualifierTypes.All(_qualifiers.Select(x => x.GetType()).Contains);
+            return qualifiers.Types.All(Types.Contains);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
+
+        public Type[] Types { get; private set; }
     }
 }

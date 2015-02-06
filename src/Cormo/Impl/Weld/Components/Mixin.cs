@@ -10,12 +10,12 @@ namespace Cormo.Impl.Weld.Components
 {
     public class Mixin : ManagedComponent
     {
-        private readonly IEnumerable<Type> _mixinBinders;
+        public IEnumerable<Type> MixinBinders { get; private set; }
 
         public Mixin(Type[] interfaceTypes, Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(type, binders, scope, manager, postConstructs)
         {
-            _mixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
+            MixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
             InterfaceTypes = interfaceTypes;
         }
 
@@ -38,11 +38,6 @@ namespace Cormo.Impl.Weld.Components
                 var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
                 return Activator.CreateInstance(Type, paramVals);
             };
-        }
-
-        public bool CanMixTo(IComponent component)
-        {
-            return _mixinBinders.Any(component.Binders.Select(x=> x.GetType()).Contains);
         }
     }
 }

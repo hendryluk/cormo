@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Injections;
+using Cormo.Impl.Weld.Interceptions;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Interceptions;
@@ -18,52 +19,12 @@ namespace Cormo.Impl.Weld.Components
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
             _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
-
-            _lazyInterceptors = new Lazy<Interceptor[]>(() => Manager.GetInterceptors(this));
-            //_interceptedMethods = InitInterceptedMethods();
         }
 
-        private MethodInfo[] InitInterceptedMethods()
-        {
-            var methods = Type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance);
-
-            var typeBindings = Type.GetAttributesRecursive<IInterceptorBinding>().ToArray();
-            
-            IDictionary<MethodInfo, IInterceptorBinding[]> methodBindings = new Dictionary<MethodInfo, IInterceptorBinding[]>();
-
-            if (typeBindings.Any())
-            {
-                methodBindings = methods.Where(x => !x.IsPrivate && !x.IsStatic).ToDictionary(x => x, _ => typeBindings);
-            }
-            else
-            {
-                var onMethods = (from method in methods
-                                let bindings = method.GetAttributesRecursive<IInterceptorBinding>().ToArray()
-                                where methodBindings.Any()
-                                select new {method, bindings})
-                                .ToDictionary(x=> x.method, x=> x.bindings);
-
-            }
-                
-            TypeUtils.ValidateInterceptable(methods);
-            return methods;
-        }
-
-        public ClassComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+        public ClassComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager,
+            MethodInfo[] postConstructs)
             : base(type, binders, scope, manager, postConstructs)
         {
-            _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
-            _lazyInterceptors = new Lazy<Interceptor[]>(() => new Interceptor[0]);
-        }
-
-        public IEnumerable<Mixin> Mixins
-        {
-            get { return _lazyMixins.Value; }
-        }
-
-        public IEnumerable<Interceptor> Interceptors
-        {
-            get { return _lazyInterceptors.Value; }
         }
 
         public override IWeldComponent Resolve(Type requestedType)
@@ -84,28 +45,38 @@ namespace Cormo.Impl.Weld.Components
         }
 
         private readonly Lazy<Mixin[]> _lazyMixins;
-        private readonly Lazy<Interceptor[]> _lazyInterceptors;
-        private MethodInfo[] _interceptedMethods;
-
+        
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
             var paramInjects = injects.GroupBy(x => x.Member)
                 .Select(x => x.OrderBy(i => i.Position).ToArray())
                 .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
                 .First();
-            
-            if (Mixins.Any() || Interceptors.Any())
+
+            var mixins = Manager.GetMixins(this);
+            // todo: preconstruct/dispose intercetor
+
+            var aroundMethodInterceptors = 
+                (from method in Type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+                let interceptors = Manager.GetMethodInterceptors(typeof(IAroundInvokeInterceptor), method).ToArray()
+                where interceptors.Any()
+                select new {method, interceptors}).ToArray();
+
+            if (mixins.Any() || aroundMethodInterceptors.Any())
             {
                 return context =>
                 {
                     var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                    var mixinObjects = (from mixin in Mixins
+                    var mixinObjects = (from mixin in mixins
                             let reference = Manager.GetReference(mixin, context, mixin.InterfaceTypes)
                             from interfaceType in mixin.InterfaceTypes
                             select new {interfaceType, reference})
                             .ToDictionary(x => x.interfaceType, x => x.reference);
+                    var interceptorHandlers = aroundMethodInterceptors
+                        .ToDictionary(x => x.method,
+                            x => new InterceptorMethodHandler(Manager, x.method, x.interceptors, context));
 
-                    return CormoProxyGenerator.CreateMixins(Type, mixinObjects, paramVals);
+                    return CormoProxyGenerator.CreateComponentProxy(Type, mixinObjects, interceptorHandlers, paramVals);
                 };
             }
         
