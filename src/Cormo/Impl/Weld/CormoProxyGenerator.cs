@@ -65,7 +65,7 @@ namespace Cormo.Impl.Weld
             {
                 object mixin;
                 InterceptorMethodHandler handler;
-                    
+
                 if (_mixins.TryGetValue(invocation.Method.DeclaringType, out mixin))
                 {
                     invocation.ReturnValue = invocation.Method.Invoke(mixin, invocation.Arguments);

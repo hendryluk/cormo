@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
@@ -12,14 +13,14 @@ namespace Cormo.Impl.Weld.Components
 {
     public abstract class ManagedComponent : AbstractComponent
     {
+        private readonly bool _isConcrete;
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
-        protected readonly bool ContainsGenericParameters;
-
+        
         protected ManagedComponent(ComponentIdentifier id, Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
             : base(id, type, binders, scope, manager)
         {
             PostConstructs = postConstructs;
-            ContainsGenericParameters = Type.ContainsGenericParameters;
+            _isConcrete = !Type.ContainsGenericParameters;
             IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
 
             ValidateMethodSignatures();
@@ -29,10 +30,15 @@ namespace Cormo.Impl.Weld.Components
             : base(type.FullName, type, binders, scope, manager)
         {
             PostConstructs = postConstructs;
-            ContainsGenericParameters = Type.ContainsGenericParameters;
+            _isConcrete = !Type.ContainsGenericParameters;
             IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
 
             ValidateMethodSignatures();
+        }
+
+        public override void Touch()
+        {
+            RuntimeHelpers.RunClassConstructor(Type.TypeHandle);
         }
 
         public override void Destroy(object instance, ICreationalContext creationalContext)
@@ -105,10 +111,7 @@ namespace Cormo.Impl.Weld.Components
             }
         }
 
-        public override bool IsConcrete
-        {
-            get { return !ContainsGenericParameters; }
-        }
+        public override bool IsConcrete { get { return _isConcrete; } }
 
         public bool IsDisposable { get; private set; }
     }

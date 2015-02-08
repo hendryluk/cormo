@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
+using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
 
 namespace Cormo.Impl.Weld.Components
@@ -23,6 +24,9 @@ namespace Cormo.Impl.Weld.Components
         {
             InterceptorBindings = binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
             InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type)).ToArray();
+
+            if(!InterceptorBindings.Any())
+                throw new InvalidComponentException(type, "Interceptor must have at least one interceptor-binding attribute");
         }
 
         public Type[] InterceptorTypes { get; private set; }

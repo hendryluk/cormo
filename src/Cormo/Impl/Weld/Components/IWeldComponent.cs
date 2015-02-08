@@ -8,5 +8,6 @@ namespace Cormo.Impl.Weld.Components
         IWeldComponent Resolve(Type type);
         bool IsConcrete { get; }
         bool IsConditionalOnMissing { get; }
+        void Touch();
     }
 }

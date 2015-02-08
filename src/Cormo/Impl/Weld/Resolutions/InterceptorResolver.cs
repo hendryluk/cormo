@@ -13,6 +13,9 @@ namespace Cormo.Impl.Weld.Resolutions
 
         protected override IEnumerable<Interceptor> Resolve(IntercetorResolvable resolvable, ref IEnumerable<Interceptor> interceptors)
         {
+            if (!resolvable.Bindings.Any())
+                return Enumerable.Empty<Interceptor>();
+
             return interceptors.Where(x => 
                 x.InterceptorTypes.Contains(resolvable.InterceptorType) 
                 && x.InterceptorBindings.Any(resolvable.Bindings.Contains));

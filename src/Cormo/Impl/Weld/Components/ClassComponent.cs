@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Interceptions;
@@ -18,7 +20,6 @@ namespace Cormo.Impl.Weld.Components
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
-            _lazyMixins = new Lazy<Mixin[]>(() => Manager.GetMixins(this));
         }
 
         public ClassComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager,
@@ -29,22 +30,53 @@ namespace Cormo.Impl.Weld.Components
 
         public override IWeldComponent Resolve(Type requestedType)
         {
-            if (!ContainsGenericParameters)
-                return requestedType.IsAssignableFrom(Type)? this: null;
+            ClassComponent component;
+            if (IsConcrete)
+                component = requestedType.IsAssignableFrom(Type) ? this : null;
 
-            var resolution = GenericUtils.ResolveGenericType(Type, requestedType);
-            if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
-                return null;
+            else
+            {
+                var resolution = GenericUtils.ResolveGenericType(Type, requestedType);
+                if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
+                    return null;
 
-            var component = new ClassComponent(this, 
-                resolution.ResolvedType, 
-                Binders, 
-                Scope, Manager, resolution);
-
+                component = new ClassComponent(this,
+                    resolution.ResolvedType,
+                    Binders,
+                    Scope, Manager, resolution);
+            }
+            if(component != null)
+                RuntimeHelpers.RunClassConstructor(component.Type.TypeHandle);
             return component;
         }
 
-        private readonly Lazy<Mixin[]> _lazyMixins;
+        private IEnumerable<KeyValuePair<MethodInfo, Interceptor[]>> GetInterceptors(Type interceptorType)
+        {
+            MethodInfo[] classInterceptorMethods;
+            var classInterceptors = Manager.GetClassInterceptors(interceptorType, this, out classInterceptorMethods);
+
+            foreach (var method in classInterceptorMethods)
+                yield return new KeyValuePair<MethodInfo, Interceptor[]>(method, classInterceptors);
+
+            const BindingFlags bindingFlagsAll = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
+                                                 BindingFlags.Static;
+            foreach (var method in
+                    Type.GetMethods(bindingFlagsAll))
+            {
+                var interceptors = Manager.GetMethodInterceptors(interceptorType, method).ToArray();
+                if(interceptors.Any())
+                    yield return new KeyValuePair<MethodInfo, Interceptor[]>(method, interceptors);
+            }
+
+            foreach (var property in
+                    Type.GetProperties(bindingFlagsAll))
+            {
+                MethodInfo[] methods;
+                var interceptors = Manager.GetPropertyInterceptors(interceptorType, property, out methods).ToArray();
+                foreach(var method in methods)
+                    yield return new KeyValuePair<MethodInfo, Interceptor[]>(method, interceptors);
+            }
+        }
         
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
@@ -56,12 +88,11 @@ namespace Cormo.Impl.Weld.Components
             var mixins = Manager.GetMixins(this);
             // todo: preconstruct/dispose intercetor
 
-            var aroundMethodInterceptors = 
-                (from method in Type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                let interceptors = Manager.GetMethodInterceptors(typeof(IAroundInvokeInterceptor), method).ToArray()
-                where interceptors.Any()
-                select new {method, interceptors}).ToArray();
-
+            var aroundMethodInterceptors =
+                GetInterceptors(typeof (IAroundInvokeInterceptor)).GroupBy(x => x.Key)
+                    .Select(x=> new {method = x.Key, interceptors = x.SelectMany(g => g.Value).ToArray()})
+                    .ToArray();
+                
             if (mixins.Any() || aroundMethodInterceptors.Any())
             {
                 return context =>
@@ -72,6 +103,7 @@ namespace Cormo.Impl.Weld.Components
                             from interfaceType in mixin.InterfaceTypes
                             select new {interfaceType, reference})
                             .ToDictionary(x => x.interfaceType, x => x.reference);
+
                     var interceptorHandlers = aroundMethodInterceptors
                         .ToDictionary(x => x.method,
                             x => new InterceptorMethodHandler(Manager, x.method, x.interceptors, context));

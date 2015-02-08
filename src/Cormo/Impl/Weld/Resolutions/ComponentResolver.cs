@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Cormo.Impl.Weld.Components;
 
 namespace Cormo.Impl.Weld.Resolutions
@@ -34,8 +35,10 @@ namespace Cormo.Impl.Weld.Resolutions
                 results = others.Any() ? others : onMissings.Take(1).ToArray();
             }
 
+            foreach (var result in results)
+                result.Touch();
             components = results;
-
+            
             return isWrapped
                 ? new IWeldComponent[] {new InstanceComponent(unwrappedType, new Binders(resolvable.Qualifiers), Manager, results)}
                 : results;

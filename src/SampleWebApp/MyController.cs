@@ -26,7 +26,7 @@ namespace SampleWebApp
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
     {
-        [Inject] IGreeter<string> _stringService;                // -> Resolves to UpperCaseGreeter
+        [Inject] UpperCaseGreeter _stringService;                // -> Resolves to UpperCaseGreeter
         [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
 
         [Route("test/{id}"), HttpGet]
@@ -38,7 +38,8 @@ namespace SampleWebApp
         [Route("test"), HttpGet]
         public string Test(HttpRequestMessage msg)
         {
-            return _stringService.Greet("World") + "/" + GetHashCode();
+            return _stringService.Hello;
+            //return _stringService.Greet("World") + "/" + GetHashCode();
         }
 
         [Route("testMany"), HttpGet]
@@ -69,11 +70,11 @@ namespace SampleWebApp
     {
         public async Task<object> AroundInvoke(IInvocationContext invocationContext)
         {
-            return "abc";
+            return "abc" + await invocationContext.Proceed();
         }
     }
 
-    [RequestScoped]
+    //[RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
 
@@ -86,13 +87,23 @@ namespace SampleWebApp
 
         [Inject, Limit] private int xxxx;
 
-        //[Logged]
+        [Logged]
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity, 
                 0, //_persons.Count(), 
                 Accept) + "/" + id;
+        }
+
+        [Logged]
+        public virtual string Hello
+        {
+            get
+            {
+                throw new Exception("xxx");
+                return "Hahaha";
+            }
         }
 
         public void Dispose()

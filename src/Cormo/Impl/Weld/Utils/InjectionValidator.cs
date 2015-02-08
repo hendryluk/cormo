@@ -44,6 +44,19 @@ namespace Cormo.Impl.Weld.Utils
         private static readonly ConcurrentDictionary<Type, string> _checkedProxyableTypes = new ConcurrentDictionary<Type, string>();
         public static void ValidateProxiable(Type type, IInjectionPoint injectionPoint)
         {
+            var error = CheckProxiable(type);
+
+            if (error != null)
+            {
+                var message = string.Format("Normal-scoped component must be proxyable, consider using IInstance<> instead. {0}Reason: {1}", 
+                    injectionPoint==null?"": "Injected at: " + injectionPoint + ".", 
+                    error);
+                throw new NonProxiableTypeException(type, message);
+            }
+        }
+
+        public static string CheckProxiable(Type type)
+        {
             var error = _checkedProxyableTypes.GetOrAdd(type, _ =>
             {
                 if (type.IsInterface /* || typeof (MulticastDelegate).IsAssignableFrom(type.BaseType) */)
@@ -92,14 +105,7 @@ namespace Cormo.Impl.Weld.Utils
                     return null;
                 return builder.ToString();
             });
-
-            if (error != null)
-            {
-                var message = string.Format("Normal-scoped component must be proxyable, consider using IInstance<> instead. {0}Reason: {1}", 
-                    injectionPoint==null?"": "Injected at: " + injectionPoint + ".", 
-                    error);
-                throw new NonProxiableTypeException(type, message);
-            }
+            return error;
         }
     }
 

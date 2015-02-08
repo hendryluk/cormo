@@ -10,16 +10,13 @@ using Cormo.Injects;
 
 namespace Cormo.Data.EntityFramework.Impl
 {
-    [Configuration]
+    [Configuration, Singleton]
     public class EntityContextProducer
     {
-        [Inject]
+        [PostConstruct]
         public void Init()
         {
-            if (ConfigurationManager.ConnectionStrings.Count == 0)
-            {
-                Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "/App_Data");
-            }
+            Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "/App_Data");
         }
 
         static readonly ConcurrentDictionary<Type, EntityInfo> _entityInfos = new ConcurrentDictionary<Type, EntityInfo>(); 
@@ -36,7 +33,7 @@ namespace Cormo.Data.EntityFramework.Impl
             public virtual DbContext GetContext(IInjectionPoint injectionPoint)
             {
                 var connectionName = GetConnectionName(injectionPoint);
-                return _contexts.GetOrAdd(connectionName, new CormoDbContext(connectionName,
+                return _contexts.GetOrAdd(connectionName, _=> new CormoDbContext(connectionName,
                     _entityTypes.Select(x => GetEntityInfo(_manager, x)).ToArray()));
             }
 
@@ -51,6 +48,7 @@ namespace Cormo.Data.EntityFramework.Impl
 
         private static readonly ConcurrentBag<Type> _entityTypes = new ConcurrentBag<Type>();
         
+        [Singleton]
         public class EntityType<T> where T:class
         {
             static EntityType()

@@ -72,6 +72,7 @@
     <Compile Include="Impl\Weld\Resolutions\MixinResolver.cs" />
     <Compile Include="Impl\Weld\Resolutions\ComponentResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\TypeSafeResolver.cs" />
+    <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
     <Compile Include="Injects\IBinders.cs" />
     <Compile Include="Impl\Weld\Qualifiers.cs" />
     <Compile Include="Injects\IBinderAttribute.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Interceptions\IInterceptorBinding.cs" />
     <Compile Include="Interceptions\IInvocationContext.cs" />
     <Compile Include="Interceptions\InterceptorAttribute.cs" />
+    <Compile Include="Interceptions\NotInterceptableException.cs" />
     <Compile Include="Mixins\IMixinBinder.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />
     <Compile Include="Injects\IServiceRegistry.cs" />

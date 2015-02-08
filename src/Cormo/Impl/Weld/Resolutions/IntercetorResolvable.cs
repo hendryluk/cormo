@@ -42,6 +42,12 @@ namespace Cormo.Impl.Weld.Resolutions
             Bindings = component.Binders.Select(x => x.GetType()).ToArray();
         }
 
+        public IntercetorResolvable(Type interceptorType, PropertyInfo property)
+        {
+            InterceptorType = interceptorType;
+            Bindings = property.GetAttributesRecursive<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
+        }
+
         public Type InterceptorType { get; private set; }
         public Type[] Bindings { get; private set; }
     }

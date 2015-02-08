@@ -13,6 +13,7 @@ using Cormo.Impl.Weld.Serialization;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
+using Cormo.Interceptions;
 
 namespace Cormo.Impl.Weld
 {
@@ -200,12 +201,42 @@ namespace Cormo.Impl.Weld
             return activeContexts.Single();
         }
 
-        public IEnumerable<Interceptor> GetMethodInterceptors(Type interceptorType, MethodInfo methodInfo)
+        public Interceptor[] GetMethodInterceptors(Type interceptorType, MethodInfo methodInfo)
         {
-            var intercetorResolvable = new IntercetorResolvable(interceptorType, methodInfo);
-            if (!intercetorResolvable.Bindings.Any())
-                return Enumerable.Empty<Interceptor>();
-            return _interceptorResolver.Resolve(intercetorResolvable);
+            var resolvable = new IntercetorResolvable(interceptorType, methodInfo);
+            var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
+            if (interceptors.Any())
+                InterceptionValidator.ValidateInterceptableMethod(methodInfo, resolvable);
+            
+            return interceptors;
+        }
+
+        public Interceptor[] GetPropertyInterceptors(Type interceptorType, PropertyInfo property, out MethodInfo[] methods)
+        {
+            var resolvable = new IntercetorResolvable(interceptorType, property);
+            var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
+            if (interceptors.Any())
+            {
+                methods = new[] {property.SetMethod, property.GetMethod}.Where(x => x != null).ToArray();
+                foreach(var method in methods)
+                    InterceptionValidator.ValidateInterceptableMethod(method, resolvable);
+            }
+            else
+                methods = new MethodInfo[0];
+
+            return interceptors;
+        }
+
+        public Interceptor[] GetClassInterceptors(Type interceptorType, IComponent component, out MethodInfo[] methods)
+        {
+            var intercetorResolvable = new IntercetorResolvable(interceptorType, component);
+            var interceptors = _interceptorResolver.Resolve(intercetorResolvable).ToArray();
+            if (interceptors.Any())
+                InterceptionValidator.ValidateInterceptableClass(component.Type, intercetorResolvable, out methods);
+            else
+                methods = new MethodInfo[0];
+
+            return interceptors;
         }
     }
 }

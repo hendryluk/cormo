@@ -58,17 +58,22 @@ namespace Cormo.Impl.Weld.Utils
         public static MemberInfo[] GetSealedPublicMembers(Type type)
         {
             var methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .Where(x => (!x.IsVirtual || x.IsFinal) && !x.IsAbstract && x.DeclaringType != typeof(object));
+                    .Where(x => !IsOveridable(x) && !x.IsAbstract && x.DeclaringType != typeof(object));
 
             var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                             .Where(x => new []{x.GetMethod, x.SetMethod}
-                                .Any(y => y != null && (!y.IsVirtual || y.IsFinal) && !y.IsAbstract));
+                                .Any(y => y != null && !IsOveridable(y) && !y.IsAbstract));
 
             var events = type.GetEvents(BindingFlags.Public | BindingFlags.Instance)
                             .Where(x => new[] { x.AddMethod, x.RemoveMethod }
-                                .Any(y => y != null && (!y.IsVirtual || y.IsFinal) && !y.IsAbstract));
+                                .Any(y => y != null && !IsOveridable(y) && !y.IsAbstract));
 
             return methods.Cast<MemberInfo>().Union(properties).Union(events).ToArray();
+        }
+
+        public static bool IsOveridable(MethodInfo method)
+        {
+            return method.IsVirtual && !method.IsFinal;
         }
 
         public static FieldInfo[] GetPublicFields(Type type)

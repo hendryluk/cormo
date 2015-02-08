@@ -62,6 +62,7 @@
     <Compile Include="Impl\CormoDbContext.cs" />
     <Compile Include="Impl\EntityContextProducer.cs" />
     <Compile Include="Impl\EntityInfo.cs" />
+    <Compile Include="Impl\TransactionalInterceptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

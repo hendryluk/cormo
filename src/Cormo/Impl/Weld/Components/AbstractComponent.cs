@@ -54,6 +54,10 @@ namespace Cormo.Impl.Weld.Components
         public abstract bool IsConcrete { get; }
         public bool IsConditionalOnMissing { get; private set; }
 
+        public virtual void Touch()
+        {
+        }
+
         public IEnumerable<IInjectionPoint> InjectionPoints
         {
             get { return _injectionPoints; }

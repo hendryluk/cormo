@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Cormo.Contexts;
@@ -11,9 +13,9 @@ namespace Cormo.Impl.Weld.Interceptions
 {
     public class InterceptorMethodHandler
     {
-        private LinkedList<IAroundInvokeInterceptor> _interceptorReferences;
-        private bool _isAsync;
-        private ITaskCaster _taskCaster;
+        private readonly LinkedList<IAroundInvokeInterceptor> _interceptorReferences;
+        private readonly bool _isAsync;
+        private readonly ITaskCaster _taskCaster;
 
         public InterceptorMethodHandler(WeldComponentManager manager, MethodInfo method, Interceptor[] interceptors, ICreationalContext creationalContext)
         {
@@ -51,8 +53,15 @@ namespace Cormo.Impl.Weld.Interceptions
             }
             else
             {
-                result.Wait();
-                castleInvocation.ReturnValue = result.Result;
+                try
+                {
+                    result.Wait();
+                    castleInvocation.ReturnValue = result.Result;
+                }
+                catch (AggregateException e)
+                {
+                    ExceptionDispatchInfo.Capture(e.GetBaseException()).Throw();
+                }
             }
         }
     }
