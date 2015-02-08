@@ -8,7 +8,7 @@ using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
-    [GlobalFilter]
+    [WebRegistry]
     public class RequestProducerHandler : DelegatingHandler
     {
         [RequestScoped]
@@ -31,10 +31,11 @@ namespace Cormo.Web.Impl
 
         [Inject] private RequestProducer _requestProducer;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             _requestProducer.SetRequest(request);
-            return base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
+            return response;
         }
     }
 }

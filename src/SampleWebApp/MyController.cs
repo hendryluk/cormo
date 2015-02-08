@@ -1,17 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Diagnostics;
-using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Security.Principal;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Http;
-using System.Web.Http.Controllers;
-using System.Web.ModelBinding;
 using Cormo.Contexts;
-using Cormo.Data.EntityFramework.Api;
 using Cormo.Injects;
 using Cormo.Interceptions;
 using Cormo.Web.Api;
@@ -35,9 +30,10 @@ namespace SampleWebApp
             return _stringService.Greet("World") + "/" + GetHashCode();
         }
 
-        [Route("test"), HttpGet]
+        [Route("test"), HttpGet, HttpStatusCode(HttpStatusCode.Accepted)]
         public string Test(HttpRequestMessage msg)
         {
+            //throw new Exception("xxx");
             return _stringService.Hello;
             //return _stringService.Greet("World") + "/" + GetHashCode();
         }
@@ -101,7 +97,6 @@ namespace SampleWebApp
         {
             get
             {
-                throw new Exception("xxx");
                 return "Hahaha";
             }
         }

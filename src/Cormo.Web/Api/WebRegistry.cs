@@ -2,7 +2,7 @@
 
 namespace Cormo.Web.Api
 {
-    public class GlobalFilterAttribute: QualifierAttribute
+    public class WebRegistry: QualifierAttribute
     {
          
     }

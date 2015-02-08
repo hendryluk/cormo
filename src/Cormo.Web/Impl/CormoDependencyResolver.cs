@@ -5,6 +5,7 @@ using System.Web.Http.Dependencies;
 using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
@@ -15,6 +16,7 @@ namespace Cormo.Web.Impl
         object GetReference(IInjectionPoint injectionPoint);
     }
 
+    [WebRegistry]
     public class CormoDependencyResolver : ICormoDependencyResolver
     {
         private readonly IComponentManager _componentManager;
