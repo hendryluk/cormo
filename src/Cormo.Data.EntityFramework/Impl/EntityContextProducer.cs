@@ -4,8 +4,10 @@ using System.Configuration;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api;
+using Cormo.Data.EntityFramework.Api.Audits;
 using Cormo.Injects;
 
 namespace Cormo.Data.EntityFramework.Impl
@@ -23,6 +25,20 @@ namespace Cormo.Data.EntityFramework.Impl
         public static EntityInfo GetEntityInfo(IComponentManager manager, Type type)
         {
             return _entityInfos.GetOrAdd(type, _ => new EntityInfo(manager, type));
+        }
+
+        [Produces, RequestScoped, CurrentAuditor, ConditionalOnMissingComponent]
+        public IPrincipal GetCurrentPrincipalAuditor(IPrincipal principal)
+        {
+            return principal;
+        }
+
+        [Produces, RequestScoped, CurrentAuditor, ConditionalOnMissingComponent]
+        public string GetCurrentStringAuditor(IPrincipal principal)
+        {
+            if (principal == null || principal.Identity == null)
+                return null;
+            return principal.Identity.Name;
         }
 
         [RequestScoped]
