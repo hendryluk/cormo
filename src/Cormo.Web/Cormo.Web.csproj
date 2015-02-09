@@ -80,7 +80,7 @@
     </Compile>
     <Compile Include="Api\EnableHttpSessionAttribute.cs" />
     <Compile Include="Api\HttpStatusCodeAttribute.cs" />
-    <Compile Include="Api\WebRegistry.cs" />
+    <Compile Include="Api\Provider.cs" />
     <Compile Include="Api\HeaderParamAttribute.cs" />
     <Compile Include="Api\Response.cs" />
     <Compile Include="Api\RouteParamAttribute.cs" />

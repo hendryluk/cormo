@@ -24,9 +24,12 @@ namespace Cormo.Impl.Weld.Components
         {
             InterceptorBindings = binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
             InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type)).ToArray();
-
+            
             if(!InterceptorBindings.Any())
                 throw new InvalidComponentException(type, "Interceptor must have at least one interceptor-binding attribute");
+            if (!InterceptorTypes.Any())
+                throw new InvalidComponentException(type, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x=> x.ToString())));
+        
         }
 
         public Type[] InterceptorTypes { get; private set; }

@@ -16,7 +16,7 @@ namespace Cormo.Web.Impl
         object GetReference(IInjectionPoint injectionPoint);
     }
 
-    [WebRegistry]
+    [Provider]
     public class CormoDependencyResolver : ICormoDependencyResolver
     {
         private readonly IComponentManager _componentManager;

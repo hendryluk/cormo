@@ -84,6 +84,7 @@
     <Compile Include="Interceptions\IInterceptorBinding.cs" />
     <Compile Include="Interceptions\IInvocationContext.cs" />
     <Compile Include="Interceptions\InterceptorAttribute.cs" />
+    <Compile Include="Interceptions\InterceptorBindingAttribute.cs" />
     <Compile Include="Interceptions\NotInterceptableException.cs" />
     <Compile Include="Mixins\IMixinBinder.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />

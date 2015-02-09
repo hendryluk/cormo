@@ -7,7 +7,7 @@ using Cormo.Interceptions;
 
 namespace Cormo.Data.EntityFramework.Impl
 {
-    [Transactional]
+    [Interceptor, Transactional]
     public class TransactionalInterceptor: IAroundInvokeInterceptor
     {
         [Inject] private IInstance<DbContext> _dbContext; 

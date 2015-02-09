@@ -34,7 +34,7 @@ namespace SampleWebApp
         public string Test(HttpRequestMessage msg)
         {
             //throw new Exception("xxx");
-            return _stringService.Hello;
+            return _stringService.Greet("World");
             //return _stringService.Greet("World") + "/" + GetHashCode();
         }
 
@@ -87,8 +87,8 @@ namespace SampleWebApp
         public virtual string Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
-                _principal.Identity, 
-                0, //_persons.Count(), 
+                _principal.Identity,
+                xxxx, //_persons.Count(), 
                 Accept) + "/" + id;
         }
 

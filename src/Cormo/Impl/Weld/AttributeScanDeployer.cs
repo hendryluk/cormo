@@ -44,18 +44,22 @@ namespace Cormo.Impl.Weld
             return referencings;
         }
 
+        // Declaring known built-in types explicitly for performance reason
+        private static readonly Type[] BuiltInTypes = {typeof(ValueProvider)};
+
         public void AutoScan()
         {
             var cormo = typeof(IComponentManager).Assembly;
             var assemblyName = cormo.GetName();
 
-            var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName)
-                .Union(new[]{cormo}).ToArray();
+            var assemblies = WhereReferencesRecursive(AppDomain.CurrentDomain.GetAssemblies(), assemblyName).ToArray();
 
             var types = (from assembly in assemblies.AsParallel()
                             from type in assembly.GetLoadableTypes()
                             where type.IsVisible && type.IsClass && !type.IsPrimitive
-                            select type).ToArray();
+                            select type)
+                            .AsEnumerable().Union(BuiltInTypes)
+                            .ToArray();
 
             var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
 
@@ -179,7 +183,7 @@ namespace Cormo.Impl.Weld
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
             
             ManagedComponent component;
-            if (typeof (IAroundInvokeInterceptor).IsAssignableFrom(type))
+            if (binders.OfType<InterceptorAttribute>().Any())
             {
                 component = new Interceptor(type, binders, scope, _manager, postConstructs);
             }

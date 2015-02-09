@@ -8,7 +8,7 @@ using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
-    [WebRegistry]
+    [Provider]
     public class RequestProducerHandler : DelegatingHandler
     {
         [RequestScoped]

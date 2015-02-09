@@ -5,7 +5,7 @@ using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
-    [WebRegistry]
+    [Provider]
     public class StatusCodeFilter : ActionFilterAttribute
     {
         public override void OnActionExecuted(HttpActionExecutedContext context)

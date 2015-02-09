@@ -2,7 +2,7 @@
 
 namespace Cormo.Web.Api
 {
-    public class WebRegistry: QualifierAttribute
+    public class Provider: QualifierAttribute
     {
          
     }
