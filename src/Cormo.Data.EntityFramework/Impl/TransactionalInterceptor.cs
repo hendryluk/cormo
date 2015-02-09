@@ -14,6 +14,9 @@ namespace Cormo.Data.EntityFramework.Impl
         public async Task<object> AroundInvoke(IInvocationContext invocationContext)
         {
             var dbContext = _dbContext.Value;
+            if (dbContext.Database.CurrentTransaction != null)
+                return await invocationContext.Proceed();
+
             using (var transaction = dbContext.Database.BeginTransaction())
             {
                 try
