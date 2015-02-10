@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Utils;
@@ -39,10 +38,7 @@ namespace Cormo.Impl.Weld.Components
             if (typeResolution == null || typeResolution.ResolvedType == null || typeResolution.ResolvedType.ContainsGenericParameters)
                 return null;
 
-            var component = TranslateTypes(typeResolution);
-            if(component != null)
-                TransferInjectionPointsTo(component, typeResolution);
-            return component;
+            return TranslateTypes(typeResolution);
         }
 
         public override void Destroy(object instance, ICreationalContext creationalContext)

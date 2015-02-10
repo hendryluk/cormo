@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
+using Cormo.Events;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
+using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
@@ -78,6 +81,7 @@ namespace Cormo.Impl.Weld
         public void AddTypes(params Type[] types)
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
+            var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
 
             var producerFields = (from component in components.AsParallel()
                                   let type = component.Type
@@ -102,11 +106,43 @@ namespace Cormo.Impl.Weld
 
         }
 
+        public class EventObserverMethod
+        {
+            private readonly ParameterInfo _parameter;
+            private InjectableMethod _method;
+
+            public EventObserverMethod(IWeldComponent component, ParameterInfo parameter)
+            {
+                _parameter = parameter;
+                _method = new InjectableMethod(component, (MethodInfo) _parameter.Member, parameter);
+            }
+
+            public void SendEvent(object ev, ICreationalContext creationalContext)
+            {
+                _method.InvokeWithSpecialValue(creationalContext, ev);
+            }
+        }
+
+        private static IEnumerable<EventObserverMethod> FindEventObservers(IWeldComponent component)
+        {
+            foreach (var method in component.Type.GetMethods())
+            {
+                var injectParams = method.GetParameters()
+                    .Where(AttributeUtils.HasAttribute<ObservesAttribute>)
+                    .ToArray();
+                if(!injectParams.Any())
+                    continue;
+                if (injectParams.Length > 1)
+                    throw new InvalidComponentException(Formatters.MultipleObservesParameter(method));
+
+                yield return new EventObserverMethod(component, injectParams.Single());
+            }
+        }
+
         public void AddValue(object instance, params IBinderAttribute[] binders)
         {
             _environment.AddValue(instance, binders, _manager);
         }
-        
 
         private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components, Type[] assemblyConfigs)
         {
@@ -160,10 +196,7 @@ namespace Cormo.Impl.Weld
             var binders = method.GetBinders();
             var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 
-            var producer = new ProducerMethod(component, method, binders, scope, _manager);
-            var injects = ToMethodInjections(producer, method).ToArray();
-            producer.AddInjectionPoints(injects);
-            return producer;
+            return new ProducerMethod(component, method, binders, scope, _manager);
         }
 
         public IWeldComponent MakeComponent(Type type)
@@ -181,33 +214,29 @@ namespace Cormo.Impl.Weld
 
             if (iCtors.Length > 1)
                 throw new InvalidComponentException(type, "Multiple [Inject] constructors");
+
+            var iCtor = iCtors.FirstOrDefault()?? type.GetConstructor(new Type[0]);
             
             ManagedComponent component;
             if (binders.OfType<InterceptorAttribute>().Any())
             {
-                component = new Interceptor(type, binders, scope, _manager, postConstructs);
+                component = new Interceptor(iCtor, binders, scope, _manager, postConstructs);
             }
             else
             {
                 var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
                 component = mixinAttr==null? (ManagedComponent)
-                new ClassComponent(type, binders, scope, _manager, postConstructs):
-                new Mixin(mixinAttr.InterfaceTypes, type, binders, scope, _manager, postConstructs);
+                new ClassComponent(iCtor, binders, scope, _manager, postConstructs):
+                new Mixin(mixinAttr.InterfaceTypes, iCtor, binders, scope, _manager, postConstructs);
             }
-            
-            var methodInjects = iMethods.SelectMany(m => ToMethodInjections(component, m)).ToArray();
-            var ctorInjects = iCtors.SelectMany(ctor => ToMethodInjections(component, ctor)).ToArray();
+
+            var methodInjects = iMethods.Select(m => new InjectableMethod(component, m, null)).ToArray();
             var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetBinders())).ToArray();
             var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetBinders())).ToArray();
             
-            component.AddInjectionPoints(methodInjects.Union(ctorInjects).Union(fieldInjects).Union(propertyInjects).ToArray());
+            component.AddMemberInjectionPoints(fieldInjects.Cast<IWeldInjetionPoint>().Union(propertyInjects).ToArray());
+            component.AddInjectableMethods(methodInjects);
             return component;
-        }
-
-        private IEnumerable<IWeldInjetionPoint> ToMethodInjections(IComponent component, MethodBase method)
-        {
-            var parameters = method.GetParameters();
-            return parameters.Select(p => new MethodParameterInjectionPoint(component, p, p.GetBinders()));
         }
 
         public void Deploy()

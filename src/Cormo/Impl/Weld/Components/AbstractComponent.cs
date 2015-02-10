@@ -42,6 +42,18 @@ namespace Cormo.Impl.Weld.Components
         }
 
         public IQualifiers Qualifiers { get { return Binders.Qualifiers; }}
+
+        private readonly ISet<IWeldInjetionPoint> _injectionPoints = new HashSet<IWeldInjetionPoint>();
+        public IEnumerable<IInjectionPoint> InjectionPoints
+        {
+            get { return _injectionPoints; }
+        }
+
+        protected void AddInjectionPoint(IWeldInjetionPoint injectionPoint)
+        {
+            _injectionPoints.Add(injectionPoint);
+        }
+
         public Type Scope { get; private set; }
         public Type Type { get; set; }
 
@@ -58,19 +70,9 @@ namespace Cormo.Impl.Weld.Components
         {
         }
 
-        public IEnumerable<IInjectionPoint> InjectionPoints
-        {
-            get { return _injectionPoints; }
-        }
-
-        public void AddInjectionPoints(params IWeldInjetionPoint[] injectionPoints)
-        {
-            foreach(var inject in injectionPoints)
-                _injectionPoints.Add(inject);
-        }
+        
 
         private readonly Lazy<BuildPlan> _lazyBuildPlan;
-        private readonly ISet<IWeldInjetionPoint> _injectionPoints = new HashSet<IWeldInjetionPoint>();
         private ComponentIdentifier _id;
 
         public bool IsProxyRequired { get; private set; }
@@ -83,16 +85,6 @@ namespace Cormo.Impl.Weld.Components
         }
 
         public abstract void Destroy(object instance, ICreationalContext creationalContext);
-
-        protected void TransferInjectionPointsTo(AbstractComponent component, GenericUtils.Resolution resolution)
-        {
-            component.AddInjectionPoints(_injectionPoints.Select(x =>
-            {
-                if (x.DeclaringComponent.Type == component.Type)
-                    return x;
-                return x.TranslateGenericArguments(component, resolution.GenericParameterTranslations);
-            }).ToArray());
-        }
 
         protected abstract BuildPlan GetBuildPlan();
         public ComponentIdentifier Id { get { return _id; } }

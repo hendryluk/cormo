@@ -56,7 +56,12 @@
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
+    <Compile Include="Events\ObservesAttribute.cs" />
     <Compile Include="Impl\ValueProvider.cs" />
+    <Compile Include="Impl\Weld\Introspectors\InjectableConstructor.cs" />
+    <Compile Include="Impl\Weld\Introspectors\InjectableMethod.cs" />
+    <Compile Include="Impl\Weld\Introspectors\InjectableMethodBase.cs" />
+    <Compile Include="Impl\Weld\Formatters.cs" />
     <Compile Include="Impl\Weld\Interceptions\TaskCaster.cs" />
     <Compile Include="Impl\Weld\Interceptions\InvocationContext.cs" />
     <Compile Include="Impl\Weld\Interceptions\InterceptorMethodHandler.cs" />

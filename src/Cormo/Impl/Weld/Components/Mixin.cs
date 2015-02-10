@@ -12,8 +12,8 @@ namespace Cormo.Impl.Weld.Components
     {
         public IEnumerable<Type> MixinBinders { get; private set; }
 
-        public Mixin(Type[] interfaceTypes, Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(type, binders, scope, manager, postConstructs)
+        public Mixin(Type[] interfaceTypes, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
+            : base(ctor, binders, scope, manager, postConstructs)
         {
             MixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
             InterfaceTypes = interfaceTypes;
@@ -28,16 +28,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
-            var paramInjects = injects.GroupBy(x => x.Member)
-                .Select(x => x.OrderBy(i => i.Position).ToArray())
-                .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
-                .First();
-
-            return context =>
-            {
-                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                return Activator.CreateInstance(Type, paramVals);
-            };
+            return InjectableConstructor.Invoke;
         }
     }
 }

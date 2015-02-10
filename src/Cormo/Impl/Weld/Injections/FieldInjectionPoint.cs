@@ -20,6 +20,9 @@ namespace Cormo.Impl.Weld.Injections
 
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
+            if (DeclaringComponent.Type == component.Type)
+                return this;
+                
             var field = GenericUtils.TranslateFieldType(_field, translations);
             return new FieldInjectionPoint(component, field, Binders);
         }

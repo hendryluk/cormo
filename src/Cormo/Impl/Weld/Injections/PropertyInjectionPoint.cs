@@ -20,6 +20,9 @@ namespace Cormo.Impl.Weld.Injections
 
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
+            if (DeclaringComponent.Type == component.Type)
+                return this;
+
             var property = GenericUtils.TranslatePropertyType(_property, translations);
             return new PropertyInjectionPoint(component, property, Binders);
         }

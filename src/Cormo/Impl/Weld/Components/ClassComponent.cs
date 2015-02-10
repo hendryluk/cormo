@@ -22,9 +22,9 @@ namespace Cormo.Impl.Weld.Components
             parent.TransferInjectionPointsTo(this, typeResolution);
         }
 
-        public ClassComponent(Type type, IBinders binders, Type scope, WeldComponentManager manager,
+        public ClassComponent(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager,
             MethodInfo[] postConstructs)
-            : base(type, binders, scope, manager, postConstructs)
+            : base(ctor, binders, scope, manager, postConstructs)
         {
         }
 
@@ -80,11 +80,6 @@ namespace Cormo.Impl.Weld.Components
         
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
-            var paramInjects = injects.GroupBy(x => x.Member)
-                .Select(x => x.OrderBy(i => i.Position).ToArray())
-                .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
-                .First();
-
             var mixins = Manager.GetMixins(this);
             // todo: preconstruct/dispose intercetor
 
@@ -97,7 +92,7 @@ namespace Cormo.Impl.Weld.Components
             {
                 return context =>
                 {
-                    var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
+                    var paramVals = InjectableConstructor.GetParameterValues(context);
                     var mixinObjects = (from mixin in mixins
                             let reference = Manager.GetReference(mixin, context, mixin.InterfaceTypes)
                             from interfaceType in mixin.InterfaceTypes
@@ -112,11 +107,7 @@ namespace Cormo.Impl.Weld.Components
                 };
             }
         
-            return context =>
-            {
-                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                return Activator.CreateInstance(Type, paramVals);
-            };
+            return InjectableConstructor.Invoke;
         }
 
         public override string ToString()

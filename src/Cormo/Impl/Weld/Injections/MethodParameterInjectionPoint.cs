@@ -26,20 +26,7 @@ namespace Cormo.Impl.Weld.Injections
 
         public override IWeldInjetionPoint TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
         {
-            if (IsConstructor)
-            {
-                var ctor = (ConstructorInfo) _param.Member;
-                ctor = GenericUtils.TranslateConstructorGenericArguments(ctor, translations);
-                var param = ctor.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Binders);
-            }
-            else
-            {
-                var method = (MethodInfo)_param.Member;
-                method = GenericUtils.TranslateMethodGenericArguments(method, translations);
-                var param = method.GetParameters()[_param.Position];
-                return new MethodParameterInjectionPoint(component, param, Binders);
-            }
+            throw new NotSupportedException();
         }
 
         protected override InjectPlan BuildInjectPlan(IComponent component)

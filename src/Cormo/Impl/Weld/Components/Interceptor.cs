@@ -19,16 +19,16 @@ namespace Cormo.Impl.Weld.Components
 
         public Type[] InterceptorBindings { get; private set; }
 
-        public Interceptor(Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(type, binders, scope, manager, postConstructs)
+        public Interceptor(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+            : base(ctor, binders, scope, manager, postConstructs)
         {
             InterceptorBindings = binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
-            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type)).ToArray();
+            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(ctor.DeclaringType)).ToArray();
             
             if(!InterceptorBindings.Any())
-                throw new InvalidComponentException(type, "Interceptor must have at least one interceptor-binding attribute");
+                throw new InvalidComponentException(ctor.DeclaringType, "Interceptor must have at least one interceptor-binding attribute");
             if (!InterceptorTypes.Any())
-                throw new InvalidComponentException(type, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x=> x.ToString())));
+                throw new InvalidComponentException(ctor.DeclaringType, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x => x.ToString())));
         
         }
 
@@ -43,16 +43,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
         {
-            var paramInjects = injects.GroupBy(x => x.Member)
-                .Select(x => x.OrderBy(i => i.Position).ToArray())
-                .DefaultIfEmpty(new MethodParameterInjectionPoint[0])
-                .First();
-
-            return context =>
-            {
-                var paramVals = paramInjects.Select(p => p.GetValue(context)).ToArray();
-                return Activator.CreateInstance(Type, paramVals);
-            };
+            return InjectableConstructor.Invoke;
         }
     }
 }
