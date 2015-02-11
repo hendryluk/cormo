@@ -1,12 +1,20 @@
+### [Wiki](../../wiki)
+- [Quickstart](../../wiki/quickstart)
+- [CDI Introduction](../../wiki/introduction)
+- [Entity Framework](../../wiki/Cormo.Data.EntityFramework)
+- [Events and Observers] (../../wiki/Events-and-Observers)
+- [Interceptors] (../../wiki/interceptors)
+- [Scopes and Contexts](../../wiki/Scopes-and-Contexts)
+
 # Cormo
 Cormo is a .NET application development framework that brings both [Spring](http://spring.io) and the CDI (Contexts and Dependency Injection) spec from Java EE (specifically its implementation by [JBoss Weld] (http://weld.cdi-spec.org)) into .NET development.
 
-Two main objectives thatCormo is trying to achieve:
-* Remove ceremonies out of writing code. Cormo aims to provide an ecosystem of modules that you can pick and plug onto your application to take care of various dirty plumbing works so you don't have to. This is 21st century. With all conveniences in life, writing code shouldn't be so hard. You shouldn't need to do anything to have fully configured IoC, ORM, auditing, security, messaging, events, logging, transactions, scheduling, health-monitoring, etc. I want to only need to say so and they just happen. [Spring-Boot](http://projects.spring.io/spring-boot/) is a great framework that currently offers such capability, and Cormo tries to bring it to .NET environment.
-* A simpler way for application components to interact. Traditional layered architecture is often rigidly bloated with vertical stacks of indirections that become heavy and unmanageable as your codebase grows. JavaEE 6 introduced CDI as the standard glue for independent parts of your application, which uses contextual awareness to provide a loosely-coupled way to reference functionalities from different parts of your application, eliminating several layers of indirections and abstractions, resulting in a more organic and pragmatic layering. It makes many common .NET patterns and best-practices superfluous (interfaces, repository, read/write services, commands, handlers, event-bus). Instead the magic words are YAGNI and KISS. ([Read#1](http://www.oracle.com/au/products/database/o11java-195110.html), [Read#2](http://antoniogoncalves.org/2013/10/29/several-architectural-styles-with-java-ee-7/))
+Cormo's main objectives:
+* A simpler way for application components to interact. Traditional layered architecture is often rigidly bloated with vertical stacks of indirections that become heavy and unmanageable as your codebase grows. JavaEE 6 introduced CDI as the standard glue for independent parts of your application, which uses contextual awareness to provide a loosely-coupled way to reference functionalities from different parts of your application, eliminating several layers of indirections and abstractions, resulting in a more organic and pragmatic layering. It makes many common .NET patterns and "best-practices" superfluous (interfaces, repository, read/write services, commands, handlers, event-bus). Instead the magic words are YAGNI and KISS. ([Read#1](http://www.oracle.com/au/products/database/o11java-195110.html), [Read#2](http://antoniogoncalves.org/2013/10/29/several-architectural-styles-with-java-ee-7/))
+* Remove ceremonies out of writing code. Cormo aims to provide an environment to develop and host modules that you can pick and plug onto your application to speed up development and take care of plumbing works so you don't have to. Writing code shouldn't be so hard: configuring IoC, ORM, auditing, security, messaging, events, logging, transactions, scheduling, health-monitoring, etc, I want to only need to say so and they just happen. [Spring-Boot](http://projects.spring.io/spring-boot/) is a great framework that currently offers such capability, and Cormo tries to bring it to .NET environment.
 
 # Getting Started
-To start a new web project, start an *empty* ASP.NET project (do not pick any template e.g. MVC or WebAPI).
+To start a new web project, start an *empty* ASP.NET project (do not pick any template e.g. MVC or WebAPI. They're bloated!).
 
 Then NuGet:
 ```
@@ -77,18 +85,17 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
-# Entity Framework
-[Read more here](http://github.com/hendryluk/cormo/wiki/Cormo.Data.EntityFramework)
+### Next, [continue to our wiki](../../wiki).
 
 # Further Reading
-Cormo combines ideas from these following frameworks. Each comes with great documentation far beyond what Cormo has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Cormo (or what Cormo will come to be), so check them out. Just replace the word "Bean" with "Component".
+The current state of Cormo's documentation is pretty sad. Well luckily the specs and frameworks that Cormo is based on come with excellent documentations. A lot in those documentations are applicable to Cormo (or what Cormo will come to be), so go and check them out. Just replace the word "Bean" with "Component".
 * [JBoss Weld](http://weld.cdi-spec.org)  [ [Doc](https://docs.jboss.org/weld/reference/latest/en-US/html/) ]
 * [JBoss Seam 3](http://seamframework.org/Seam3/Home.html)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
 * [Spring Framework](http://projects.spring.io/spring-framework/)  [ [Doc](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/) ]
 * [Spring Boot](http://projects.spring.io/spring-boot/)  [ [Doc](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/) ]
 * JAX-RS  [ [Doc](http://docs.jboss.org/resteasy/docs/3.0.6.Final/userguide/html/) ]
 
-# NEXT
+# More
 
 TODO: Scopes (Dependent, Singleton, RequestScoped, ResponseScoped, custom scopes)
 
