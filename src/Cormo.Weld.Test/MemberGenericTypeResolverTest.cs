@@ -39,7 +39,7 @@ namespace Cormo.Weld.Test
 
         public Type Resolve<T>(string name)
         {
-            var resolution = GenericUtils.ResolveGenericType(GetMethodType(name), typeof(T));
+            var resolution = GenericResolver.ImplementerResolver.ResolveType(GetMethodType(name), typeof(T));
             if (resolution == null)
                 return null;
             return resolution.ResolvedType;
@@ -100,7 +100,7 @@ namespace Cormo.Weld.Test
         [Test]
         public void ResolveGenericArgumentWithRestrictiveConstraint()
         {
-            var resolution = GenericUtils.ResolveGenericType(typeof(IDisposableList<>), GetMethodType("List"));
+            var resolution = GenericResolver.ImplementerResolver.ResolveType(typeof(IDisposableList<>), GetMethodType("List"));
             Assert.IsNotNull(resolution);
         }
 

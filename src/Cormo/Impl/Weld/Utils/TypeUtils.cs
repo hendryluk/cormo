@@ -36,7 +36,7 @@ namespace Cormo.Impl.Weld.Utils
                 .Where(x => x.HasAttributeRecursive<InjectAttribute>());
         }
 
-        public static IEnumerable<Type> GetComponentTypes(Type type)
+        public static IEnumerable<Type> GetAncestors(Type type)
         {
             for(var t = type; t != null; t=t.BaseType)
             {

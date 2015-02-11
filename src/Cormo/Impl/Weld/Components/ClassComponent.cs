@@ -15,7 +15,7 @@ namespace Cormo.Impl.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        private ClassComponent(ClassComponent parent, Type type, IBinders binders, Type scope, WeldComponentManager manager, GenericUtils.Resolution typeResolution)
+        private ClassComponent(ClassComponent parent, Type type, IBinders binders, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
             : base(new ComponentIdentifier(parent.Id.Key, type), type, binders, scope, manager,
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         {
@@ -36,7 +36,7 @@ namespace Cormo.Impl.Weld.Components
 
             else
             {
-                var resolution = GenericUtils.ResolveGenericType(Type, requestedType);
+                var resolution = GenericResolver.ImplementerResolver.ResolveType(Type, requestedType);
                 if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                     return null;
 

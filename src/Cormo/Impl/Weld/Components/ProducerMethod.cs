@@ -16,7 +16,7 @@ namespace Cormo.Impl.Weld.Components
             _method = new InjectableMethod(declaringComponent, method, null);
         }
 
-        protected override AbstractProducer TranslateTypes(GenericUtils.Resolution resolution)
+        protected override AbstractProducer TranslateTypes(GenericResolver.Resolution resolution)
         {
             var resolvedMethod = GenericUtils.TranslateMethodGenericArguments(_method.Method, resolution.GenericParameterTranslations);
             if (resolvedMethod == null || GenericUtils.MemberContainsGenericArguments(resolvedMethod))

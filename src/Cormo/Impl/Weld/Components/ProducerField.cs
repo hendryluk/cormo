@@ -17,7 +17,7 @@ namespace Cormo.Impl.Weld.Components
         }
 
 
-        protected override AbstractProducer TranslateTypes(GenericUtils.Resolution resolution)
+        protected override AbstractProducer TranslateTypes(GenericResolver.Resolution resolution)
         {
             var resolvedField = GenericUtils.TranslateFieldType(_field, resolution.GenericParameterTranslations);
             return new ProducerField(DeclaringComponent.Resolve(resolvedField.DeclaringType), resolvedField, Binders, Scope, Manager);

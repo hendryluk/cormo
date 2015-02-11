@@ -47,8 +47,9 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="GenericAncestorTypeResolverTest.cs" />
     <Compile Include="GenericMemberTranslationTest.cs" />
-    <Compile Include="ClassGenericTypeResolverTest.cs" />
+    <Compile Include="GenericImplementerTypeResolverTest.cs" />
     <Compile Include="Injection\GenericsInjectTest.cs" />
     <Compile Include="Injection\ProducerMethodTest.cs" />
     <Compile Include="MemberGenericTypeResolverTest.cs" />

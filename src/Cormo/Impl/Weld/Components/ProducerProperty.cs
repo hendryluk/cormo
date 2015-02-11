@@ -17,7 +17,7 @@ namespace Cormo.Impl.Weld.Components
         }
 
 
-        protected override AbstractProducer TranslateTypes(GenericUtils.Resolution resolution)
+        protected override AbstractProducer TranslateTypes(GenericResolver.Resolution resolution)
         {
             var resolvedProperty = GenericUtils.TranslatePropertyType(_property, resolution.GenericParameterTranslations);
             return new ProducerProperty(DeclaringComponent.Resolve(resolvedProperty.DeclaringType), resolvedProperty, Binders, Scope, Manager);

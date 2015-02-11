@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Utils;
+using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 
@@ -11,12 +12,12 @@ namespace Cormo.Impl.Weld.Introspectors
 {
     public abstract class InjectableMethodBase
     {
-        protected readonly IComponent Component;
+        public IWeldComponent Component { get; private set; }
         private readonly MethodBase _method;
         protected readonly ParameterInfo SpecialParameter;
         private readonly MethodParameterInjectionPoint[] _injectionPoints;
 
-        protected InjectableMethodBase(IComponent component, MethodBase method, ParameterInfo specialParameter)
+        protected InjectableMethodBase(IWeldComponent component, MethodBase method, ParameterInfo specialParameter)
         {
             Component = component;
             _method = method;
@@ -42,6 +43,9 @@ namespace Cormo.Impl.Weld.Introspectors
 
         public object Invoke(ICreationalContext creationalContext)
         {
+            if (SpecialParameter != null)
+                throw new InvalidOperationException("Must be invoked with InvokeWithSpecialValue");
+
             return Invoke(GetParameterValues(creationalContext), creationalContext);
         }
 
@@ -54,7 +58,7 @@ namespace Cormo.Impl.Weld.Introspectors
 
         protected abstract object Invoke(object[] parameters, ICreationalContext creationalContext);
 
-        public abstract InjectableMethodBase TranslateGenericArguments(IComponent component,
+        public abstract InjectableMethodBase TranslateGenericArguments(IWeldComponent weldComponent,
             IDictionary<Type, Type> translations);
 
         public bool IsConstructor { get; private set; }

@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Cormo.Weld.Test
 {
-    public class ClassGenericTypeResolverTest
+    public class GenericImplementerTypeResolverTest
     {
         private interface IList2<T, U>: IEnumerable<T>
         {
@@ -18,7 +18,7 @@ namespace Cormo.Weld.Test
 
         public Type Resolve<TInject>(Type produce)
         {
-            var resolution = GenericUtils.ResolveGenericType(produce, typeof(TInject));
+            var resolution = GenericResolver.ImplementerResolver.ResolveType(produce, typeof(TInject));
             if (resolution == null)
                 return null;
             return resolution.ResolvedType;

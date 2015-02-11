@@ -106,23 +106,6 @@ namespace Cormo.Impl.Weld
 
         }
 
-        public class EventObserverMethod
-        {
-            private readonly ParameterInfo _parameter;
-            private InjectableMethod _method;
-
-            public EventObserverMethod(IWeldComponent component, ParameterInfo parameter)
-            {
-                _parameter = parameter;
-                _method = new InjectableMethod(component, (MethodInfo) _parameter.Member, parameter);
-            }
-
-            public void SendEvent(object ev, ICreationalContext creationalContext)
-            {
-                _method.InvokeWithSpecialValue(creationalContext, ev);
-            }
-        }
-
         private static IEnumerable<EventObserverMethod> FindEventObservers(IWeldComponent component)
         {
             foreach (var method in component.Type.GetMethods())

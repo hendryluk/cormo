@@ -34,7 +34,7 @@ namespace Cormo.Impl.Weld.Components
             if (IsConcrete)
                 return requestedType.IsAssignableFrom(Type) ? this : null;
 
-            var typeResolution = GenericUtils.ResolveGenericType(Type, requestedType);
+            var typeResolution = GenericResolver.ImplementerResolver.ResolveType(Type, requestedType);
             if (typeResolution == null || typeResolution.ResolvedType == null || typeResolution.ResolvedType.ContainsGenericParameters)
                 return null;
 
@@ -46,6 +46,6 @@ namespace Cormo.Impl.Weld.Components
             // TODO DisposeAttribute
         }
 
-        protected abstract AbstractProducer TranslateTypes(GenericUtils.Resolution resolution);
+        protected abstract AbstractProducer TranslateTypes(GenericResolver.Resolution resolution);
     }
 }

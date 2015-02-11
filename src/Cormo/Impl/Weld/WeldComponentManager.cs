@@ -44,6 +44,7 @@ namespace Cormo.Impl.Weld
         private ComponentResolver _componentResolver;
         private MixinResolver _mixinResolver;
         private InterceptorResolver _interceptorResolver;
+        //private EventResolver _eventResolver;
 
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {

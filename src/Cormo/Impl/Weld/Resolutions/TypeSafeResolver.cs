@@ -11,7 +11,8 @@ using Cormo.Injects.Exceptions;
 namespace Cormo.Impl.Weld.Resolutions
 {
     public abstract class TypeSafeResolver<TComponent, TResolvable> 
-        where TComponent:IWeldComponent where TResolvable:IResolvable
+        where TComponent:IWeldComponent 
+        where TResolvable:IResolvable
     {
         protected readonly WeldComponentManager Manager;
         private readonly ConcurrentBag<TComponent> _allComponents;

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Cormo.Contexts;
+using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
-using Cormo.Injects;
 
 namespace Cormo.Impl.Weld.Introspectors
 {
@@ -11,7 +11,7 @@ namespace Cormo.Impl.Weld.Introspectors
     {
         private readonly ConstructorInfo _ctor;
 
-        public InjectableConstructor(IComponent component, ConstructorInfo ctor)
+        public InjectableConstructor(IWeldComponent component, ConstructorInfo ctor)
             : base(component, ctor, null)
         {
             _ctor = ctor;
@@ -22,7 +22,7 @@ namespace Cormo.Impl.Weld.Introspectors
             return Activator.CreateInstance(_ctor.DeclaringType, parameters);
         }
 
-        public override InjectableMethodBase TranslateGenericArguments(IComponent component, IDictionary<Type, Type> translations)
+        public override InjectableMethodBase TranslateGenericArguments(IWeldComponent component, IDictionary<Type, Type> translations)
         {
             var resolvedCtor = GenericUtils.TranslateConstructorGenericArguments(_ctor, translations);
             return new InjectableConstructor(component, resolvedCtor);

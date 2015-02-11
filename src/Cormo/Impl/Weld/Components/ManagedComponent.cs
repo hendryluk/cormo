@@ -99,7 +99,7 @@ namespace Cormo.Impl.Weld.Components
             }
         }
 
-        protected void TransferInjectionPointsTo(ManagedComponent component, GenericUtils.Resolution resolution)
+        protected void TransferInjectionPointsTo(ManagedComponent component, GenericResolver.Resolution resolution)
         {
             component.AddMemberInjectionPoints(_memberInjectionPoints.Select(x => 
                 x.TranslateGenericArguments(component, resolution.GenericParameterTranslations))
