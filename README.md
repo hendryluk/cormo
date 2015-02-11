@@ -1,12 +1,12 @@
 # Cormo
 Cormo is a .NET application development framework that brings both [Spring](http://spring.io) and the CDI (Contexts and Dependency Injection) spec from Java EE (specifically its implementation by [JBoss Weld] (http://weld.cdi-spec.org)) into .NET development.
 
-Two main objectives thatCormo is trying to achieve:
+Cormo's main objectives:
 * A simpler way for application components to interact. Traditional layered architecture is often rigidly bloated with vertical stacks of indirections that become heavy and unmanageable as your codebase grows. JavaEE 6 introduced CDI as the standard glue for independent parts of your application, which uses contextual awareness to provide a loosely-coupled way to reference functionalities from different parts of your application, eliminating several layers of indirections and abstractions, resulting in a more organic and pragmatic layering. It makes many common .NET patterns and "best-practices" superfluous (interfaces, repository, read/write services, commands, handlers, event-bus). Instead the magic words are YAGNI and KISS. ([Read#1](http://www.oracle.com/au/products/database/o11java-195110.html), [Read#2](http://antoniogoncalves.org/2013/10/29/several-architectural-styles-with-java-ee-7/))
 * Remove ceremonies out of writing code. Cormo aims to provide an environment to develop and host modules that you can pick and plug onto your application to speed up development and take care of plumbing works so you don't have to. Writing code shouldn't be so hard: configuring IoC, ORM, auditing, security, messaging, events, logging, transactions, scheduling, health-monitoring, etc, I want to only need to say so and they just happen. [Spring-Boot](http://projects.spring.io/spring-boot/) is a great framework that currently offers such capability, and Cormo tries to bring it to .NET environment.
 
 # Getting Started
-To start a new web project, start an *empty* ASP.NET project (do not pick any template e.g. MVC or WebAPI).
+To start a new web project, start an *empty* ASP.NET project (do not pick any template e.g. MVC or WebAPI. They're bloated!).
 
 Then NuGet:
 ```
