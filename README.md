@@ -84,8 +84,7 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
-# Entity Framework
-[Read more here](http://github.com/hendryluk/cormo/wiki/Cormo.Data.EntityFramework)
+Next, [continue to our wiki](../../wiki).
 
 # Further Reading
 The current state of Cormo's documentation is pretty sad. Well luckily the specs and frameworks that Cormo is based on come with excellent documentations. A lot in those documentations are applicable to Cormo (or what Cormo will come to be), so go and check them out. Just replace the word "Bean" with "Component".
@@ -95,7 +94,7 @@ The current state of Cormo's documentation is pretty sad. Well luckily the specs
 * [Spring Boot](http://projects.spring.io/spring-boot/)  [ [Doc](http://docs.spring.io/spring-boot/docs/1.2.2.BUILD-SNAPSHOT/reference/html/) ]
 * JAX-RS  [ [Doc](http://docs.jboss.org/resteasy/docs/3.0.6.Final/userguide/html/) ]
 
-# NEXT
+# More
 
 TODO: Scopes (Dependent, Singleton, RequestScoped, ResponseScoped, custom scopes)
 
