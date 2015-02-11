@@ -4,7 +4,7 @@ using Cormo.Impl.Weld.Components;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
-    public class MixinResolver: TypeSafeResolver<Mixin, MixinResolvable>
+    public class MixinResolver: ContextualResolver<Mixin, MixinResolvable>
     {
         public MixinResolver(WeldComponentManager manager, IEnumerable<Mixin> allComponents) : base(manager, allComponents)
         {

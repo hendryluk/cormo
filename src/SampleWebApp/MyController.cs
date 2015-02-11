@@ -7,6 +7,7 @@ using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Cormo.Contexts;
+using Cormo.Events;
 using Cormo.Injects;
 using Cormo.Interceptions;
 using Cormo.Web.Api;
@@ -23,7 +24,8 @@ namespace SampleWebApp
     {
         [Inject] UpperCaseGreeter _stringService;                // -> Resolves to UpperCaseGreeter
         [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
-
+        [Inject] private IEvents<string> _someEvents;
+            
         [Route("test/{id}"), HttpGet]
         public string TestWithId(HttpRequestMessage msg)
         {
@@ -33,6 +35,8 @@ namespace SampleWebApp
         [Route("test"), HttpGet, HttpStatusCode(HttpStatusCode.Accepted)]
         public string Test(HttpRequestMessage msg)
         {
+            _someEvents.Fire("Hello");
+
             //throw new Exception("xxx");
             return _stringService.Greet("World");
             //return _stringService.Greet("World") + "/" + GetHashCode();
@@ -94,6 +98,11 @@ namespace SampleWebApp
                 _principal.Identity,
                 xxxx, //_persons.Count(), 
                 Accept) + "/" + id;
+        }
+
+        public void OnHello([Observes] string str )
+        {
+            Debug.WriteLine("Hello " + str);
         }
 
         [Logged]

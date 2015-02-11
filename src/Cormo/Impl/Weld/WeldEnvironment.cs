@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
+using Cormo.Impl.Weld.Introspectors;
 using Cormo.Injects;
 
 namespace Cormo.Impl.Weld
@@ -9,8 +10,11 @@ namespace Cormo.Impl.Weld
     {
         private readonly List<IWeldComponent> _components = new List<IWeldComponent>();
         private readonly List<IWeldComponent> _configurations = new List<IWeldComponent>();
+        private readonly List<EventObserverMethod> _observers = new List<EventObserverMethod>();
+
         public IEnumerable<IWeldComponent> Components { get { return _components; } }
         public IEnumerable<IWeldComponent> Configurations { get { return _configurations; } }
+        public IEnumerable<EventObserverMethod> Observers { get { return _observers; } }
         
         public void AddComponent(IWeldComponent component)
         {
@@ -27,6 +31,11 @@ namespace Cormo.Impl.Weld
             AddComponent(new ValueComponent(instance,
                Binders.Empty, typeof (DependentAttribute),
                 manager));
+        }
+
+        public void AddObserver(EventObserverMethod observer)
+        {
+            _observers.Add(observer);
         }
     }
 }

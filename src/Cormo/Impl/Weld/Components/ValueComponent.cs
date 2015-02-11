@@ -16,13 +16,6 @@ namespace Cormo.Impl.Weld.Components
             _instance = instance;
         }
 
-        public override IWeldComponent Resolve(Type requestedType)
-        {
-            if (requestedType.IsInstanceOfType(_instance))
-                return this;
-            return null;
-        }
-
         public override void Destroy(object instance, ICreationalContext creationalContext)
         {
         }

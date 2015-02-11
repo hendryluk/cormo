@@ -56,9 +56,11 @@
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
+    <Compile Include="Events\IEvents.cs" />
     <Compile Include="Events\ObservesAttribute.cs" />
     <Compile Include="Impl\ValueProvider.cs" />
-    <Compile Include="Impl\Weld\EventObserverMethod.cs" />
+    <Compile Include="Impl\Weld\Components\Events.cs" />
+    <Compile Include="Impl\Weld\Introspectors\EventObserverMethod.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableConstructor.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableMethod.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableMethodBase.cs" />
@@ -71,13 +73,15 @@
     <Compile Include="Impl\Weld\Components\Interceptor.cs" />
     <Compile Include="Impl\Weld\CormoProxyGenerator.cs" />
     <Compile Include="Impl\Weld\CurrentInjectionPoint.cs" />
-    <Compile Include="Impl\Weld\Resolutions\EventResolvable.cs" />
+    <Compile Include="Impl\Weld\Components\EventComponent.cs" />
+    <Compile Include="Impl\Weld\Resolutions\ObserverResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\InterceptorResolver.cs" />
     <Compile Include="Impl\Weld\Resolutions\IntercetorResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\IResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\MixinResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\MixinResolver.cs" />
     <Compile Include="Impl\Weld\Resolutions\ComponentResolvable.cs" />
+    <Compile Include="Impl\Weld\Resolutions\ObserverResolver.cs" />
     <Compile Include="Impl\Weld\Resolutions\TypeSafeResolver.cs" />
     <Compile Include="Impl\Weld\Utils\GenericResolver.cs" />
     <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
@@ -179,7 +183,6 @@
     <Compile Include="Impl\Weld\Utils\InjectionValidator.cs" />
     <Compile Include="Impl\Weld\Utils\ScannerUtils.cs" />
     <Compile Include="Impl\Weld\Utils\TypeUtils.cs" />
-    <Compile Include="Impl\Weld\Validator.cs" />
     <Compile Include="Impl\Weld\WeldComponentManager.cs" />
     <Compile Include="Impl\Weld\WeldEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

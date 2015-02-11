@@ -21,11 +21,6 @@ namespace Cormo.Impl.Weld.Components
 
         public Type[] InterfaceTypes { get; private set; }
 
-        public override IWeldComponent Resolve(Type requestedType)
-        {
-            return requestedType.IsAssignableFrom(Type) ? this : null;
-        }
-
         protected override BuildPlan MakeConstructPlan()
         {
             return InjectableConstructor.Invoke;

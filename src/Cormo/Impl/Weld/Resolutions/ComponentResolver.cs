@@ -3,11 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Cormo.Events;
 using Cormo.Impl.Weld.Components;
+using Cormo.Impl.Weld.Utils;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
-    public class ComponentResolver : TypeSafeResolver<IWeldComponent, ComponentResolvable>
+    public class ComponentResolver : ContextualResolver<IWeldComponent, ComponentResolvable>
     {
         private readonly ConcurrentDictionary<Type, IWeldComponent[]> _typeComponents = new ConcurrentDictionary<Type, IWeldComponent[]>();
 
@@ -19,6 +21,12 @@ namespace Cormo.Impl.Weld.Resolutions
         protected override IEnumerable<IWeldComponent> Resolve(ComponentResolvable resolvable, ref IEnumerable<IWeldComponent> components)
         {
             var results = components.ToArray();
+            
+            if (GenericUtils.OpenIfGeneric(resolvable.Type) == typeof(IEvents<>))
+                return new IWeldComponent[]
+                {new EventComponent(resolvable.Type.GetGenericArguments()[0], new Binders(resolvable.Qualifiers), Manager)};
+                
+
             var unwrappedType = UnwrapType(resolvable.Type);
             var isWrapped = unwrappedType != resolvable.Type;
 

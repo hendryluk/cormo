@@ -4,6 +4,7 @@ using Cormo.Injects;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
+    // TODO: perhaps a struct?
     public class ComponentResolvable: IResolvable
     {
         public Type Type { get; private set; }
@@ -22,7 +23,7 @@ namespace Cormo.Impl.Weld.Resolutions
 
         protected bool Equals(ComponentResolvable other)
         {
-            return Type == other.Type && Equals(Qualifiers.Types, other.Qualifiers.Types);
+            return Type == other.Type && Equals(Qualifiers, other.Qualifiers);
         }
 
         public override bool Equals(object obj)
@@ -37,7 +38,7 @@ namespace Cormo.Impl.Weld.Resolutions
         {
             unchecked
             {
-                return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Qualifiers.Types != null ? Qualifiers.Types.GetHashCode() : 0);
+                return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (Qualifiers != null ? Qualifiers.GetHashCode() : 0);
             }
         }
     }

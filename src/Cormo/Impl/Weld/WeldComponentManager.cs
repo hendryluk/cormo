@@ -8,6 +8,7 @@ using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
+using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Resolutions;
 using Cormo.Impl.Weld.Serialization;
 using Cormo.Impl.Weld.Utils;
@@ -44,7 +45,7 @@ namespace Cormo.Impl.Weld
         private ComponentResolver _componentResolver;
         private MixinResolver _mixinResolver;
         private InterceptorResolver _interceptorResolver;
-        //private EventResolver _eventResolver;
+        private ObserverResolver _observerResolver;
 
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
@@ -88,7 +89,8 @@ namespace Cormo.Impl.Weld
             _mixinResolver = new MixinResolver(this, mixins);
             _interceptorResolver = new InterceptorResolver(this, interceptors);
             _componentResolver = new ComponentResolver(this, environment.Components.Except(mixins).Except(interceptors));
-            
+            _observerResolver = new ObserverResolver(this, environment.Observers);
+
             _componentResolver.Validate();
             ExecuteConfigurations(environment);
         }
@@ -238,6 +240,11 @@ namespace Cormo.Impl.Weld
                 methods = new MethodInfo[0];
 
             return interceptors;
+        }
+
+        public IEnumerable<EventObserverMethod> ResolveObservers(Type eventType, IQualifiers qualifiers)
+        {
+            return _observerResolver.Resolve(new ObserverResolvable(eventType, qualifiers));
         }
     }
 }

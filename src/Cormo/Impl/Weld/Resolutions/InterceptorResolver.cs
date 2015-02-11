@@ -4,7 +4,7 @@ using Cormo.Impl.Weld.Components;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
-    public class InterceptorResolver : TypeSafeResolver<Interceptor, IntercetorResolvable>
+    public class InterceptorResolver : ContextualResolver<Interceptor, IntercetorResolvable>
     {
         public InterceptorResolver(WeldComponentManager manager, IEnumerable<Interceptor> allComponents) 
             : base(manager, allComponents)

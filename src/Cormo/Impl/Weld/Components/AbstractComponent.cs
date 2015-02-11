@@ -65,7 +65,10 @@ namespace Cormo.Impl.Weld.Components
 
         public bool IsProxyRequired { get; private set; }
 
-        public abstract IWeldComponent Resolve(Type requestedType);
+        public virtual IWeldComponent Resolve(Type requestedType)
+        {
+            return requestedType.IsAssignableFrom(Type) ? this : null;
+        }
 
         public object Create(ICreationalContext context)
         {

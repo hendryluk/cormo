@@ -33,6 +33,24 @@ namespace Cormo.Impl.Weld
 
     public class Qualifiers: IQualifiers
     {
+        protected bool Equals(Qualifiers other)
+        {
+            return Equals(Types, other.Types);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Qualifiers) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return (Types != null ? Types.GetHashCode() : 0);
+        }
+
         private readonly IQualifier[] _qualifiers;
 
         public Qualifiers(IEnumerable<IQualifier> qualifiers)

@@ -102,7 +102,10 @@ namespace Cormo.Impl.Weld
                                       select MakeProducerProperty(component, property)).ToArray();
 
             foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
-                _environment.AddComponent(c);   
+                _environment.AddComponent(c);
+
+            foreach (var observer in eventObservers)
+                _environment.AddObserver(observer);
 
         }
 
@@ -118,7 +121,8 @@ namespace Cormo.Impl.Weld
                 if (injectParams.Length > 1)
                     throw new InvalidComponentException(Formatters.MultipleObservesParameter(method));
 
-                yield return new EventObserverMethod(component, injectParams.Single());
+                var param = injectParams.Single();
+                yield return new EventObserverMethod(component, param, param.GetBinders());
             }
         }
 

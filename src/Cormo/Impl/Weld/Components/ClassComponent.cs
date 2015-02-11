@@ -32,7 +32,7 @@ namespace Cormo.Impl.Weld.Components
         {
             ClassComponent component;
             if (IsConcrete)
-                component = requestedType.IsAssignableFrom(Type) ? this : null;
+                component = (ClassComponent) base.Resolve(requestedType);
 
             else
             {

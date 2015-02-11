@@ -12,11 +12,6 @@ namespace Cormo.Impl.Weld.Components
         {
         }
 
-        public override IWeldComponent Resolve(Type requestedType)
-        {
-            return requestedType.IsAssignableFrom(Type) ? this : null;
-        }
-
         public override void Destroy(object instance, ICreationalContext creationalContext)
         {
         }

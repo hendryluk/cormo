@@ -18,11 +18,6 @@ namespace Cormo.Impl.Weld.Components
             _components = components;
         }
 
-        public override IWeldComponent Resolve(Type requestedType)
-        {
-            return this;
-        }
-
         public override void Destroy(object instance, ICreationalContext creationalContext)
         {
             creationalContext.Release();
