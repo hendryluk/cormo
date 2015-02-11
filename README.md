@@ -1,4 +1,4 @@
-### Wiki
+### [Wiki](../../wiki)
 - [Quickstart](../../wiki/quickstart)
 - [CDI Introduction](../../wiki/introduction)
 - [Entity Framework](../../wiki/Cormo.Data.EntityFramework)
