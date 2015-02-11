@@ -88,7 +88,7 @@ Note: Marking your class with [Configuration] ensures your class gets executed b
 [Read more here](http://github.com/hendryluk/cormo/wiki/Cormo.Data.EntityFramework)
 
 # Further Reading
-Cormo combines ideas from these following frameworks. Each comes with great documentation far beyond what Cormo has at the moment (or will ever have). Many of what you'll get from those documentations will be applicable to Cormo (or what Cormo will come to be), so check them out. Just replace the word "Bean" with "Component".
+The current state of Cormo's documentation is pretty sad. Well luckily the specs and frameworks that Cormo is based on come with excellent documentations. A lot in those documentations are applicable to Cormo (or what Cormo will come to be), so go and check them out. Just replace the word "Bean" with "Component".
 * [JBoss Weld](http://weld.cdi-spec.org)  [ [Doc](https://docs.jboss.org/weld/reference/latest/en-US/html/) ]
 * [JBoss Seam 3](http://seamframework.org/Seam3/Home.html)  [ [Doc](https://docs.jboss.org/seam/latest/reference/html/) ]
 * [Spring Framework](http://projects.spring.io/spring-framework/)  [ [Doc](http://docs.spring.io/spring/docs/4.2.0.BUILD-SNAPSHOT/spring-framework-reference/html/) ]
