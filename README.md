@@ -84,7 +84,7 @@ See "Dependency Injection" for more.
 
 Note: Marking your class with [Configuration] ensures your class gets executed before the application starts.
 
-Next, [continue to our wiki](../../wiki).
+### Next, [continue to our wiki](../../wiki).
 
 # Further Reading
 The current state of Cormo's documentation is pretty sad. Well luckily the specs and frameworks that Cormo is based on come with excellent documentations. A lot in those documentations are applicable to Cormo (or what Cormo will come to be), so go and check them out. Just replace the word "Bean" with "Component".
