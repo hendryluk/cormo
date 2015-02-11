@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Utils;
@@ -17,7 +18,7 @@ namespace Cormo.Impl.Weld.Components
             DeclaringComponent = declaringComponent;
         }
 
-        public override bool IsConcrete
+        public bool IsConcrete
         {
             get { return !_containsGenericParameters; }
         }
@@ -44,6 +45,16 @@ namespace Cormo.Impl.Weld.Components
         public override void Destroy(object instance, ICreationalContext creationalContext)
         {
             // TODO DisposeAttribute
+        }
+
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
+        {
+            get { yield return DeclaringComponent; }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get { yield break; }
         }
 
         protected abstract AbstractProducer TranslateTypes(GenericResolver.Resolution resolution);

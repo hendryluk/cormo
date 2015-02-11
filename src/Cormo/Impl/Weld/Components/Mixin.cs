@@ -26,7 +26,7 @@ namespace Cormo.Impl.Weld.Components
             return requestedType.IsAssignableFrom(Type) ? this : null;
         }
 
-        protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
+        protected override BuildPlan MakeConstructPlan()
         {
             return InjectableConstructor.Invoke;
         }

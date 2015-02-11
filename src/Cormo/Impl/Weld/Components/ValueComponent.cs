@@ -16,11 +16,6 @@ namespace Cormo.Impl.Weld.Components
             _instance = instance;
         }
 
-        public override bool IsConcrete
-        {
-            get { return true; }
-        }
-
         public override IWeldComponent Resolve(Type requestedType)
         {
             if (requestedType.IsInstanceOfType(_instance))
@@ -35,6 +30,16 @@ namespace Cormo.Impl.Weld.Components
         protected override BuildPlan GetBuildPlan()
         {
             return _ => _instance;
+        }
+
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
+        {
+            get { yield break; }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get { yield break; }
         }
 
         public override string ToString()

@@ -62,5 +62,27 @@ namespace Cormo.Impl.Weld.Introspectors
             IDictionary<Type, Type> translations);
 
         public bool IsConstructor { get; private set; }
+
+        public IEnumerable<IChainValidatable> LinearValidatables
+        {
+            get
+            {
+                return InjectionPoints
+                        .Where(x => !ScopeAttribute.IsNormal(x.Scope))
+                        .Select(x => x.Component)
+                        .OfType<IWeldComponent>();
+            }
+        }
+
+        public IEnumerable<IChainValidatable> NonLinearValidatables
+        {
+            get
+            {
+                return InjectionPoints
+                        .Where(x => ScopeAttribute.IsNormal(x.Scope))
+                        .Select(x => x.Component)
+                        .OfType<IWeldComponent>();
+            }
+        }
     }
 }

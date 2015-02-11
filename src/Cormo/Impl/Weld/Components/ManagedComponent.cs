@@ -16,10 +16,13 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly bool _isConcrete;
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
-        
-        protected ManagedComponent(ComponentIdentifier id, Type type, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
-            : base(id, type, binders, scope, manager)
+        private readonly InjectableConstructor _injectableConstructor;
+
+        protected ManagedComponent(ComponentIdentifier id, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
+            : base(id, ctor.DeclaringType, binders, scope, manager)
         {
+            _injectableConstructor = new InjectableConstructor(this, ctor);
+            
             PostConstructs = postConstructs;
             _isConcrete = !Type.ContainsGenericParameters;
             IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
@@ -30,8 +33,7 @@ namespace Cormo.Impl.Weld.Components
         protected ManagedComponent(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
             : base(ctor.DeclaringType.FullName, ctor.DeclaringType, binders, scope, manager)
         {
-            var config = ctor.DeclaringType.FullName.EndsWith("Configurator");
-            InjectableConstructor = new InjectableConstructor(this, ctor);
+            _injectableConstructor = new InjectableConstructor(this, ctor);
             
             PostConstructs = postConstructs;
             _isConcrete = !Type.ContainsGenericParameters;
@@ -40,7 +42,7 @@ namespace Cormo.Impl.Weld.Components
             ValidateMethodSignatures();
         }
 
-        protected InjectableConstructor InjectableConstructor { get; private set; }
+        protected InjectableConstructor InjectableConstructor { get { return _injectableConstructor; } }
 
         public override void Touch()
         {
@@ -74,7 +76,7 @@ namespace Cormo.Impl.Weld.Components
 
         private readonly ISet<IWeldInjetionPoint> _memberInjectionPoints = new HashSet<IWeldInjetionPoint>();
         private readonly ISet<InjectableMethod> _injectableMethods = new HashSet<InjectableMethod>();
-
+        
         protected IEnumerable<InjectableMethodBase> InjectableMethods
         {
             get { return _injectableMethods; }
@@ -85,7 +87,6 @@ namespace Cormo.Impl.Weld.Components
             foreach (var inject in injectionPoints)
             {
                 _memberInjectionPoints.Add(inject);
-                AddInjectionPoint(inject);
             }
         }
 
@@ -94,8 +95,6 @@ namespace Cormo.Impl.Weld.Components
             foreach (var method in methods)
             {
                 _injectableMethods.Add(method);
-                foreach (var inject in method.InjectionPoints)
-                    AddInjectionPoint(inject);
             }
         }
 
@@ -111,20 +110,16 @@ namespace Cormo.Impl.Weld.Components
 
         protected override BuildPlan GetBuildPlan()
         {
-            var paramInject = InjectionPoints.OfType<MethodParameterInjectionPoint>().ToArray();
-            var constructPlan = MakeConstructPlan(paramInject.Where(x => x.IsConstructor));
-            var methodInject = InjectMethods(paramInject.Where(x => !x.IsConstructor)).ToArray();
-            var otherInjects = InjectionPoints.Except(paramInject).Cast<IWeldInjetionPoint>();
-
+            var constructPlan = MakeConstructPlan();
             return context =>
             {
                 var instance = constructPlan(context);
                 context.Push(instance);
 
-                foreach (var i in otherInjects)
+                foreach (var i in _memberInjectionPoints)
                     i.Inject(instance, context);
-                foreach (var i in methodInject)
-                    i(instance, context);
+                foreach (var injectableMethod in _injectableMethods)
+                    injectableMethod.InvokeWithInstance(instance, context);
                 foreach (var post in PostConstructs)
                     post.Invoke(instance, new object[0]);
 
@@ -132,7 +127,7 @@ namespace Cormo.Impl.Weld.Components
             };
         }
 
-        protected abstract BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects);
+        protected abstract BuildPlan MakeConstructPlan();
 
         private IEnumerable<InjectPlan> InjectMethods(IEnumerable<MethodParameterInjectionPoint> injects)
         {
@@ -154,8 +149,31 @@ namespace Cormo.Impl.Weld.Components
             }
         }
 
-        public override bool IsConcrete { get { return _isConcrete; } }
+        public bool IsConcrete { get { return _isConcrete; } }
 
         public bool IsDisposable { get; private set; }
+
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
+        {
+            get
+            {
+                if (!IsConcrete)
+                    return new IChainValidatable[0];
+
+                return InjectableConstructor.LinearValidatables;
+            }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get
+            {
+                if (!IsConcrete)
+                    return new IChainValidatable[0];
+
+                return InjectableConstructor.LinearValidatables.Union(
+                    _memberInjectionPoints.Select(x => x.Component).OfType<IWeldComponent>());
+            }
+        }
     }
 }

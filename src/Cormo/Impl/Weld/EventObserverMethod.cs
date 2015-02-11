@@ -4,6 +4,7 @@ using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
+using Cormo.Injects;
 
 namespace Cormo.Impl.Weld
 {

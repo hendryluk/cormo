@@ -15,8 +15,8 @@ namespace Cormo.Impl.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        private ClassComponent(ClassComponent parent, Type type, IBinders binders, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
-            : base(new ComponentIdentifier(parent.Id.Key, type), type, binders, scope, manager,
+        private ClassComponent(ClassComponent parent, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
+            : base(new ComponentIdentifier(parent.Id.Key, ctor.DeclaringType), ctor, binders, scope, manager,
                 parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         {
             parent.TransferInjectionPointsTo(this, typeResolution);
@@ -39,9 +39,11 @@ namespace Cormo.Impl.Weld.Components
                 var resolution = GenericResolver.ImplementerResolver.ResolveType(Type, requestedType);
                 if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                     return null;
+                var resolvedCtor = GenericUtils.TranslateConstructorGenericArguments(InjectableConstructor.Constructor,
+                    resolution.GenericParameterTranslations);
 
                 component = new ClassComponent(this,
-                    resolution.ResolvedType,
+                    resolvedCtor,
                     Binders,
                     Scope, Manager, resolution);
             }
@@ -78,7 +80,7 @@ namespace Cormo.Impl.Weld.Components
             }
         }
         
-        protected override BuildPlan MakeConstructPlan(IEnumerable<MethodParameterInjectionPoint> injects)
+        protected override BuildPlan MakeConstructPlan()
         {
             var mixins = Manager.GetMixins(this);
             // todo: preconstruct/dispose intercetor

@@ -34,9 +34,14 @@ namespace Cormo.Impl.Weld.Components
                 Manager, Qualifiers.ToArray(), _components, context);
         }
 
-        public override bool IsConcrete
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
         {
-            get { return true; }
+            get { yield break; }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get { yield break; }
         }
     }
 }

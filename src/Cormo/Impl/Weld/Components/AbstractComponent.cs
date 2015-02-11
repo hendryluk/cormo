@@ -43,17 +43,6 @@ namespace Cormo.Impl.Weld.Components
 
         public IQualifiers Qualifiers { get { return Binders.Qualifiers; }}
 
-        private readonly ISet<IWeldInjetionPoint> _injectionPoints = new HashSet<IWeldInjetionPoint>();
-        public IEnumerable<IInjectionPoint> InjectionPoints
-        {
-            get { return _injectionPoints; }
-        }
-
-        protected void AddInjectionPoint(IWeldInjetionPoint injectionPoint)
-        {
-            _injectionPoints.Add(injectionPoint);
-        }
-
         public Type Scope { get; private set; }
         public Type Type { get; set; }
 
@@ -63,7 +52,6 @@ namespace Cormo.Impl.Weld.Components
         }
 
         public WeldComponentManager Manager { get; set; }
-        public abstract bool IsConcrete { get; }
         public bool IsConditionalOnMissing { get; private set; }
 
         public virtual void Touch()
@@ -88,5 +76,7 @@ namespace Cormo.Impl.Weld.Components
 
         protected abstract BuildPlan GetBuildPlan();
         public ComponentIdentifier Id { get { return _id; } }
+        public abstract IEnumerable<IChainValidatable> NextLinearValidatables { get; }
+        public abstract IEnumerable<IChainValidatable> NextNonLinearValidatables { get; }
     }
 }

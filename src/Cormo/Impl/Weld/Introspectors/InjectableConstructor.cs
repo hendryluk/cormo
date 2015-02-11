@@ -17,6 +17,8 @@ namespace Cormo.Impl.Weld.Introspectors
             _ctor = ctor;
         }
 
+        public ConstructorInfo Constructor { get { return _ctor; } }
+
         protected override object Invoke(object[] parameters, ICreationalContext creationalContext)
         {
             return Activator.CreateInstance(_ctor.DeclaringType, parameters);

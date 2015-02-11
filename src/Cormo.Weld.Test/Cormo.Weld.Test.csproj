@@ -50,6 +50,7 @@
     <Compile Include="GenericAncestorTypeResolverTest.cs" />
     <Compile Include="GenericMemberTranslationTest.cs" />
     <Compile Include="GenericImplementerTypeResolverTest.cs" />
+    <Compile Include="Injection\CircularDependencyTest.cs" />
     <Compile Include="Injection\GenericsInjectTest.cs" />
     <Compile Include="Injection\ProducerMethodTest.cs" />
     <Compile Include="MemberGenericTypeResolverTest.cs" />

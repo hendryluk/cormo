@@ -16,7 +16,7 @@ using Owin;
 
 namespace SampleWebApp
 {
-    [RestController, RequestScoped]
+    [RestController]
     public class MyController
     // Inheriting ApiController or IHttpController is optional. Cormo.Web will inject that for you.
     // This promotes DI principle and lightweight components.
@@ -70,10 +70,14 @@ namespace SampleWebApp
         }
     }
 
+    public class Haha
+    {
+        [Inject] private UpperCaseGreeter _greeter;
+    }
     //[RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
-
+        [Inject] private Haha _haha;
         [Inject, HeaderParam] string Accept;
         //[Inject] IDbSet<Person> _persons;
         [Inject] private IPrincipal _principal;

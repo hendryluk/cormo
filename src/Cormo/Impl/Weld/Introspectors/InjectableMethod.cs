@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
@@ -22,6 +23,12 @@ namespace Cormo.Impl.Weld.Introspectors
         {
             var containingObject = Method.IsStatic ? null : Component.Manager.GetReference(Component, creationalContext);
             return Method.Invoke(containingObject, parameters);
+        }
+
+        public object InvokeWithInstance(object instance, ICreationalContext creationalContext)
+        {
+            var parameters = GetParameterValues(creationalContext);
+            return Method.Invoke(Method.IsStatic?null: instance, parameters);
         }
 
         public override InjectableMethodBase TranslateGenericArguments(IWeldComponent component, IDictionary<Type, Type> translations)

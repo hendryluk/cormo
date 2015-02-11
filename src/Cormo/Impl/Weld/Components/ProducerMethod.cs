@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using Cormo.Contexts;
 using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
@@ -28,6 +31,22 @@ namespace Cormo.Impl.Weld.Components
         protected override BuildPlan GetBuildPlan()
         {
             return _method.Invoke;
+        }
+
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
+        {
+            get
+            {
+                return base.NextLinearValidatables.Union(
+                    _method.InjectionPoints
+                        .Where(x => !ScopeAttribute.IsNormal(x.Scope))
+                        .Select(x => x.Component).OfType<IWeldComponent>());
+            }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get { return _method.NonLinearValidatables; }
         }
 
         public override string ToString()

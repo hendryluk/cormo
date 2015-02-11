@@ -10,8 +10,8 @@ using Cormo.Injects.Exceptions;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
-    public abstract class TypeSafeResolver<TComponent, TResolvable> 
-        where TComponent:IWeldComponent 
+    public abstract class TypeSafeResolver<TComponent, TResolvable>
+        where TComponent : IChainValidatable, IContextual
         where TResolvable:IResolvable
     {
         protected readonly WeldComponentManager Manager;
@@ -38,23 +38,19 @@ namespace Cormo.Impl.Weld.Resolutions
 
         public void Validate()
         {
-            foreach (var component in _allComponents.Where(x => x.IsConcrete).ToArray())
+            foreach (var component in _allComponents.ToArray())
             {
-                Validate(component, new IComponent[0]);
+                Validate(component, new IChainValidatable[0]);
             }
             _isValidated = true;
         }
 
-        private void Validate(IComponent component, IComponent[] path)
+        private void Validate(IChainValidatable component, IChainValidatable[] path)
         {
             var nextPath = path.Concat(new []{component}).ToArray();
 
             if (path.Contains(component))
                 throw new CircularDependenciesException(nextPath);
-
-            var producer = component as AbstractProducer;
-            if (producer != null)
-                Validate(producer.DeclaringComponent, nextPath);
 
             // This may not be needed since we allow injections of incomplete instance
             //var classComponent = component as ClassComponent;
@@ -65,11 +61,12 @@ namespace Cormo.Impl.Weld.Resolutions
             //    foreach (var interceptor in classComponent.Interceptors)
             //        Validate(interceptor, nextPath);
             //}
-                
-            foreach (var inject in component.InjectionPoints.OfType<IWeldInjetionPoint>())
-            {
-                Validate(inject.Component, (inject.Scope is NormalScopeAttribute)? new IComponent[0] : nextPath);
-            }
+
+            foreach (var next in component.NextLinearValidatables)
+                Validate(next, nextPath);
+
+            component.NextNonLinearValidatables.ToArray();
+            //Validate(next, new IChainValidatable[0]);
         }
 
         protected abstract IEnumerable<TComponent> Resolve(TResolvable resolvable, ref IEnumerable<TComponent> components);
@@ -86,8 +83,8 @@ namespace Cormo.Impl.Weld.Resolutions
                 {
                     _allComponents.Add(c);
                     Manager.ContextualStore.PutIfAbsent(c);
-                    if (_isValidated)
-                        Validate(c, new IComponent[0]);
+                    //if (_isValidated)
+                        Validate(c, new IChainValidatable[0]);
                 }
 
                 return results.ToArray();

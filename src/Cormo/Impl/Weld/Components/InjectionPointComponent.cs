@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Cormo.Contexts;
 using Cormo.Injects;
 
@@ -25,9 +26,14 @@ namespace Cormo.Impl.Weld.Components
             return context => Manager.GetService<CurrentInjectionPoint>().Peek();
         }
 
-        public override bool IsConcrete
+        public override IEnumerable<IChainValidatable> NextLinearValidatables
         {
-            get { return true; }
+            get { yield break; }
+        }
+
+        public override IEnumerable<IChainValidatable> NextNonLinearValidatables
+        {
+            get { yield break; }
         }
     }
 }
