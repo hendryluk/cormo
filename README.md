@@ -35,8 +35,6 @@ That was the only file you need to have in the project. Now build and run it on 
 
 Note that extending ApiController or IHttpController is optional. At runtime Cormo.Web will inject that for you (see: Mixins). This is to promote lightweight POCOs and dependency injection principles, keeping testability and sanity of your code. ApiController class carries heavy infrastructural baggage that goes agains the spirit of CDI, so we encourage to keep that away from your POCO and let Cormo.Web take care of wiring that up from behind the stage.
 
-[A single-file sample app] (https://github.com/hendryluk/cormo/blob/master/src/SampleWebApp/MyController.cs)
-
 # Dependency Injection
 Dependency Injection is fully configured for you. No additional setup needed.
 Example:
