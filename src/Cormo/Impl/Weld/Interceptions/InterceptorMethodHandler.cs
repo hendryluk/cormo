@@ -29,7 +29,7 @@ namespace Cormo.Impl.Weld.Interceptions
                 _isAsync = true;
                 _taskCaster = null;
             }
-            else if (returnType.IsGenericParameter)
+            else if (returnType.IsGenericType)
             {
                 var genericType = returnType.GetGenericTypeDefinition();
                 if (genericType == typeof (Task<>))

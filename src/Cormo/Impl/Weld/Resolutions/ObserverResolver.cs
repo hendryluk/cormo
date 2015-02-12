@@ -15,7 +15,8 @@ namespace Cormo.Impl.Weld.Resolutions
         {
             return observers
                 .Where(x => x.Qualifiers.CanSatisfy(resolvable.Qualifiers))
-                .Select(x => x.Resolve(resolvable.EventType));
+                .Select(x => x.Resolve(resolvable.EventType))
+                .Where(x=> x!=null);
         }
     }
 }

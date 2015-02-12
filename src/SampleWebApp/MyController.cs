@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Cormo.Contexts;
+using Cormo.Data.EntityFramework.Api.Events;
 using Cormo.Events;
 using Cormo.Injects;
 using Cormo.Interceptions;
@@ -33,7 +36,7 @@ namespace SampleWebApp
         }
 
         [Route("test"), HttpGet, HttpStatusCode(HttpStatusCode.Accepted)]
-        public string Test(HttpRequestMessage msg)
+        public Task<string> Test(HttpRequestMessage msg)
         {
             _someEvents.Fire("Hello");
 
@@ -43,7 +46,7 @@ namespace SampleWebApp
         }
 
         [Route("testMany"), HttpGet]
-        public string TestMany([Value(Default = 100)]int aaa)
+        public Task<string> TestMany([Value(Default = 100)]int aaa)
         {
             return _integersService.Greet(new[] { 1, 2, 3, 4, 5 });
         }
@@ -53,7 +56,7 @@ namespace SampleWebApp
     public interface IGreeter<T>
     {
         [Logged]
-        string Greet(T val);
+        Task<string> Greet(T val);
     }
 
     [Value("limit", Default = 50)]
@@ -65,7 +68,7 @@ namespace SampleWebApp
     {
     }
 
-    [Logged]
+    [Interceptor, Logged]
     public class LoggingInterceptor: IAroundInvokeInterceptor
     {
         public async Task<object> AroundInvoke(IInvocationContext invocationContext)
@@ -83,7 +86,7 @@ namespace SampleWebApp
     {
         [Inject] private Haha _haha;
         [Inject, HeaderParam] string Accept;
-        //[Inject] IDbSet<Person> _persons;
+        [Inject] IDbSet<Person> _persons;
         [Inject] private IPrincipal _principal;
 
         //[Inject, RouteParam]
@@ -92,11 +95,11 @@ namespace SampleWebApp
         [Inject, Limit] private int xxxx;
 
         [Logged]
-        public virtual string Greet(string val)
+        public virtual async Task<string> Greet(string val)
         {
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity,
-                xxxx, //_persons.Count(), 
+                _persons.Count(), 
                 Accept) + "/" + id;
         }
 
@@ -135,13 +138,13 @@ namespace SampleWebApp
     [SessionScoped]
     public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>
     {
-        public string Greet(IEnumerable<T> vals)
+        public async Task<string> Greet(IEnumerable<T> vals)
         {
             return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }
     }
 
-    [Configuration]
+    [Configuration, Singleton]
     public class MyConfig
     {
         [Inject]
@@ -149,6 +152,11 @@ namespace SampleWebApp
         {
             config.Routes.MapHttpRoute("api", "api/{controller}");
             builder.UseWebApi(config);
+        }
+
+        public void Creating([Observes] ModelCreating modelCreating)
+        {
+            
         }
     }
 }

@@ -8,6 +8,8 @@ using System.Security.Principal;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api;
 using Cormo.Data.EntityFramework.Api.Audits;
+using Cormo.Data.EntityFramework.Api.Events;
+using Cormo.Events;
 using Cormo.Injects;
 
 namespace Cormo.Data.EntityFramework.Impl
@@ -45,12 +47,15 @@ namespace Cormo.Data.EntityFramework.Impl
         public class DbContexts
         {
             [Inject] IComponentManager _manager;
+            [Inject] private IEvents<ModelCreating> _modelCreatingEvents;
+ 
             private readonly ConcurrentDictionary<string, DbContext> _contexts = new ConcurrentDictionary<string, DbContext>(); 
             public virtual DbContext GetContext(IInjectionPoint injectionPoint)
             {
                 var connectionName = GetConnectionName(injectionPoint);
                 return _contexts.GetOrAdd(connectionName, _=> new CormoDbContext(connectionName,
-                    _entityTypes.Select(x => GetEntityInfo(_manager, x)).ToArray()));
+                    _entityTypes.Select(x => GetEntityInfo(_manager, x)).ToArray(),
+                    _modelCreatingEvents));
             }
 
             private string GetConnectionName(IInjectionPoint injectionPoint)

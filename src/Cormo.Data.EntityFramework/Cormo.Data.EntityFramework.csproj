@@ -58,6 +58,7 @@
     <Compile Include="Api\Audits\LastModifiedByAttribute.cs" />
     <Compile Include="Api\Audits\LastModifiedDateAttribute.cs" />
     <Compile Include="Api\EntityContextAttribute.cs" />
+    <Compile Include="Api\Events\ModelCreating.cs" />
     <Compile Include="Api\TransactionalAttribute.cs" />
     <Compile Include="Impl\CormoDbContext.cs" />
     <Compile Include="Impl\EntityContextProducer.cs" />

@@ -1,17 +1,21 @@
 ﻿using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
+using Cormo.Data.EntityFramework.Api.Events;
+using Cormo.Events;
 
 namespace Cormo.Data.EntityFramework.Impl
 {
     public class CormoDbContext : DbContext
     {
         private readonly EntityInfo[] _entities;
+        private readonly IEvents<ModelCreating> _modelCreatingEvents;
 
-        public CormoDbContext(string connectionName, EntityInfo[] entities)
+        public CormoDbContext(string connectionName, EntityInfo[] entities, IEvents<ModelCreating> modelCreatingEvents)
             : base(connectionName)
         {
             _entities = entities;
+            _modelCreatingEvents = modelCreatingEvents;
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
@@ -19,6 +23,7 @@ namespace Cormo.Data.EntityFramework.Impl
             foreach (var entity in _entities)
                 modelBuilder.RegisterEntityType(entity.Type);
 
+            _modelCreatingEvents.Fire(new ModelCreating(modelBuilder));
             base.OnModelCreating(modelBuilder);
         }
 
