@@ -48,7 +48,7 @@ namespace Cormo.Impl.Weld
         }
 
         // Declaring known built-in types explicitly for performance reason
-        private static readonly Type[] BuiltInTypes = {typeof(ValueProvider)};
+        private static readonly Type[] BuiltInTypes = { typeof(ValueProvider), typeof(AppSettingsValueProvider) };
 
         public void AutoScan()
         {

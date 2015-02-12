@@ -12,7 +12,7 @@ namespace Cormo.Data.EntityFramework.Api
         {
         }
 
-        private EntityContextAttribute(string connectionName)
+        public EntityContextAttribute(string connectionName)
         {
             ConnectionName = connectionName;
         }
