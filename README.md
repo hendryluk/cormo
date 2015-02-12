@@ -9,8 +9,8 @@
 # Cormo
 Cormo is a .NET application development framework that brings both [Spring](http://spring.io) and the CDI (Contexts and Dependency Injection) spec from Java EE (specifically its implementation by [JBoss Weld] (http://weld.cdi-spec.org)) into .NET development.
 
-Cormo's main objectives:
-* A simpler way for application components to interact. Traditional layered architecture is often rigidly bloated with vertical stacks of indirections that become heavy and unmanageable as your codebase grows. JavaEE 6 introduced CDI as the standard glue for independent parts of your application, which uses contextual awareness to provide a loosely-coupled way to reference functionalities from different parts of your application, eliminating several layers of indirections and abstractions, resulting in a more organic and pragmatic layering. It makes many common .NET patterns and "best-practices" superfluous (interfaces, repository, read/write services, commands, handlers, event-bus). Instead the magic words are YAGNI and KISS. ([Read#1](http://www.oracle.com/au/products/database/o11java-195110.html), [Read#2](http://antoniogoncalves.org/2013/10/29/several-architectural-styles-with-java-ee-7/))
+Cormo's main objectives is Productivity.
+* A simpler way for application components to interact. Traditional layered architecture is often rigidly bloated with vertical stacks of indirections that become heavy and unmanageable as your codebase grows. JavaEE 6 introduced CDI as the standard glue for independent parts of your application and eliminates several layers of indirections and abstractions, resulting in a more organic and pragmatic layering. It makes many common .NET patterns and "best-practices" superfluous (interfaces, repository, read/write services, commands, handlers, event-bus). Instead the magic words are YAGNI and KISS. ([Read#1](http://www.oracle.com/au/products/database/o11java-195110.html), [Read#2](http://antoniogoncalves.org/2013/10/29/several-architectural-styles-with-java-ee-7/))
 * Remove ceremonies out of writing code. Cormo aims to provide an environment to develop and host modules that you can pick and plug onto your application to speed up development and take care of plumbing works so you don't have to. Writing code shouldn't be so hard: configuring IoC, ORM, auditing, security, messaging, events, logging, transactions, scheduling, health-monitoring, etc, I want to only need to say so and they just happen. [Spring-Boot](http://projects.spring.io/spring-boot/) is a great framework that currently offers such capability, and Cormo tries to bring it to .NET environment.
 
 # Getting Started
@@ -34,8 +34,6 @@ public class MyController
 That was the only file you need to have in the project. Now build and run it on the browser.
 
 Note that extending ApiController or IHttpController is optional. At runtime Cormo.Web will inject that for you (see: Mixins). This is to promote lightweight POCOs and dependency injection principles, keeping testability and sanity of your code. ApiController class carries heavy infrastructural baggage that goes agains the spirit of CDI, so we encourage to keep that away from your POCO and let Cormo.Web take care of wiring that up from behind the stage.
-
-[A single-file sample app] (https://github.com/hendryluk/cormo/blob/master/src/SampleWebApp/MyController.cs)
 
 # Dependency Injection
 Dependency Injection is fully configured for you. No additional setup needed.
