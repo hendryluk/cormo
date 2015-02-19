@@ -3,7 +3,7 @@ using Cormo.Interceptions;
 
 namespace Cormo.Catch
 {
-    public interface ICaughtException<T> where T:Exception
+    public interface ICaughtException<out T> where T:Exception
     {
         /// <summary>
         /// Instructs the dispatcher to terminate additional handler processing and mark the event as handled.
@@ -28,5 +28,7 @@ namespace Cormo.Catch
         T Exception { get; }
         IInvocationContext InvocationContext { get; }
         Exception ThrownException { get; }
+        bool IsMarkedHandled { get; }
+        bool StopsHandling { get; }
     }
 }

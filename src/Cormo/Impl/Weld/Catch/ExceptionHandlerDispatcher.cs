@@ -27,18 +27,18 @@ namespace Cormo.Impl.Weld.Catch
             var context = new ExceptionHandlingContext(invocationContext, exception);
             DispatchCauses(exception, context);
 
-            return context.IsHandled;
+            return context.IsMarkedHandled;
         }
 
         private void DispatchCauses(Exception exception, ExceptionHandlingContext context)
         {
-            if (context.StopProcessing)
+            if (context.StopsHandling)
                 return;
 
             if (exception.InnerException != null)
             {
                 DispatchCauses(exception.InnerException, context);
-                if (context.StopProcessing)
+                if (context.StopsHandling)
                     return;
             }
 
@@ -53,7 +53,7 @@ namespace Cormo.Impl.Weld.Catch
             foreach (var handler in handlers)
             {
                 handler.Notify(caught);
-                if (context.IsHandled)
+                if (context.IsMarkedHandled)
                     break;
             }
         }
@@ -67,11 +67,11 @@ namespace Cormo.Impl.Weld.Catch
             {
                 InvocationContext = invocationContext;
                 Exception = exception;
-                IsHandled = true;
+                IsMarkedHandled = true;
             }
 
-            public bool IsHandled { get; set; }
-            public bool StopProcessing { get; set; }
+            public bool IsMarkedHandled { get; set; }
+            public bool StopsHandling { get; set; }
         }
 
         public class CaughtException<T> : ICaughtException<T> where T : Exception
@@ -85,6 +85,9 @@ namespace Cormo.Impl.Weld.Catch
                 Exception = exception;
             }
 
+            public bool IsMarkedHandled { get { return _context.IsMarkedHandled; } }
+            public bool StopsHandling { get { return _context.StopsHandling; } }
+
             public IInvocationContext InvocationContext
             {
                 get { return _context.InvocationContext; }
@@ -97,22 +100,22 @@ namespace Cormo.Impl.Weld.Catch
 
             public void Handled()
             {
-                _context.IsHandled = _context.StopProcessing = true;
+                _context.IsMarkedHandled = _context.StopsHandling = true;
             }
 
             public void MarkHandled()
             {
-                _context.IsHandled = true;
+                _context.IsMarkedHandled = true;
             }
 
             public void Abort()
             {
-                _context.StopProcessing = true;
+                _context.StopsHandling = true;
             }
 
             public void Rethrow()
             {
-                _context.IsHandled = false;
+                _context.IsMarkedHandled = false;
             }
         }
     }

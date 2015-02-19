@@ -48,9 +48,7 @@ namespace Cormo.Impl.Weld.Utils
 
             if (error != null)
             {
-                var message = string.Format("Normal-scoped component must be proxyable, consider using IInstance<> instead. {0}Reason: {1}", 
-                    injectionPoint==null?"": "Injected at: " + injectionPoint + ".", 
-                    error);
+                var message = Formatters.FormatUnproxiableType(injectionPoint, error);
                 throw new NonProxiableTypeException(type, message);
             }
         }
@@ -90,7 +88,7 @@ namespace Cormo.Impl.Weld.Utils
                 {
                     builder.Append(
                         string.Format("These public members must be virtual: {0}",
-                            string.Join(",/n", sealedMembers.Select(x => x.ToString()))));
+                            string.Join(",/n", sealedMembers.Select(Formatters.Format))));
                 }
 
                 var publicFields = TypeUtils.GetPublicFields(type);

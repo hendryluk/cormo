@@ -9,7 +9,7 @@ namespace Cormo.Web.Impl
     [CatchResource, RequestScoped]
     public class CatchResponseMessageProducer
     {
-        [Inject] ResponseEnrichers _enrichers;
+        [Inject] HttpResponseEnrichers _enrichers;
         private HttpResponseMessage _response;
 
         public virtual void ProvideResponse(HttpResponseMessage response)

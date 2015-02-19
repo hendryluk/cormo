@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Cormo.Injects;
 
 namespace Cormo.Impl.Weld
 {
@@ -33,6 +34,19 @@ namespace Cormo.Impl.Weld
         public static string WrongHandlesParamType(ParameterInfo parameter)
         {
             return string.Format("[Handles] must take CaughtException<> parameter at [{0}]", parameter.Member);
+        }
+
+        public static string FormatUnproxiableType(IInjectionPoint injectionPoint, string reason)
+        {
+            return string.Format("Normal-scoped component must be proxyable, consider using IInstance<> instead. {0}Reason: {1}",
+                    injectionPoint == null ? "" : "Injected at: " + injectionPoint + ". ",
+                    reason);
+        }
+
+        public static object Format(MemberInfo method)
+        {
+            // TODO: make it pretty
+            return method.ToString();
         }
     }
 }

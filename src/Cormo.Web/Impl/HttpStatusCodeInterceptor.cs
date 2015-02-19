@@ -9,7 +9,7 @@ namespace Cormo.Web.Impl
     [Interceptor, HttpStatusCode]
     public class HttpStatusCodeInterceptor : IAroundInvokeInterceptor
     {
-        [Inject]ResponseEnrichers _enrichers;
+        [Inject]HttpResponseEnrichers _enrichers;
         
         public Task<object> AroundInvoke(IInvocationContext invocationContext)
         {

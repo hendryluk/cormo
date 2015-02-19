@@ -100,6 +100,7 @@
     <Compile Include="Impl\HttpSessionContextRegistrar.cs" />
     <Compile Include="Impl\HttpStatusCodeInterceptor.cs" />
     <Compile Include="Impl\InjectParameterBinding.cs" />
+    <Compile Include="Impl\ResponseEnrichers.cs" />
     <Compile Include="Impl\RouteParamProducer.cs" />
     <Compile Include="Impl\QueryParamProducer.cs" />
     <Compile Include="Impl\RequestProducerHandler.cs" />
