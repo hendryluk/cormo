@@ -5,6 +5,7 @@
 - [Events and Observers] (../../wiki/Events-and-Observers)
 - [Interceptors] (../../wiki/interceptors)
 - [Scopes and Contexts](../../wiki/Scopes-and-Contexts)
+- [Exception Handlers](../../wiki/Exception-Handlers)
 
 # Cormo
 Cormo is a .NET application development framework that brings both [Spring](http://spring.io) and the CDI (Contexts and Dependency Injection) spec from Java EE (specifically its implementation by [JBoss Weld] (http://weld.cdi-spec.org)) into .NET development.
