@@ -15,10 +15,10 @@ namespace Cormo.Web.Impl
     [Configuration]
     public class WebApiRegistrar
     {
-        [Inject, Provider] private IDependencyResolver _resolver;
-        [Inject, Provider] private IInstance<IFilter> _filters;
-        [Inject, Provider] private IInstance<DelegatingHandler> _delegatingHandlers;
-        [Inject, Provider] private IContractResolver _contractResolver;
+        [Inject, WebProvider] private IDependencyResolver _resolver;
+        [Inject, WebProvider] private IInstance<IFilter> _filters;
+        [Inject, WebProvider] private IInstance<DelegatingHandler> _delegatingHandlers;
+        [Inject, WebProvider] private IContractResolver _contractResolver;
 
         [Inject]
         public virtual void Setup(IComponentManager manager, HttpConfiguration config)
@@ -40,7 +40,7 @@ namespace Cormo.Web.Impl
             [Produces, Singleton]
             private readonly HttpConfiguration _configuration = GlobalConfiguration.Configuration;
 
-            [Produces, Singleton, Provider, ConditionalOnMissingComponent]
+            [Produces, Singleton, WebProvider, ConditionalOnMissingComponent]
             private readonly IContractResolver _contractResolver = new CamelCasePropertyNamesContractResolver();
         }
     }

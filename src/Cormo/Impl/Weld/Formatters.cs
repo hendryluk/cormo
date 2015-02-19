@@ -10,6 +10,11 @@ namespace Cormo.Impl.Weld
             return string.Format("Method [{0}] has more than one parameter marked with [Observes]", methodInfo);
         }
 
+        public static string MultipleHandlesParameter(MethodInfo methodInfo)
+        {
+            return string.Format("Method [{0}] has more than one parameter marked with [Handles]", methodInfo);
+        }
+
         private static string Method(MethodInfo method)
         {
             return method.ToString();
@@ -23,6 +28,11 @@ namespace Cormo.Impl.Weld
                 name = name.Substring(0, name.Length - "Attribute".Length);
             }
             return "[" + name + "]";
+        }
+
+        public static string WrongHandlesParamType(ParameterInfo parameter)
+        {
+            return string.Format("[Handles] must take CaughtException<> parameter at [{0}]", parameter.Member);
         }
     }
 }

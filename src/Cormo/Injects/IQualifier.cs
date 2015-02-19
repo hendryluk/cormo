@@ -1,4 +1,5 @@
 ﻿using System;
+using Cormo.Catch;
 
 namespace Cormo.Injects
 {

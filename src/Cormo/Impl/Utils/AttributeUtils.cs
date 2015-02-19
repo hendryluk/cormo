@@ -34,30 +34,23 @@ namespace Cormo.Impl.Utils
             return GetAttributesRecursive(attributeProvider).OfType<T>();
         }
 
-        public static IEnumerable<Attribute> GetAttributesRecursive(this IEnumerable<Attribute> attributes)
-        {
-            var cormoAttributes = attributes.ToArray();
-            return cormoAttributes.Union(
-                    cormoAttributes.OfType<StereotypeAttribute>().SelectMany(x => GetAttributesRecursive(x.GetType())));
-        }
-
         public static IEnumerable<T> GetAttributesRecursive<T>(this IEnumerable<Attribute> attributes) where T:IBinderAttribute
         {
             return GetAttributesRecursive(attributes).OfType<T>();
         }
 
-        public static IEnumerable<Attribute> GetAttributesRecursive(this ICustomAttributeProvider attributeProvider)
+        public static IEnumerable<Attribute> GetAttributesRecursive(this IEnumerable<Attribute> attributes)
         {
-            var attributes = new HashSet<Attribute>();
-            var list = new LinkedList<ICustomAttributeProvider>();
-            list.AddLast(attributeProvider);
+            var attributeSet = new HashSet<Attribute>();
+            var list = new LinkedList<IEnumerable<Attribute>>();
+            list.AddLast(attributes);
 
             for (var node = list.First; node != null; node = node.Next)
-                foreach (var attribute in node.Value.GetCustomAttributes(true).OfType<Attribute>())
+                foreach (var attribute in node.Value)
                 {
                     try
                     {
-                        if (!attributes.Add(attribute)) // Try catch: sometimes GetHashCode may throw exception
+                        if (!attributeSet.Add(attribute)) // Try catch: sometimes GetHashCode may throw exception
                             continue;
                     }
                     catch (Exception)
@@ -67,9 +60,14 @@ namespace Cormo.Impl.Utils
 
                     yield return attribute;
 
-                    if(attribute is StereotypeAttribute)
-                        list.AddLast(attribute.GetType());
+                    if (attribute is IStereotype)
+                        list.AddLast(((IStereotype)attribute).Attributes);
                 }
+        }
+
+        public static IEnumerable<Attribute> GetAttributesRecursive(this ICustomAttributeProvider attributeProvider)
+        {
+            return GetAttributesRecursive(attributeProvider.GetCustomAttributes(true).OfType<Attribute>());
         }
 
         public static IBinders GetBinders(this ICustomAttributeProvider attributeProvider)

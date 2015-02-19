@@ -1,26 +1,31 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
+using Cormo.Injects;
 using Cormo.Interceptions;
 
 namespace Cormo.Impl.Weld.Interceptions
 {
     public class InvocationContext : IInvocationContext
     {
+        private readonly Lazy<IEnumerable<IInterceptorBinding>> _bindingsLazy;
         private readonly IInvocation _castleInvocation;
         private LinkedListNode<IAroundInvokeInterceptor> _nextInterceptor;
         private readonly bool _isAsync;
         private readonly ITaskCaster _taskCaster;
 
-        public InvocationContext(IInvocation castleInvocation, LinkedListNode<IAroundInvokeInterceptor> nextInterceptor, bool isAsync, ITaskCaster taskCaster)
+        public InvocationContext(Lazy<IEnumerable<IInterceptorBinding>> bindingsLazy, IInvocation castleInvocation, LinkedListNode<IAroundInvokeInterceptor> nextInterceptor, bool isAsync, ITaskCaster taskCaster)
         {
+            _bindingsLazy = bindingsLazy;
             _castleInvocation = castleInvocation;
             _nextInterceptor = nextInterceptor;
             _isAsync = isAsync;
             _taskCaster = taskCaster;
         }
 
+        public IEnumerable<IInterceptorBinding> Bindings { get { return _bindingsLazy.Value; } }
         public object Target { get { return _castleInvocation.InvocationTarget; } }
         public MethodInfo Method { get { return _castleInvocation.Method; } }
         public Task<object> Proceed()

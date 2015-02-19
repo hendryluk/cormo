@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Cormo.Catch;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api.Events;
 using Cormo.Events;
@@ -36,7 +37,7 @@ namespace SampleWebApp
         }
 
         [Route("test"), HttpGet, HttpStatusCode(HttpStatusCode.Accepted)]
-        public Task<string> Test(HttpRequestMessage msg)
+        public virtual string Test(HttpRequestMessage msg)
         {
             _someEvents.Fire("Hello");
 
@@ -45,8 +46,10 @@ namespace SampleWebApp
             //return _stringService.Greet("World") + "/" + GetHashCode();
         }
 
+        
+
         [Route("testMany"), HttpGet]
-        public Task<string> TestMany([Value(Default = 100)]int aaa)
+        public string TestMany([Value(Default = 100)]int aaa)
         {
             return _integersService.Greet(new[] { 1, 2, 3, 4, 5 });
         }
@@ -56,7 +59,7 @@ namespace SampleWebApp
     public interface IGreeter<T>
     {
         [Logged]
-        Task<string> Greet(T val);
+        string Greet(T val);
     }
 
     [Value("limit", Default = 50)]
@@ -81,6 +84,25 @@ namespace SampleWebApp
     {
         [Inject] private UpperCaseGreeter _greeter;
     }
+
+    public class HendersException : Exception
+    {
+
+    }
+
+    public class HendersHandler
+    {
+        //public void OnHenders([Handles] ICaughtException<HendersException> e, [CatchResource]HttpResponseMessage message)
+        //{
+        //    message.StatusCode = HttpStatusCode.NotFound;
+        //}
+
+        [HttpStatusCode(HttpStatusCode.Unauthorized)]
+        public virtual void OnHenders([Handles] ICaughtException<HendersException> e)
+        {
+        }
+    }
+
     //[RequestScoped]
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
@@ -94,9 +116,10 @@ namespace SampleWebApp
 
         [Inject, Limit] private int xxxx;
 
-        [Logged]
-        public virtual async Task<string> Greet(string val)
+        [ExceptionsHandled]
+        public virtual string Greet(string val)
         {
+            throw new HendersException();
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity,
                 _persons.Count(), 
@@ -138,7 +161,7 @@ namespace SampleWebApp
     [SessionScoped]
     public class EnumerableeGreeter<T>: IGreeter<IEnumerable<T>>
     {
-        public async Task<string> Greet(IEnumerable<T> vals)
+        public string Greet(IEnumerable<T> vals)
         {
             return string.Format("Hello many {0} ({1})", string.Join(",", vals), GetHashCode());
         }

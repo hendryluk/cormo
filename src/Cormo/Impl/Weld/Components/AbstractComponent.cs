@@ -21,7 +21,7 @@ namespace Cormo.Impl.Weld.Components
             Manager = manager;
             Binders = binders;
             Scope = scope;
-            IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope);
+            IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(scope) && !binders.OfType<UnwrapAttribute>().Any();
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
             IsConditionalOnMissing = binders.OfType<ConditionalOnMissingComponentAttribute>().Any();
         }

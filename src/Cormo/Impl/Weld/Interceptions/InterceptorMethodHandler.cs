@@ -6,6 +6,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Castle.DynamicProxy;
 using Cormo.Contexts;
+using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Interceptions;
 
@@ -16,12 +17,15 @@ namespace Cormo.Impl.Weld.Interceptions
         private readonly LinkedList<IAroundInvokeInterceptor> _interceptorReferences;
         private readonly bool _isAsync;
         private readonly ITaskCaster _taskCaster;
+        private readonly Lazy<IEnumerable<IInterceptorBinding>> _bindingsLazy; 
 
         public InterceptorMethodHandler(WeldComponentManager manager, MethodInfo method, Interceptor[] interceptors, ICreationalContext creationalContext)
         {
             _interceptorReferences = new LinkedList<IAroundInvokeInterceptor>(
                 interceptors.Select(x => manager.GetReference(x, creationalContext))
                     .Cast<IAroundInvokeInterceptor>());
+
+            _bindingsLazy = new Lazy<IEnumerable<IInterceptorBinding>>(()=> method.GetBinders().OfType<IInterceptorBinding>().ToArray());
 
             var returnType = method.ReturnType;
             if (returnType == typeof (Task))
@@ -42,7 +46,7 @@ namespace Cormo.Impl.Weld.Interceptions
 
         public void Invoke(IInvocation castleInvocation)
         {
-            var result = new InvocationContext(castleInvocation, _interceptorReferences.First, _isAsync, _taskCaster).Proceed();
+            var result = new InvocationContext(_bindingsLazy, castleInvocation, _interceptorReferences.First, _isAsync, _taskCaster).Proceed();
 
             if (_isAsync)
             {

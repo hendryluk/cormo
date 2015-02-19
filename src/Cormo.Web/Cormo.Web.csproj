@@ -80,7 +80,7 @@
     </Compile>
     <Compile Include="Api\EnableHttpSessionAttribute.cs" />
     <Compile Include="Api\HttpStatusCodeAttribute.cs" />
-    <Compile Include="Api\Provider.cs" />
+    <Compile Include="Api\WebProvider.cs" />
     <Compile Include="Api\HeaderParamAttribute.cs" />
     <Compile Include="Api\Response.cs" />
     <Compile Include="Api\RouteParamAttribute.cs" />
@@ -95,13 +95,15 @@
     <Compile Include="Impl\Contexts\HttpRequestContext.cs" />
     <Compile Include="Impl\CookieParamProducer.cs" />
     <Compile Include="Impl\HeaderParamProducer.cs" />
+    <Compile Include="Impl\CatchResponseMessageProducer.cs" />
     <Compile Include="Impl\HttpRequestContextRegistrar.cs" />
     <Compile Include="Impl\HttpSessionContextRegistrar.cs" />
+    <Compile Include="Impl\HttpStatusCodeInterceptor.cs" />
     <Compile Include="Impl\InjectParameterBinding.cs" />
     <Compile Include="Impl\RouteParamProducer.cs" />
     <Compile Include="Impl\QueryParamProducer.cs" />
     <Compile Include="Impl\RequestProducerHandler.cs" />
-    <Compile Include="Impl\StatusCodeFilter.cs" />
+    <Compile Include="Impl\MessageEnricherFilter.cs" />
     <Compile Include="Impl\WebApiRegistrar.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

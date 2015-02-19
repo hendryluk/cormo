@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
@@ -21,8 +22,7 @@ namespace Cormo.Impl.Weld.Introspectors
             _eventType = parameter.ParameterType;
             IsConcrete = _eventType.ContainsGenericParameters;
             _method = new InjectableMethod(component, (MethodInfo) parameter.Member, parameter);
-            NextLinearValidatables = _method.LinearValidatables;
-            NextNonLinearValidatables = _method.NonLinearValidatables;
+            NextNonLinearValidatables = _method.LinearValidatables.Union(_method.NonLinearValidatables);
         }
 
         public bool IsConcrete { get; set; }
@@ -56,7 +56,7 @@ namespace Cormo.Impl.Weld.Introspectors
             _method.InvokeWithSpecialValue(creationalContext, ev);
         }
 
-        public IEnumerable<IChainValidatable> NextLinearValidatables { get; private set; }
+        public IEnumerable<IChainValidatable> NextLinearValidatables { get { yield break; } }
         public IEnumerable<IChainValidatable> NextNonLinearValidatables { get; private set; }
         public IQualifiers Qualifiers { get { return _binders.Qualifiers; } }
     }

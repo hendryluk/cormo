@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using Cormo.Catch;
 using Cormo.Contexts;
 using Cormo.Events;
+using Cormo.Impl.Solder;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
@@ -48,7 +50,10 @@ namespace Cormo.Impl.Weld
         }
 
         // Declaring known built-in types explicitly for performance reason
-        private static readonly Type[] BuiltInTypes = { typeof(ValueProvider), typeof(AppSettingsValueProvider) };
+        private static readonly Type[] BuiltInTypes =
+        {
+            typeof(ValueProvider), typeof(AppSettingsValueProvider), typeof(ExceptionHandlingInterceptor)
+        };
 
         public void AutoScan()
         {
@@ -82,6 +87,7 @@ namespace Cormo.Impl.Weld
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
             var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
+            var exceptionHandlers = components.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
 
             var producerFields = (from component in components.AsParallel()
                                   let type = component.Type
@@ -106,7 +112,8 @@ namespace Cormo.Impl.Weld
 
             foreach (var observer in eventObservers)
                 _environment.AddObserver(observer);
-
+            foreach (var handler in exceptionHandlers)
+                _environment.AddExceptionHandlers(handler);
         }
 
         private static IEnumerable<EventObserverMethod> FindEventObservers(IWeldComponent component)
@@ -114,7 +121,7 @@ namespace Cormo.Impl.Weld
             foreach (var method in component.Type.GetMethods())
             {
                 var injectParams = method.GetParameters()
-                    .Where(AttributeUtils.HasAttribute<ObservesAttribute>)
+                    .Where(AttributeUtils.HasAttributeRecursive<ObservesAttribute>)
                     .ToArray();
                 if(!injectParams.Any())
                     continue;
@@ -122,6 +129,26 @@ namespace Cormo.Impl.Weld
                     throw new InvalidComponentException(Formatters.MultipleObservesParameter(method));
 
                 var param = injectParams.Single();
+                yield return new EventObserverMethod(component, param, param.GetBinders());
+            }
+        }
+
+        private static IEnumerable<EventObserverMethod> FindExceptionHandlers(IWeldComponent component)
+        {
+            foreach (var method in component.Type.GetMethods())
+            {
+                var injectParams = method.GetParameters()
+                    .Where(AttributeUtils.HasAttributeRecursive<HandlesAttribute>)
+                    .ToArray();
+                if (!injectParams.Any())
+                    continue;
+                if (injectParams.Length > 1)
+                    throw new InvalidComponentException(Formatters.MultipleHandlesParameter(method));
+
+                var param = injectParams.Single();
+                if(GenericUtils.OpenIfGeneric(param.ParameterType) != typeof(ICaughtException<>))
+                    throw new InvalidComponentException(Formatters.WrongHandlesParamType(param));
+
                 yield return new EventObserverMethod(component, param, param.GetBinders());
             }
         }

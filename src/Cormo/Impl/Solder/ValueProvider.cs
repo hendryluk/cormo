@@ -6,7 +6,7 @@ using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 
-namespace Cormo.Impl
+namespace Cormo.Impl.Solder
 {
     [Singleton]
     public class ValueProvider

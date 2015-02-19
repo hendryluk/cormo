@@ -33,6 +33,8 @@ namespace Cormo.Impl.Weld
 
     public class Qualifiers: IQualifiers
     {
+        public static readonly Qualifiers Empty = new Qualifiers(new IQualifier[0]);
+
         protected bool Equals(Qualifiers other)
         {
             return Equals(Types, other.Types);

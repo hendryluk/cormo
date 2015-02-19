@@ -1,9 +1,11 @@
 ﻿using System;
+using Cormo.Contexts;
 
 namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class ConfigurationAttribute: Attribute
+    [Singleton]
+    public sealed class ConfigurationAttribute: StereotypeAttribute
     {
          
     }

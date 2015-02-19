@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Utils;
+using Cormo.Impl.Weld.Catch;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
@@ -90,6 +91,7 @@ namespace Cormo.Impl.Weld
             _interceptorResolver = new InterceptorResolver(this, interceptors);
             _componentResolver = new ComponentResolver(this, environment.Components.Except(mixins).Except(interceptors));
             _observerResolver = new ObserverResolver(this, environment.Observers);
+            _services.Add(typeof(IExceptionHandlerDispatcher), new ExceptionHandlerDispatcher(this, environment.ExceptionHandlers));
 
             _componentResolver.Validate();
             ExecuteConfigurations(environment);
@@ -122,7 +124,6 @@ namespace Cormo.Impl.Weld
                 if (pushInjectionPoint)
                     _currentInjectionPoint.Push(injectionPoint);
 
-                
                 if (proxyTypes.Any() && component.IsProxyRequired)
                 {
                     foreach(var proxyType in proxyTypes)

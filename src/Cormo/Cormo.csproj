@@ -48,6 +48,10 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Catch\CatchResourceAttribute.cs" />
+    <Compile Include="Catch\ExceptionsHandledAttribute.cs" />
+    <Compile Include="Catch\HandlesAttribute.cs" />
+    <Compile Include="Catch\ICaughtException.cs" />
     <Compile Include="Contexts\ScopeAttribute.cs" />
     <Compile Include="CormoApplication.cs" />
     <Compile Include="Contexts\ContextException.cs" />
@@ -58,7 +62,9 @@
     <Compile Include="Contexts\SingletonAttribute.cs" />
     <Compile Include="Events\IEvents.cs" />
     <Compile Include="Events\ObservesAttribute.cs" />
-    <Compile Include="Impl\ValueProvider.cs" />
+    <Compile Include="Impl\Solder\ExceptionHandlingInterceptor.cs" />
+    <Compile Include="Impl\Solder\ValueProvider.cs" />
+    <Compile Include="Impl\Weld\Catch\ExceptionHandlerDispatcher.cs" />
     <Compile Include="Impl\Weld\Components\Events.cs" />
     <Compile Include="Impl\Weld\Introspectors\EventObserverMethod.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableConstructor.cs" />
@@ -88,6 +94,7 @@
     <Compile Include="Injects\IBinders.cs" />
     <Compile Include="Impl\Weld\Qualifiers.cs" />
     <Compile Include="Injects\IBinderAttribute.cs" />
+    <Compile Include="Injects\IExtension.cs" />
     <Compile Include="Injects\IQualifiers.cs" />
     <Compile Include="Injects\IValueProvider.cs" />
     <Compile Include="Injects\UnwrapAttribute.cs" />

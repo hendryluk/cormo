@@ -11,10 +11,12 @@ namespace Cormo.Impl.Weld
         private readonly List<IWeldComponent> _components = new List<IWeldComponent>();
         private readonly List<IWeldComponent> _configurations = new List<IWeldComponent>();
         private readonly List<EventObserverMethod> _observers = new List<EventObserverMethod>();
-
+        private readonly List<EventObserverMethod> _exceptionHandlers = new List<EventObserverMethod>();
+       
         public IEnumerable<IWeldComponent> Components { get { return _components; } }
         public IEnumerable<IWeldComponent> Configurations { get { return _configurations; } }
         public IEnumerable<EventObserverMethod> Observers { get { return _observers; } }
+        public IEnumerable<EventObserverMethod> ExceptionHandlers { get { return _exceptionHandlers; } }
         
         public void AddComponent(IWeldComponent component)
         {
@@ -36,6 +38,11 @@ namespace Cormo.Impl.Weld
         public void AddObserver(EventObserverMethod observer)
         {
             _observers.Add(observer);
+        }
+
+        public void AddExceptionHandlers(EventObserverMethod observer)
+        {
+            _exceptionHandlers.Add(observer);
         }
     }
 }
