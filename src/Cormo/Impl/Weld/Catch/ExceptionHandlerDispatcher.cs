@@ -67,6 +67,7 @@ namespace Cormo.Impl.Weld.Catch
             {
                 InvocationContext = invocationContext;
                 Exception = exception;
+                IsHandled = true;
             }
 
             public bool IsHandled { get; set; }
