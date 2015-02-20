@@ -4,8 +4,10 @@ using System.Net;
 using System.Net.Http;
 using Cormo.Catch;
 using Cormo.Contexts;
+using Cormo.Impl.Weld;
 using Cormo.Impl.Weld.Catch;
 using Cormo.Injects;
+using Cormo.Web.Api;
 
 namespace Cormo.Web.Impl
 {
@@ -104,10 +106,11 @@ namespace Cormo.Web.Impl
 
         private readonly IList<IHttpResponseEnricher> _enrichers = new List<IHttpResponseEnricher>();
 
+        static readonly IQualifier[] _webQualifiers = { new DefaultAttribute(), new WebRequestAttribute()};
         public virtual HttpResponseMessage Enrich(HttpResponseMessage message, Exception exception)
         {
             if (exception != null)
-                _exceptionHandlerDispatcher.Dispatch(null, exception);
+                _exceptionHandlerDispatcher.Dispatch(null, exception, _webQualifiers);
 
             if (message == null)
                 message = _catchResponseMessage.Value;

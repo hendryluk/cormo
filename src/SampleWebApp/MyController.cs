@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Web.Http;
@@ -85,6 +86,11 @@ namespace SampleWebApp
         [Inject] private UpperCaseGreeter _greeter;
     }
 
+    public class SheepAttribute : QualifierAttribute
+    {
+        
+    }
+
     public class HendersException : Exception
     {
 
@@ -92,14 +98,17 @@ namespace SampleWebApp
 
     public class HendersHandler
     {
-        //public void OnHenders([Handles] ICaughtException<HendersException> e, [CatchResource]HttpResponseMessage message)
-        //{
-        //    message.StatusCode = HttpStatusCode.NotFound;
-        //}
-
         [HttpStatusCode(HttpStatusCode.Unauthorized)]
         public virtual void OnHenders([Handles] ICaughtException<HendersException> e)
         {
+        }
+
+        [HttpStatusCode(HttpStatusCode.Unauthorized)]
+        public void OnHenders(
+            [Handles] ICaughtException<HendersException> e,
+            [CatchResource]HttpResponseMessage message)
+        {
+            message.Headers.RetryAfter = new RetryConditionHeaderValue(DateTime.Now.AddMinutes(5));
         }
     }
 
@@ -116,10 +125,10 @@ namespace SampleWebApp
 
         [Inject, Limit] private int xxxx;
 
-        [ExceptionsHandled]
+        //[ExceptionsHandled]
         public virtual string Greet(string val)
         {
-            throw new HendersException();
+            ExceptionsHandled.Throw(new HendersException(), new SheepAttribute());
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity,
                 _persons.Count(), 

@@ -85,6 +85,7 @@
     <Compile Include="Api\Response.cs" />
     <Compile Include="Api\RouteParamAttribute.cs" />
     <Compile Include="Api\QueryParamAttribute.cs" />
+    <Compile Include="Api\WebRequestAttribute.cs" />
     <Compile Include="CormoOwinStartup.cs" />
     <Compile Include="Api\CookieParamAttribute.cs" />
     <Compile Include="Api\RestControllerAttribute.cs" />

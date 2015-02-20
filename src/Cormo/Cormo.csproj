@@ -50,6 +50,7 @@
     </Compile>
     <Compile Include="Catch\CatchResourceAttribute.cs" />
     <Compile Include="Catch\ExceptionsHandledAttribute.cs" />
+    <Compile Include="Catch\ExceptionsHandled.cs" />
     <Compile Include="Catch\HandlesAttribute.cs" />
     <Compile Include="Catch\ICaughtException.cs" />
     <Compile Include="Contexts\ScopeAttribute.cs" />
@@ -62,7 +63,7 @@
     <Compile Include="Contexts\SingletonAttribute.cs" />
     <Compile Include="Events\IEvents.cs" />
     <Compile Include="Events\ObservesAttribute.cs" />
-    <Compile Include="Impl\Solder\ExceptionHandlingInterceptor.cs" />
+    <Compile Include="Impl\Solder\ExceptionsHandledInterceptor.cs" />
     <Compile Include="Impl\Solder\ValueProvider.cs" />
     <Compile Include="Impl\Weld\Catch\ExceptionHandlerDispatcher.cs" />
     <Compile Include="Impl\Weld\Components\Events.cs" />

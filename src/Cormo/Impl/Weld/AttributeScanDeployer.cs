@@ -52,7 +52,8 @@ namespace Cormo.Impl.Weld
         // Declaring known built-in types explicitly for performance reason
         private static readonly Type[] BuiltInTypes =
         {
-            typeof(ValueProvider), typeof(AppSettingsValueProvider), typeof(ExceptionHandlingInterceptor)
+            typeof(ValueProvider), typeof(AppSettingsValueProvider), 
+            typeof(ExceptionsHandledInterceptor), typeof(ExceptionsHandled.Configurator)
         };
 
         public void AutoScan()
@@ -64,7 +65,7 @@ namespace Cormo.Impl.Weld
 
             var types = (from assembly in assemblies.AsParallel()
                             from type in assembly.GetLoadableTypes()
-                            where type.IsVisible && type.IsClass && !type.IsPrimitive
+                            where type.IsClass && !type.IsPrimitive
                             select type)
                             .AsEnumerable().Union(BuiltInTypes)
                             .ToArray();

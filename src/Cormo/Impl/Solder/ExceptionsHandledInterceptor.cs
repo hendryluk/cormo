@@ -8,12 +8,12 @@ using Cormo.Interceptions;
 namespace Cormo.Impl.Solder
 {
     [Interceptor, ExceptionsHandled]
-    public class ExceptionHandlingInterceptor: IAroundInvokeInterceptor
+    public class ExceptionsHandledInterceptor: IAroundInvokeInterceptor
     {
         private readonly IExceptionHandlerDispatcher _dispatcher;
 
         [Inject]
-        public ExceptionHandlingInterceptor(IServiceRegistry services)
+        public ExceptionsHandledInterceptor(IServiceRegistry services)
         {
             _dispatcher = services.GetService<IExceptionHandlerDispatcher>();
         }
