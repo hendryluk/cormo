@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using Cormo.Catch;
@@ -112,7 +113,7 @@ namespace Cormo.Web.Impl
             if (exception != null)
                 _exceptionHandlerDispatcher.Dispatch(null, exception, _webQualifiers);
 
-            if (message == null)
+            if (message == null && _enrichers.Any())
                 message = _catchResponseMessage.Value;
             
             foreach (var enricher in _enrichers)

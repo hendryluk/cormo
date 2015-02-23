@@ -18,7 +18,7 @@ namespace Cormo.Web.Impl
         {
             base.OnActionExecuted(context);
              
-            _producer.ProvideResponse(context.Response);
+            _producer.ProvideResponse(context);
             context.Response = _enricher.Enrich(context.Response, context.Exception);
         }
     }
