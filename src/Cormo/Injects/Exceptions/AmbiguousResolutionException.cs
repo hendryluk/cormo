@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Cormo.Injects.Exceptions
 {
-    public class AmbiguousResolutionException: InjectionException
+    public class    AmbiguousResolutionException: InjectionException
     {
         public Type Type { get; private set; }
         public IQualifier[] Qualifiers { get; private set; }

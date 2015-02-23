@@ -36,9 +36,10 @@ namespace Cormo.Impl.Solder
 
             var name = GetValueName(injectionPoint);
 
-            foreach (var provider in providers)
+            foreach (var value in providers.OrderByDescending(x=> x.Priority)
+                .Select(x=> x.GetValue(name))
+                .Where(x=> x!=null))
             {
-                var value = provider.GetValue(name);
                 try
                 {
                     return (T)converter.ConvertFromString(value);
@@ -64,9 +65,19 @@ namespace Cormo.Impl.Solder
 
     public class AppSettingsValueProvider: IValueProvider
     {
+        public const int PRIORITY = 100;
+
         public string GetValue(string key)
         {
-            return ConfigurationManager.AppSettings[key];
+            return ConfigurationManager.AppSettings[key] ?? GetFromConnectionString(key);
+        }
+
+        public int Priority { get { return PRIORITY; } }
+
+        private string GetFromConnectionString(string key)
+        {
+            var connection = ConfigurationManager.ConnectionStrings[key];
+            return connection == null ? null : connection.ConnectionString;
         }
     }
 }

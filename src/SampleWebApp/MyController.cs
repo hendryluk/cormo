@@ -128,7 +128,7 @@ namespace SampleWebApp
         //[ExceptionsHandled]
         public virtual string Greet(string val)
         {
-            ExceptionsHandled.Throw(new HendersException(), new SheepAttribute());
+            //ExceptionsHandled.Throw(new HendersException(), new SheepAttribute());
             return string.Format("Hello {0} ({1}). Count: {2}. Accept: {3}", val.ToUpper(), 
                 _principal.Identity,
                 _persons.Count(), 
@@ -184,11 +184,6 @@ namespace SampleWebApp
         {
             config.Routes.MapHttpRoute("api", "api/{controller}");
             builder.UseWebApi(config);
-        }
-
-        public void Creating([Observes] ModelCreating modelCreating)
-        {
-            
         }
     }
 }

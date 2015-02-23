@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using Cormo.Injects;
 
@@ -16,9 +17,67 @@ namespace Cormo.Impl.Weld
             return string.Format("Method [{0}] has more than one parameter marked with [Handles]", methodInfo);
         }
 
-        private static string Method(MethodInfo method)
+        private static string ShortType(Type type)
         {
-            return method.ToString();
+            var str = type.Name;
+            if (type.IsGenericType)
+                str = FormatGenerics(str, type.GetGenericArguments());
+
+            return str;
+        }
+
+        private static string LongType(Type type)
+        {
+            var str = type.FullName;
+            if (type.IsGenericType)
+                str = FormatGenerics(str, type.GetGenericArguments());
+            
+            return str;
+        }
+
+        private static string FormatGenerics(string originalName, Type[] types)
+        {
+            return originalName.Replace("`"+types.Length, string.Format("<{0}>", string.Join(", ", types.Select(ShortType))));
+        }
+        
+        public static string Field(FieldInfo field)
+        {
+            return string.Format("{0} {1} {2}", ShortType(field.FieldType), LongType(field.DeclaringType), field.Name);
+        }
+
+        public static string Field(PropertyInfo property)
+        {
+            return string.Format("{0} {1} {2}", ShortType(property.PropertyType), LongType(property.DeclaringType), property.Name);
+        }
+
+        public static string Parameter(ParameterInfo parameter)
+        {
+            return string.Format("{0} {1}", ShortType(parameter.ParameterType), parameter.Name);
+        }
+
+        public static string DescribeMethodBase(MethodBase method)
+        {
+            return method is MethodInfo
+                ? string.Format("method [{0}]", Method((MethodInfo) method))
+                : string.Format("constructor [{0}]", Constructor((ConstructorInfo) method));
+        }
+
+        public static string Constructor(ConstructorInfo method)
+        {
+            var str = string.Format("{0}({1})", LongType(method.DeclaringType), string.Join(", ", method.GetParameters().Select(Parameter)));
+            if (method.IsGenericMethod)
+                str = FormatGenerics(str, method.GetGenericArguments());
+
+            return str;
+        }
+
+        public static string Method(MethodInfo method)
+        {
+            var str = string.Format("{0} {1}::{2}({3})", ShortType(method.ReturnType), LongType(method.DeclaringType), method.Name, string.Join(", ", method.GetParameters().Select(Parameter)));
+            if (method.IsGenericMethod)
+                str = FormatGenerics(str, method.GetGenericArguments());
+
+            return str;
         }
 
         private static string Attribute(Type type)
@@ -33,7 +92,7 @@ namespace Cormo.Impl.Weld
 
         public static string WrongHandlesParamType(ParameterInfo parameter)
         {
-            return string.Format("[Handles] must take CaughtException<> parameter at [{0}]", parameter.Member);
+            return string.Format("[Handles] must take ICaughtException<> parameter at [{0}]", parameter.Member);
         }
 
         public static string FormatUnproxiableType(IInjectionPoint injectionPoint, string reason)

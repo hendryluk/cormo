@@ -36,8 +36,7 @@ namespace Cormo.Impl.Weld.Injections
 
         public override string ToString()
         {
-            // TODO prettify
-            return _param.ToString();
+            return string.Format("parameter [{0}] of {1}", Formatters.Parameter(_param), Formatters.DescribeMethodBase((MethodBase) _param.Member));
         }
     }
 }

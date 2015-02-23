@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Cormo.Contexts;
 using Cormo.Injects;
 using Cormo.Web.Api;
+using Microsoft.Owin;
 
 namespace Cormo.Web.Impl
 {
@@ -26,6 +27,12 @@ namespace Cormo.Web.Impl
             public virtual IPrincipal GetPrincipal()
             {
                 return _request.GetRequestContext().Principal;
+            }
+
+            [Produces, RequestScoped]
+            public virtual IOwinContext GetOwinContext()
+            {
+                return _request.GetOwinContext();
             }
         }
 

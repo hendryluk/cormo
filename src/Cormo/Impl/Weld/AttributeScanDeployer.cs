@@ -92,7 +92,7 @@ namespace Cormo.Impl.Weld
 
             var producerFields = (from component in components.AsParallel()
                                   let type = component.Type
-                                  from field in type.GetFields(AllBindingFlags)
+                                  from field in ScannerUtils.GetAllField(type, AllBindingFlags)
                                   where field.HasAttributeRecursive<ProducesAttribute>()
                                   select MakeProducerField(component, field)).ToArray();
 
@@ -223,7 +223,7 @@ namespace Cormo.Impl.Weld
             var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
             var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var iFields = type.GetFields(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+            var iFields = ScannerUtils.GetAllField(type, AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
             var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
             var scope = type.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
 

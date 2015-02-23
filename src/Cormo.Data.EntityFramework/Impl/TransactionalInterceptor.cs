@@ -2,6 +2,8 @@
 using System.Data.Entity;
 using System.Threading.Tasks;
 using Cormo.Data.EntityFramework.Api;
+using Cormo.Data.EntityFramework.Api.Events;
+using Cormo.Events;
 using Cormo.Injects;
 using Cormo.Interceptions;
 
@@ -10,7 +12,9 @@ namespace Cormo.Data.EntityFramework.Impl
     [Interceptor, Transactional]
     public class TransactionalInterceptor: IAroundInvokeInterceptor
     {
-        [Inject] private IInstance<DbContext> _dbContext; 
+        [Inject] IInstance<DbContext> _dbContext;
+        [Inject] IEvents<TransactionCompleting> _completingEvents; 
+
         public async Task<object> AroundInvoke(IInvocationContext invocationContext)
         {
             // May consider TransactionScope because EF one really sucks at nesting
@@ -20,6 +24,7 @@ namespace Cormo.Data.EntityFramework.Impl
             if (dbContext.Database.CurrentTransaction != null)
             {
                 var result = await invocationContext.Proceed();
+                _completingEvents.Fire(new TransactionCompleting());
                 dbContext.SaveChanges();
                 return result;
             }
@@ -29,6 +34,7 @@ namespace Cormo.Data.EntityFramework.Impl
                 try
                 {
                     var result = await invocationContext.Proceed();
+                    _completingEvents.Fire(new TransactionCompleting());
                     dbContext.SaveChanges();
                     transaction.Commit();
                     return result;

@@ -44,8 +44,7 @@ namespace Cormo.Impl.Weld.Injections
 
         public override string ToString()
         {
-            // TODO prettify
-            return _field.ToString();
+            return string.Format("field [{0}]", Formatters.Field(_field));
         }
     }
 }

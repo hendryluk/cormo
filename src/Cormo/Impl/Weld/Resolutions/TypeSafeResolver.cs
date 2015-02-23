@@ -30,12 +30,14 @@ namespace Cormo.Impl.Weld.Resolutions
         where TResolvable: IResolvable
     {
         protected readonly WeldComponentManager Manager;
+        private readonly TComponent[] _registeredComponents;
         private readonly ConcurrentBag<TComponent> _allComponents;
 
         protected TypeSafeResolver(WeldComponentManager manager, IEnumerable<TComponent> allComponents)
         {
             Manager = manager;
-            _allComponents = new ConcurrentBag<TComponent>(allComponents);
+            _registeredComponents = allComponents.ToArray();
+            _allComponents = new ConcurrentBag<TComponent>(_registeredComponents);
         }
 
         public bool IsWrappedType(Type type)
@@ -77,7 +79,7 @@ namespace Cormo.Impl.Weld.Resolutions
         {
             return _resolvedCache.GetOrAdd(resolvable, r =>
             {
-                var components = _allComponents.AsEnumerable();
+                var components = _registeredComponents.AsEnumerable();
                 var results = Resolve(resolvable, ref components);
 
                 var newComponents = components.Where(x => !_allComponents.Contains(x)).ToArray();

@@ -43,22 +43,12 @@ namespace Cormo.Weld.Test
 
     public class SpikeTest
     {
+        public string _xxx;
+
         [Test]
         public void Haha2()
         {
-            IList<int> al;
-            
-            Assert.IsTrue(typeof(IList<>).ContainsGenericParameters);
-            Assert.IsFalse(typeof(IList<int>).ContainsGenericParameters);
-            //var a = typeof (Xxx<>).GetMethod("Blah").ReturnType;
-            //var ae = a.GetInterface(typeof (IEnumerable<>).FullName);
-
-            //Assert.IsNull(ae.GetGenericArguments());
-
-            //var a = typeof (Hen<,>);
-            //var b = typeof (IDictionary<,>);
-            //Assert.IsNotNull(a.MakeGenericType(b.GetGenericArguments()));
-            //Assert.IsNull(a.GetGenericArguments()[1].GetGenericParameterConstraints());
+            //Assert.AreEqual("", typeof(IEnumerable<string>).Name);
         }
 
         public void Haha1()

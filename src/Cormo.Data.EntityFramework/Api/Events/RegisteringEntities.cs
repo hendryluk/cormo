@@ -2,9 +2,9 @@
 
 namespace Cormo.Data.EntityFramework.Api.Events
 {
-    public class ModelCreating
+    public class RegisteringEntities
     {
-        public ModelCreating(DbModelBuilder modelBuilder)
+        public RegisteringEntities(DbModelBuilder modelBuilder)
         {
             ModelBuilder = modelBuilder;
         }
