@@ -10,6 +10,7 @@ namespace Cormo.Impl.Weld.Introspectors
 {
     public class EventObserverMethod: IChainValidatable
     {
+        public IWeldComponent Component { get; private set; }
         private readonly ParameterInfo _parameter;
         private readonly IBinders _binders;
         private readonly InjectableMethod _method;
@@ -17,6 +18,7 @@ namespace Cormo.Impl.Weld.Introspectors
 
         public EventObserverMethod(IWeldComponent component, ParameterInfo parameter, IBinders binders)
         {
+            Component = component;
             _parameter = parameter;
             _binders = binders;
             _eventType = parameter.ParameterType;

@@ -52,7 +52,7 @@ namespace Cormo.Weld.Test.Injection
             var component = _manager.GetComponent(typeof (One));
             var instance = (One)_manager.GetReference(component, _manager.CreateCreationalContext(component));
 
-            Assert.AreEqual(instance, instance.two.one);
+            Assert.AreEqual(instance, instance.two.one);    
         }
 
         [Test]

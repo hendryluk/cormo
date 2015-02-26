@@ -71,12 +71,11 @@ namespace Cormo.Impl.Utils
             return GetAttributesRecursive(attributeProvider.GetCustomAttributes(true).OfType<Attribute>());
         }
 
-        static readonly ConcurrentDictionary<ICustomAttributeProvider, IBinders> BindersCache = new ConcurrentDictionary<ICustomAttributeProvider, IBinders>(); 
         public static IBinders GetBinders(this ICustomAttributeProvider attributeProvider)
         {
-            return BindersCache.GetOrAdd(attributeProvider, x => new Binders(
-                from attribute in x.GetAttributesRecursive<IBinderAttribute>()
-                select attribute));
+            return new Binders(
+                from attribute in attributeProvider.GetAttributesRecursive<IBinderAttribute>()
+                select attribute);
 
         }
     }

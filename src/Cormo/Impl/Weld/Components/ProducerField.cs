@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -10,8 +11,13 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly FieldInfo _field;
 
-        public ProducerField(IWeldComponent component, FieldInfo field, WeldComponentManager manager)
-            : base(component, field, field.FieldType, manager)
+        public ProducerField(IWeldComponent component, IAnnotatedField field, WeldComponentManager manager)
+            : this(component, field.Field, field.Binders, manager)
+        {
+        }
+
+        private ProducerField(IWeldComponent component, FieldInfo field, IBinders binders, WeldComponentManager manager)
+            : base(component, field, field.FieldType, binders, manager)
         {
             _field = field;
         }
@@ -20,7 +26,7 @@ namespace Cormo.Impl.Weld.Components
         protected override AbstractProducer TranslateTypes(GenericResolver.Resolution resolution)
         {
             var resolvedField = GenericUtils.TranslateFieldType(_field, resolution.GenericParameterTranslations);
-            return new ProducerField(DeclaringComponent.Resolve(resolvedField.DeclaringType), resolvedField, Manager);
+            return new ProducerField(DeclaringComponent.Resolve(resolvedField.DeclaringType), resolvedField, Binders, Manager);
         }
 
         protected override BuildPlan GetBuildPlan()

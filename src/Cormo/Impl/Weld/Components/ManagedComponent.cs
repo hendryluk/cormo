@@ -11,6 +11,7 @@ using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -20,32 +21,31 @@ namespace Cormo.Impl.Weld.Components
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
         private readonly InjectableConstructor _injectableConstructor;
 
-        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-        protected ManagedComponent(Type type, WeldComponentManager manager) 
-            : base(type.FullName, type, type.GetBinders(), manager)
+        protected ManagedComponent(IAnnotatedType type, WeldComponentManager manager) 
+            : base(type.Type.FullName, type.Type, type.Binders, manager)
         {
             _isConcrete = !Type.ContainsGenericParameters;
             
             if (_isConcrete)
             {
-                var methods = type.GetMethods(AllBindingFlags).ToArray();
+                var methods = type.Methods.ToArray();
 
                 var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
-                var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-                var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-                var iFields = ScannerUtils.GetAllField(type, AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-                var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
+                var iProperties = type.Properties.Where(InjectionValidator.ScanPredicate).ToArray();
+                var iCtors = type.Constructors.Where(InjectionValidator.ScanPredicate).ToArray();
+                var iFields = type.Fields.Where(InjectionValidator.ScanPredicate).ToArray();
+                var postConstructs = methods.Where(x => x.Binders.OfType<PostConstructAttribute>().Any()).Select(x=> x.Method).ToArray();
 
                 if (iCtors.Length > 1)
-                    throw new InvalidComponentException(type, "Multiple [Inject] constructors");
+                    throw new InvalidComponentException(type.Type, "Multiple [Inject] constructors");
 
-                var iCtor = iCtors.FirstOrDefault() ?? type.GetConstructor(new Type[0]);
+                var iCtor = iCtors.FirstOrDefault() ?? type.Constructors.FirstOrDefault(x=> !x.Parameters.Any());
 
-                _injectableConstructor = new InjectableConstructor(this, iCtor);
+                _injectableConstructor = new InjectableConstructor(this, iCtor.Constructor);
 
-                var methodInjects = iMethods.Select(m => new InjectableMethod(this, m, null)).ToArray();
-                var fieldInjects = iFields.Select(f => new FieldInjectionPoint(this, f, f.GetBinders())).ToArray();
-                var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(this, p, p.GetBinders())).ToArray();
+                var methodInjects = iMethods.Select(m => new InjectableMethod(this, m.Method, null)).ToArray();
+                var fieldInjects = iFields.Select(f => new FieldInjectionPoint(this, f)).ToArray();
+                var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(this, p)).ToArray();
 
                 AddMemberInjectionPoints(fieldInjects.Cast<IWeldInjetionPoint>().Union(propertyInjects).ToArray());
                 AddInjectableMethods(methodInjects);

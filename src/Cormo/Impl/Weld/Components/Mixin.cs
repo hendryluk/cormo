@@ -5,6 +5,7 @@ using System.Reflection;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Mixins;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -12,7 +13,7 @@ namespace Cormo.Impl.Weld.Components
     {
         public IEnumerable<Type> MixinBinders { get; private set; }
 
-        public Mixin(Type type, WeldComponentManager manager) 
+        public Mixin(IAnnotatedType type, WeldComponentManager manager) 
             : base(type, manager)
         {
             MixinBinders = Binders.OfType<IMixinBinder>().Select(x=> x.GetType());

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Injections
 {
@@ -11,10 +12,15 @@ namespace Cormo.Impl.Weld.Injections
     {
         private readonly PropertyInfo _property;
 
-        public PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinders binders):
-            base(declaringComponent, property, property.PropertyType, binders)
+        public PropertyInjectionPoint(IComponent declaringComponent, IAnnotatedProperty property):
+            this(declaringComponent, property.Property, property.Binders)
         {
             InjectionValidator.Validate(property);
+        }
+
+        private PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinders binders) :
+            base(declaringComponent, property, property.PropertyType, binders)
+        {
             _property = property;
         }
 

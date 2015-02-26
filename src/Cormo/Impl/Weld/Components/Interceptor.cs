@@ -8,6 +8,7 @@ using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -19,16 +20,16 @@ namespace Cormo.Impl.Weld.Components
 
         public Type[] InterceptorBindings { get; private set; }
 
-        public Interceptor(Type type, WeldComponentManager manager)
+        public Interceptor(IAnnotatedType type, WeldComponentManager manager)
             : base(type, manager)
         {
             InterceptorBindings = Binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
-            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type)).ToArray();
+            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type.Type)).ToArray();
             
             if(!InterceptorBindings.Any())
-                throw new InvalidComponentException(type, "Interceptor must have at least one interceptor-binding attribute");
+                throw new InvalidComponentException(type.Type, "Interceptor must have at least one interceptor-binding attribute");
             if (!InterceptorTypes.Any())
-                throw new InvalidComponentException(type, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x => x.ToString())));
+                throw new InvalidComponentException(type.Type, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x => x.ToString())));
         
         }
 

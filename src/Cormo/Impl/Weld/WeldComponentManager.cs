@@ -47,6 +47,7 @@ namespace Cormo.Impl.Weld
         private MixinResolver _mixinResolver;
         private InterceptorResolver _interceptorResolver;
         private ObserverResolver _observerResolver;
+        private ComponentResolver _extensionResolver;
 
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
@@ -81,19 +82,24 @@ namespace Cormo.Impl.Weld
         public void Deploy(WeldEnvironment environment)
         {
             Container.Instance.Initialize(this);
+
             environment.AddValue(this, new IBinderAttribute[0], this);
             environment.AddValue(new ContextualStore(), new IBinderAttribute[0], this);
 
+            _extensionResolver = _componentResolver = new ComponentResolver(this, environment.Extensions);
+            _observerResolver = new ObserverResolver(this, environment.Observers.Where(x=> x.Component is ExtensionComponent));
+            
             var mixins = environment.Components.OfType<Mixin>().ToArray();
             var interceptors = environment.Components.OfType<Interceptor>().ToArray();
             
             _mixinResolver = new MixinResolver(this, mixins);
             _interceptorResolver = new InterceptorResolver(this, interceptors);
             _componentResolver = new ComponentResolver(this, environment.Components.Except(mixins).Except(interceptors));
-            _observerResolver = new ObserverResolver(this, environment.Observers);
             _services.Add(typeof(IExceptionHandlerDispatcher), new ExceptionHandlerDispatcher(this, environment.ExceptionHandlers));
 
             _componentResolver.Validate();
+            _observerResolver = new ObserverResolver(this, environment.Observers);
+            
             ExecuteConfigurations(environment);
         }
 

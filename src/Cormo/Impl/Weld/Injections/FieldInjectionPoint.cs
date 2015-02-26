@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Injections
 {
@@ -11,10 +12,15 @@ namespace Cormo.Impl.Weld.Injections
     {
         private readonly FieldInfo _field;
 
-        public FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, IBinders binders) :
-            base(declaringComponent, field, field.FieldType, binders)
+        public FieldInjectionPoint(IComponent declaringComponent, IAnnotatedField field) :
+            this(declaringComponent, field.Field, field.Binders)
         {
             InjectionValidator.Validate(field);
+        }
+
+        private FieldInjectionPoint(IComponent declaringComponent, FieldInfo field, IBinders binders) :
+            base(declaringComponent, field, field.FieldType, binders)
+        {
             _field = field;
         }
 

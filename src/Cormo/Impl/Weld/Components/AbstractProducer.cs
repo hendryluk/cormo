@@ -4,6 +4,8 @@ using System.Reflection;
 using Cormo.Contexts;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Utils;
+using Cormo.Injects;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -11,8 +13,8 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly bool _containsGenericParameters;
         
-        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, WeldComponentManager manager)
-            : base(member.ToString(), returnType, member.GetBinders(), manager)
+        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IBinders binders, WeldComponentManager manager)
+            : base(member.ToString(), returnType, binders, manager)
         {
             _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(member);
             DeclaringComponent = declaringComponent;

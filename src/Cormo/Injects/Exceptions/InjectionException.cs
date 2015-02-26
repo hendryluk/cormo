@@ -8,5 +8,11 @@ namespace Cormo.Injects.Exceptions
         {
             
         }
+
+        public InjectionException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+
+        }
     }
 }

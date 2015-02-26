@@ -14,6 +14,7 @@ using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
 using Cormo.Mixins;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld
 {
@@ -75,35 +76,39 @@ namespace Cormo.Impl.Weld
             
             AddTypes(componentTypes);
             var configs = GetConfigs(_environment.Components, assemblyConfigs);
-
+            
             foreach (var c in configs)
                 _environment.AddConfiguration(c);
         }
 
-        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         public void AddTypes(params Type[] types)
         {
-            var components = types.AsParallel().Select(MakeComponent).ToArray();
-            var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
-            var exceptionHandlers = components.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
+            var annotated = types.Select(x => new AnnotatedType(x))
+                .Cast<IAnnotatedType>()
+                .ToArray();
 
-            var producerFields = (from component in components.AsParallel()
-                                  let type = component.Type
-                                  from field in ScannerUtils.GetAllField(type, AllBindingFlags)
-                                  where field.HasAttributeRecursive<ProducesAttribute>()
+            var components = annotated.AsParallel().Select(MakeComponent).ToArray();
+            var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
+            var classes = components.OfType<ClassComponent>().ToArray();
+            var exceptionHandlers = classes.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
+
+            var producerFields = (from component in classes.AsParallel()
+                                  let type = component.AnnotatedType
+                                  from field in type.Fields
+                                  where field.Binders.OfType<ProducesAttribute>().Any()
                                   select (IWeldComponent) new ProducerField(component, field, _manager)).ToArray();
 
-            var producerMethods = (from component in components.AsParallel()
-                                   let type = component.Type
-                                   from method in type.GetMethods(AllBindingFlags)
-                                   where method.HasAttributeRecursive<ProducesAttribute>()
+            var producerMethods = (from component in classes.AsParallel()
+                                   let type = component.AnnotatedType
+                                   from method in type.Methods
+                                   where method.Binders.OfType<ProducesAttribute>().Any()
                                    select (IWeldComponent) new ProducerMethod(component, method, _manager)).ToArray();
 
-            var producerProperties = (from component in components.AsParallel()
-                                      let type = component.Type
-                                      from property in type.GetProperties(AllBindingFlags)
-                                      where property.HasAttributeRecursive<ProducesAttribute>()
-                                      select (IWeldComponent) new ProducerProperty(component, property, _manager)).ToArray();
+            var producerProperties = (from component in classes.AsParallel()
+                                      let type = component.AnnotatedType
+                                      from property in type.Properties
+                                      where property.Binders.OfType<ProducesAttribute>().Any()
+                                      select (IWeldComponent) new ProducerProperty(component, property.Property, property.Binders, _manager)).ToArray();
 
             foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
                 _environment.AddComponent(c);
@@ -131,23 +136,23 @@ namespace Cormo.Impl.Weld
             }
         }
 
-        private static IEnumerable<EventObserverMethod> FindExceptionHandlers(IWeldComponent component)
+        private static IEnumerable<EventObserverMethod> FindExceptionHandlers(ClassComponent component)
         {
-            foreach (var method in component.Type.GetMethods())
+            foreach (var method in component.AnnotatedType.Methods)
             {
-                var injectParams = method.GetParameters()
-                    .Where(AttributeUtils.HasAttributeRecursive<HandlesAttribute>)
+                var injectParams = method.Parameters
+                    .Where(p=> p.Binders.OfType<HandlesAttribute>().Any())
                     .ToArray();
                 if (!injectParams.Any())
                     continue;
                 if (injectParams.Length > 1)
-                    throw new InvalidComponentException(Formatters.MultipleHandlesParameter(method));
+                    throw new InvalidComponentException(Formatters.MultipleHandlesParameter(method.Method));
 
                 var param = injectParams.Single();
-                if(GenericUtils.OpenIfGeneric(param.ParameterType) != typeof(ICaughtException<>))
-                    throw new InvalidComponentException(Formatters.WrongHandlesParamType(param));
+                if(GenericUtils.OpenIfGeneric(param.Parameter.ParameterType) != typeof(ICaughtException<>))
+                    throw new InvalidComponentException(Formatters.WrongHandlesParamType(param.Parameter));
 
-                yield return new EventObserverMethod(component, param, param.GetBinders());
+                yield return new EventObserverMethod(component, param.Parameter, param.Binders);
             }
         }
 
@@ -169,7 +174,7 @@ namespace Cormo.Impl.Weld
                 configs.AddRange(newConfigs);
 
                 var imports = from config in newConfigs
-                    from import in config.Type.GetAttributesRecursive<ImportAttribute>()
+                    from import in config.Binders.OfType<ImportAttribute>()
                     from importType in import.Types
                     select new {config.Type, importType};
 
@@ -187,17 +192,19 @@ namespace Cormo.Impl.Weld
             return configs;
         }
 
-        public IWeldComponent MakeComponent(Type type)
+        public IWeldComponent MakeComponent(IAnnotatedType type)
         {
+            if(typeof(IExtension).IsAssignableFrom(type.Type))
+                return new ExtensionComponent(type.Type, _manager);
+
             ManagedComponent component;
-            var binders = type.GetBinders();
-            if (binders.OfType<InterceptorAttribute>().Any())
+            if (type.Binders.OfType<InterceptorAttribute>().Any())
             {
                 component = new Interceptor(type, _manager);
             }
             else
             {
-                component = binders.OfType<MixinAttribute>().Any()? (ManagedComponent)
+                component = type.Binders.OfType<MixinAttribute>().Any()? (ManagedComponent)
                     new Mixin(type, _manager):
                     new ClassComponent(type, _manager);
             }

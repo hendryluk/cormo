@@ -67,6 +67,7 @@
     <Compile Include="Impl\Solder\ValueProvider.cs" />
     <Compile Include="Impl\Weld\Catch\ExceptionHandlerDispatcher.cs" />
     <Compile Include="Impl\Weld\Components\Events.cs" />
+    <Compile Include="Impl\Weld\Components\ExtensionComponent.cs" />
     <Compile Include="Impl\Weld\Introspectors\EventObserverMethod.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableConstructor.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableMethod.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="Impl\Weld\Resolutions\TypeSafeResolver.cs" />
     <Compile Include="Impl\Weld\Utils\GenericResolver.cs" />
     <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
+    <Compile Include="Reflects\IAnnotatedType.cs" />
     <Compile Include="Injects\IBinders.cs" />
     <Compile Include="Impl\Weld\Qualifiers.cs" />
     <Compile Include="Injects\IBinderAttribute.cs" />
