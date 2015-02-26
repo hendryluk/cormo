@@ -4,18 +4,21 @@ using System.Linq;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Introspectors;
+using Cormo.Injects;
 
 namespace Cormo.Impl.Weld.Components
 {
     public class EventComponent : AbstractComponent
     {
         private readonly Type _eventType;
+        private readonly Binders _binders;
         private readonly Lazy<EventObserverMethod[]> _lazyEventObserverMethods;
         
         public EventComponent(Type eventType, Binders binders, WeldComponentManager manager) :
-            base("", typeof(Events<>).MakeGenericType(eventType), binders, typeof(DependentAttribute), manager)
+            base("", typeof(Events<>).MakeGenericType(eventType), binders, manager)
         {
             _eventType = eventType;
+            _binders = binders;
             _lazyEventObserverMethods = new Lazy<EventObserverMethod[]>(ResolveObserverMethods);
         }
 

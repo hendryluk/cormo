@@ -83,7 +83,7 @@
     <Compile Include="Impl\Weld\Components\EventComponent.cs" />
     <Compile Include="Impl\Weld\Resolutions\ObserverResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\InterceptorResolver.cs" />
-    <Compile Include="Impl\Weld\Resolutions\IntercetorResolvable.cs" />
+    <Compile Include="Impl\Weld\Resolutions\InterceptorResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\IResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\MixinResolvable.cs" />
     <Compile Include="Impl\Weld\Resolutions\MixinResolver.cs" />

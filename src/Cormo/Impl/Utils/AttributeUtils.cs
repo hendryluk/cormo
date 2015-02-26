@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -70,11 +71,13 @@ namespace Cormo.Impl.Utils
             return GetAttributesRecursive(attributeProvider.GetCustomAttributes(true).OfType<Attribute>());
         }
 
+        static readonly ConcurrentDictionary<ICustomAttributeProvider, IBinders> BindersCache = new ConcurrentDictionary<ICustomAttributeProvider, IBinders>(); 
         public static IBinders GetBinders(this ICustomAttributeProvider attributeProvider)
         {
-            return new Binders(
-                from attribute in attributeProvider.GetAttributesRecursive<IBinderAttribute>()
-                select attribute);
+            return BindersCache.GetOrAdd(attributeProvider, x => new Binders(
+                from attribute in x.GetAttributesRecursive<IBinderAttribute>()
+                select attribute));
+
         }
     }
 }

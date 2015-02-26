@@ -12,11 +12,11 @@ namespace Cormo.Impl.Weld.Components
     {
         public IEnumerable<Type> MixinBinders { get; private set; }
 
-        public Mixin(Type[] interfaceTypes, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(ctor, binders, scope, manager, postConstructs)
+        public Mixin(Type type, WeldComponentManager manager) 
+            : base(type, manager)
         {
-            MixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
-            InterfaceTypes = interfaceTypes;
+            MixinBinders = Binders.OfType<IMixinBinder>().Select(x=> x.GetType());
+            InterfaceTypes = Binders.OfType<MixinAttribute>().SelectMany(x=> x.InterfaceTypes).ToArray();
         }
 
         public Type[] InterfaceTypes { get; private set; }

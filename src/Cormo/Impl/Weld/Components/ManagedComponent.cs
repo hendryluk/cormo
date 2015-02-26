@@ -4,11 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Cormo.Contexts;
+using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Contexts;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Injects.Exceptions;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -18,28 +20,41 @@ namespace Cormo.Impl.Weld.Components
         public IEnumerable<MethodInfo> PostConstructs { get; private set; }
         private readonly InjectableConstructor _injectableConstructor;
 
-        protected ManagedComponent(ComponentIdentifier id, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
-            : base(id, ctor.DeclaringType, binders, scope, manager)
+        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        protected ManagedComponent(Type type, WeldComponentManager manager) 
+            : base(type.FullName, type, type.GetBinders(), manager)
         {
-            _injectableConstructor = new InjectableConstructor(this, ctor);
-            
-            PostConstructs = postConstructs;
             _isConcrete = !Type.ContainsGenericParameters;
-            IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
-
-            ValidateMethodSignatures();
-        }
-
-        protected ManagedComponent(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(ctor.DeclaringType.FullName, ctor.DeclaringType, binders, scope, manager)
-        {
-            _injectableConstructor = new InjectableConstructor(this, ctor);
             
-            PostConstructs = postConstructs;
-            _isConcrete = !Type.ContainsGenericParameters;
-            IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
+            if (_isConcrete)
+            {
+                var methods = type.GetMethods(AllBindingFlags).ToArray();
 
-            ValidateMethodSignatures();
+                var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
+                var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+                var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+                var iFields = ScannerUtils.GetAllField(type, AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
+                var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
+
+                if (iCtors.Length > 1)
+                    throw new InvalidComponentException(type, "Multiple [Inject] constructors");
+
+                var iCtor = iCtors.FirstOrDefault() ?? type.GetConstructor(new Type[0]);
+
+                _injectableConstructor = new InjectableConstructor(this, iCtor);
+
+                var methodInjects = iMethods.Select(m => new InjectableMethod(this, m, null)).ToArray();
+                var fieldInjects = iFields.Select(f => new FieldInjectionPoint(this, f, f.GetBinders())).ToArray();
+                var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(this, p, p.GetBinders())).ToArray();
+
+                AddMemberInjectionPoints(fieldInjects.Cast<IWeldInjetionPoint>().Union(propertyInjects).ToArray());
+                AddInjectableMethods(methodInjects);
+
+                PostConstructs = postConstructs;
+                ValidateMethodSignatures();
+
+                IsDisposable = typeof(IDisposable).IsAssignableFrom(Type);
+            }
         }
 
         protected InjectableConstructor InjectableConstructor { get { return _injectableConstructor; } }

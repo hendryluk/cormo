@@ -13,5 +13,6 @@ namespace Cormo.Injects
         object GetInjectableReference(IInjectionPoint injectionPoint, ICreationalContext context);
         string Id { get;}
         ICreationalContext CreateCreationalContext(IContextual contextual);
+        void FireEvent<T>(T ev, IQualifiers qualifiers);
     }
 }

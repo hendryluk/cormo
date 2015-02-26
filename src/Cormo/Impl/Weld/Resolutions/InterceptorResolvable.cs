@@ -7,9 +7,9 @@ using Cormo.Interceptions;
 
 namespace Cormo.Impl.Weld.Resolutions
 {
-    public class IntercetorResolvable : IResolvable
+    public class InterceptorResolvable : IResolvable
     {
-        protected bool Equals(IntercetorResolvable other)
+        protected bool Equals(InterceptorResolvable other)
         {
             return InterceptorType == other.InterceptorType && Equals(Bindings, other.Bindings);
         }
@@ -19,7 +19,7 @@ namespace Cormo.Impl.Weld.Resolutions
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((IntercetorResolvable) obj);
+            return Equals((InterceptorResolvable) obj);
         }
 
         public override int GetHashCode()
@@ -30,19 +30,19 @@ namespace Cormo.Impl.Weld.Resolutions
             }
         }
 
-        public IntercetorResolvable(Type interceptorType, MethodInfo method)
+        public InterceptorResolvable(Type interceptorType, MethodInfo method)
         {
             InterceptorType = interceptorType;
             Bindings = method.GetAttributesRecursive<IInterceptorBinding>().Select(x=> x.GetType()).ToArray();
         }
 
-        public IntercetorResolvable(Type interceptorType, IComponent component)
+        public InterceptorResolvable(Type interceptorType, IComponent component)
         {
             InterceptorType = interceptorType;
             Bindings = component.Binders.Select(x => x.GetType()).ToArray();
         }
 
-        public IntercetorResolvable(Type interceptorType, PropertyInfo property)
+        public InterceptorResolvable(Type interceptorType, PropertyInfo property)
         {
             InterceptorType = interceptorType;
             Bindings = property.GetAttributesRecursive<IInterceptorBinding>().Select(x => x.GetType()).ToArray();

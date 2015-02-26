@@ -30,9 +30,7 @@ namespace Cormo.Impl.Weld
 
         public void AddValue(object instance, IBinderAttribute[] binders, WeldComponentManager manager)
         {
-            AddComponent(new ValueComponent(instance,
-               Binders.Empty, typeof (DependentAttribute),
-                manager));
+            AddComponent(new ValueComponent(instance, manager));
         }
 
         public void AddObserver(EventObserverMethod observer)

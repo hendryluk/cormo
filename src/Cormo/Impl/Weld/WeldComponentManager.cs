@@ -207,7 +207,7 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetMethodInterceptors(Type interceptorType, MethodInfo methodInfo)
         {
-            var resolvable = new IntercetorResolvable(interceptorType, methodInfo);
+            var resolvable = new InterceptorResolvable(interceptorType, methodInfo);
             var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
             if (interceptors.Any())
                 InterceptionValidator.ValidateInterceptableMethod(methodInfo, resolvable);
@@ -217,7 +217,7 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetPropertyInterceptors(Type interceptorType, PropertyInfo property, out MethodInfo[] methods)
         {
-            var resolvable = new IntercetorResolvable(interceptorType, property);
+            var resolvable = new InterceptorResolvable(interceptorType, property);
             var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
             if (interceptors.Any())
             {
@@ -233,7 +233,7 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetClassInterceptors(Type interceptorType, IComponent component, out MethodInfo[] methods)
         {
-            var intercetorResolvable = new IntercetorResolvable(interceptorType, component);
+            var intercetorResolvable = new InterceptorResolvable(interceptorType, component);
             var interceptors = _interceptorResolver.Resolve(intercetorResolvable).ToArray();
             if (interceptors.Any())
                 InterceptionValidator.ValidateInterceptableClass(component.Type, intercetorResolvable, out methods);
@@ -246,6 +246,12 @@ namespace Cormo.Impl.Weld
         public IEnumerable<EventObserverMethod> ResolveObservers(Type eventType, IQualifiers qualifiers)
         {
             return _observerResolver.Resolve(new ObserverResolvable(eventType, qualifiers));
+        }
+
+        public void FireEvent<T>(T ev, IQualifiers qualifiers)
+        {
+            foreach (var observer in ResolveObservers(typeof (T), qualifiers))
+                observer.Notify(ev);
         }
     }
 }

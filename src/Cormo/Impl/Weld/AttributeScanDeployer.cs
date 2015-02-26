@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Cormo.Catch;
-using Cormo.Contexts;
 using Cormo.Events;
 using Cormo.Impl.Solder;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
-using Cormo.Impl.Weld.Injections;
 using Cormo.Impl.Weld.Introspectors;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
@@ -24,8 +21,7 @@ namespace Cormo.Impl.Weld
     {
         private readonly WeldComponentManager _manager;
         private readonly WeldEnvironment _environment;
-        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-
+        
         public AttributeScanDeployer(WeldComponentManager manager, WeldEnvironment environment)
         {
             _manager = manager;
@@ -84,6 +80,7 @@ namespace Cormo.Impl.Weld
                 _environment.AddConfiguration(c);
         }
 
+        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
         public void AddTypes(params Type[] types)
         {
             var components = types.AsParallel().Select(MakeComponent).ToArray();
@@ -94,19 +91,19 @@ namespace Cormo.Impl.Weld
                                   let type = component.Type
                                   from field in ScannerUtils.GetAllField(type, AllBindingFlags)
                                   where field.HasAttributeRecursive<ProducesAttribute>()
-                                  select MakeProducerField(component, field)).ToArray();
+                                  select (IWeldComponent) new ProducerField(component, field, _manager)).ToArray();
 
             var producerMethods = (from component in components.AsParallel()
                                    let type = component.Type
                                    from method in type.GetMethods(AllBindingFlags)
                                    where method.HasAttributeRecursive<ProducesAttribute>()
-                                   select MakeProducerMethod(component, method)).ToArray();
+                                   select (IWeldComponent) new ProducerMethod(component, method, _manager)).ToArray();
 
             var producerProperties = (from component in components.AsParallel()
                                       let type = component.Type
                                       from property in type.GetProperties(AllBindingFlags)
                                       where property.HasAttributeRecursive<ProducesAttribute>()
-                                      select MakeProducerProperty(component, property)).ToArray();
+                                      select (IWeldComponent) new ProducerProperty(component, property, _manager)).ToArray();
 
             foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
                 _environment.AddComponent(c);
@@ -190,67 +187,21 @@ namespace Cormo.Impl.Weld
             return configs;
         }
 
-        public IWeldComponent MakeProducerField(IWeldComponent component, FieldInfo field)
-        {
-            var binders = field.GetBinders();
-            var scope = field.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            return new ProducerField(component, field, binders, scope, _manager);
-        }
-
-        public IWeldComponent MakeProducerProperty(IWeldComponent component, PropertyInfo property)
-        {
-            var binders = property.GetBinders();
-            var scope = property.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            return new ProducerProperty(component, property, binders, scope, _manager);
-        }
-
-        public IWeldComponent MakeProducerMethod(IWeldComponent component, MethodInfo method)
-        {
-            var binders = method.GetBinders();
-            var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            return new ProducerMethod(component, method, binders, scope, _manager);
-        }
-
         public IWeldComponent MakeComponent(Type type)
         {
-            var binders = type.GetBinders();
-            
-            var methods = type.GetMethods(AllBindingFlags).ToArray();
-
-            var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
-            var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var iFields = ScannerUtils.GetAllField(type, AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
-            var scope = type.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            if (iCtors.Length > 1)
-                throw new InvalidComponentException(type, "Multiple [Inject] constructors");
-
-            var iCtor = iCtors.FirstOrDefault()?? type.GetConstructor(new Type[0]);
-            
             ManagedComponent component;
+            var binders = type.GetBinders();
             if (binders.OfType<InterceptorAttribute>().Any())
             {
-                component = new Interceptor(iCtor, binders, scope, _manager, postConstructs);
+                component = new Interceptor(type, _manager);
             }
             else
             {
-                var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
-                component = mixinAttr==null? (ManagedComponent)
-                new ClassComponent(iCtor, binders, scope, _manager, postConstructs):
-                new Mixin(mixinAttr.InterfaceTypes, iCtor, binders, scope, _manager, postConstructs);
+                component = binders.OfType<MixinAttribute>().Any()? (ManagedComponent)
+                    new Mixin(type, _manager):
+                    new ClassComponent(type, _manager);
             }
 
-            var methodInjects = iMethods.Select(m => new InjectableMethod(component, m, null)).ToArray();
-            var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetBinders())).ToArray();
-            var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetBinders())).ToArray();
-            
-            component.AddMemberInjectionPoints(fieldInjects.Cast<IWeldInjetionPoint>().Union(propertyInjects).ToArray());
-            component.AddInjectableMethods(methodInjects);
             return component;
         }
 

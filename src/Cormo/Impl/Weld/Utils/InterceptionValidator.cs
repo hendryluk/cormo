@@ -9,7 +9,7 @@ namespace Cormo.Impl.Weld.Utils
 {
     public static class InterceptionValidator
     {
-        public static void ValidateInterceptableClass(Type type, IntercetorResolvable resolvable, out MethodInfo[] methods)
+        public static void ValidateInterceptableClass(Type type, InterceptorResolvable resolvable, out MethodInfo[] methods)
         {
             var builder = new StringBuilder();
             if (type.IsSealed)
@@ -34,7 +34,7 @@ namespace Cormo.Impl.Weld.Utils
                 ThrowNotInterceptableClassException(type, resolvable, builder.ToString());
         }
 
-        public static void ValidateInterceptableMethod(MethodInfo methodInfo, IntercetorResolvable resolvable)
+        public static void ValidateInterceptableMethod(MethodInfo methodInfo, InterceptorResolvable resolvable)
         {
             if (methodInfo.IsStatic)
                 ThrowNotInterceptableMethodException(methodInfo, resolvable, "must not be static");
@@ -44,7 +44,7 @@ namespace Cormo.Impl.Weld.Utils
                 ThrowNotInterceptableMethodException(methodInfo, resolvable, "must be virtual");
         }
 
-        private static void ThrowNotInterceptableMethodException(MethodInfo methodInfo, IntercetorResolvable resolvable,
+        private static void ThrowNotInterceptableMethodException(MethodInfo methodInfo, InterceptorResolvable resolvable,
             string reason)
         {
             var msg = string.Format("Method [{0}] with interceptor-bindings [{1}] {2}", methodInfo,
@@ -54,7 +54,7 @@ namespace Cormo.Impl.Weld.Utils
             throw new NotInterceptableException(msg);
         }
 
-        private static void ThrowNotInterceptableClassException(Type type, IntercetorResolvable resolvable,
+        private static void ThrowNotInterceptableClassException(Type type, InterceptorResolvable resolvable,
             string reason)
         {
             var msg = string.Format("Class [{0}] with interceptor-bindings [{1}] {2}", type,
