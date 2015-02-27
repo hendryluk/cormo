@@ -23,7 +23,7 @@ namespace Cormo.Impl.Weld.Utils
                     .SelectMany(x => new[] { x.SetMethod, x.GetGetMethod() }.Where(m => m != null)))
                 .Where(x=> !x.IsPrivate).ToArray();
 
-            var nonVirtualMethods = methods.Where(x => !TypeUtils.IsOveridable(x)).ToArray();
+            var nonVirtualMethods = methods.Where(x => !TypeUtils.IsOveridable(x) && x.DeclaringType != typeof(object)).ToArray();
             if (nonVirtualMethods.Any())
             {
                 if (allowPartial)
