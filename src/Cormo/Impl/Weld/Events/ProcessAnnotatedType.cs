@@ -1,4 +1,5 @@
-﻿using Cormo.Impl.Weld.Reflects;
+﻿using System.Linq;
+using Cormo.Impl.Weld.Reflects;
 using Cormo.Injects;
 using Cormo.Injects.Events;
 using Cormo.Reflects;
@@ -11,6 +12,11 @@ namespace Cormo.Impl.Weld.Events
         public void SetAnnotations(IAnnotations annotations)
         {
             AnnotatedType = new AnnotatedType(AnnotatedType.Type, annotations);
+        }
+
+        public void Veto()
+        {
+            SetAnnotations(new Annotations(AnnotatedType.Annotations.Union(new[]{new VetoAttribute()})));
         }
 
         public ProcessAnnotatedType(IAnnotatedType annotatedType)

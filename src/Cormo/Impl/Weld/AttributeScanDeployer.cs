@@ -104,9 +104,7 @@ namespace Cormo.Impl.Weld
 
         public void AddTypes(params Type[] types)
         {
-            var annotated = types.Select(ProcessAnnotatedType)
-                .Cast<IAnnotatedType>()
-                .ToArray();
+            var annotated = types.Select(ProcessAnnotatedType).Where(x=> !x.Annotations.Any<VetoAttribute>()).ToArray();
 
             var components = annotated.AsParallel().Select(MakeComponent).ToArray();
             var classes = components.OfType<ClassComponent>().ToArray();
@@ -143,6 +141,9 @@ namespace Cormo.Impl.Weld
         private IAnnotatedType ProcessAnnotatedType(Type type)
         {
             var annotated = new AnnotatedType(type);
+            if (annotated.Annotations.Any<VetoAttribute>())
+                return annotated;
+
             var e = new ProcessAnnotatedType(annotated);
             _manager.FireEvent(e, Qualifiers.Empty);
             return e.AnnotatedType;

@@ -6,6 +6,7 @@ namespace Cormo.Injects.Events
     {
         IAnnotatedType AnnotatedType { get; }
         void SetAnnotations(IAnnotations annotations);
+        void Veto();
     }
 
    

@@ -1,6 +1,6 @@
 ﻿using Cormo.Interceptions;
 
-namespace Cormo.Data.EntityFramework.Api
+namespace Cormo.Data
 {
     public class TransactionalAttribute: InterceptorBindingAttribute
     {

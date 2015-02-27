@@ -61,6 +61,12 @@
     <Compile Include="Contexts\ICreationalContext.cs" />
     <Compile Include="Contexts\IContext.cs" />
     <Compile Include="Contexts\SingletonAttribute.cs" />
+    <Compile Include="Data\Audits\CreatedByAttribute.cs" />
+    <Compile Include="Data\Audits\CreatedDateAttribute.cs" />
+    <Compile Include="Data\Audits\CurrentAuditorAttribute.cs" />
+    <Compile Include="Data\Audits\LastModifiedByAttribute.cs" />
+    <Compile Include="Data\Audits\LastModifiedDateAttribute.cs" />
+    <Compile Include="Data\TransactionalAttribute.cs" />
     <Compile Include="Events\IEvents.cs" />
     <Compile Include="Events\ObservesAttribute.cs" />
     <Compile Include="Impl\Solder\ExceptionsHandledInterceptor.cs" />
@@ -96,6 +102,7 @@
     <Compile Include="Impl\Weld\Utils\GenericResolver.cs" />
     <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
     <Compile Include="Injects\Events\IProcessAnnotatedType.cs" />
+    <Compile Include="Injects\VetoAttribute.cs" />
     <Compile Include="Reflects\IAnnotatedType.cs" />
     <Compile Include="Injects\IAnnotations.cs" />
     <Compile Include="Impl\Weld\Qualifiers.cs" />

@@ -43,6 +43,9 @@ namespace Cormo.Impl.Weld.Components
         {
             get
             {
+                if (!IsConcrete)
+                    return Enumerable.Empty<IChainValidatable>();
+
                 return base.NextLinearValidatables.Union(
                     _method.InjectionPoints
                         .Where(x => !ScopeAttribute.IsNormal(x.Scope))
@@ -52,7 +55,13 @@ namespace Cormo.Impl.Weld.Components
 
         public override IEnumerable<IChainValidatable> NextNonLinearValidatables
         {
-            get { return _method.NonLinearValidatables; }
+            get
+            {
+                if (!IsConcrete)
+                    return Enumerable.Empty<IChainValidatable>();
+                
+                return _method.NonLinearValidatables;
+            }
         }
 
         public override string ToString()

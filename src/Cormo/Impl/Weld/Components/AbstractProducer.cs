@@ -51,7 +51,12 @@ namespace Cormo.Impl.Weld.Components
 
         public override IEnumerable<IChainValidatable> NextLinearValidatables
         {
-            get { yield return DeclaringComponent; }
+            get
+            {
+                if (!IsConcrete)
+                    yield break;
+                yield return DeclaringComponent;
+            }
         }
 
         public override IEnumerable<IChainValidatable> NextNonLinearValidatables

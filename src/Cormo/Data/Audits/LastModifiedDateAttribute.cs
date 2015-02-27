@@ -1,9 +1,9 @@
 ﻿using System;
 
-namespace Cormo.Data.EntityFramework.Api.Audits
+namespace Cormo.Data.Audits
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class CreatedByAttribute : Attribute
+    public class LastModifiedDateAttribute : Attribute
     {
     }
 }
