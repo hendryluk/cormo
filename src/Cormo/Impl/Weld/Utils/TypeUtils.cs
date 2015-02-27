@@ -80,10 +80,5 @@ namespace Cormo.Impl.Weld.Utils
         {
             return type.GetFields(BindingFlags.Public | BindingFlags.Instance);
         }
-
-        public static void ValidateInterceptable(MethodInfo[] methods)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

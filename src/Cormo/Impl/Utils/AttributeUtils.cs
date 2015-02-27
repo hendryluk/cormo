@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -34,7 +35,7 @@ namespace Cormo.Impl.Utils
             return GetAttributesRecursive(attributeProvider).OfType<T>();
         }
 
-        public static IEnumerable<T> GetAttributesRecursive<T>(this IEnumerable<Attribute> attributes) where T:IBinderAttribute
+        public static IEnumerable<T> GetAttributesRecursive<T>(this IEnumerable<Attribute> attributes) where T:IAnnotation
         {
             return GetAttributesRecursive(attributes).OfType<T>();
         }
@@ -70,11 +71,12 @@ namespace Cormo.Impl.Utils
             return GetAttributesRecursive(attributeProvider.GetCustomAttributes(true).OfType<Attribute>());
         }
 
-        public static IBinders GetBinders(this ICustomAttributeProvider attributeProvider)
+        public static IAnnotations GetAnnotations(this ICustomAttributeProvider attributeProvider)
         {
-            return new Binders(
-                from attribute in attributeProvider.GetAttributesRecursive<IBinderAttribute>()
+            return new Annotations(
+                from attribute in attributeProvider.GetAttributesRecursive<IAnnotation>()
                 select attribute);
+
         }
     }
 }

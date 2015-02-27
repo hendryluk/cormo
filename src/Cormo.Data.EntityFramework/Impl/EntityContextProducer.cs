@@ -7,8 +7,8 @@ using System.Linq;
 using System.Security.Principal;
 using Cormo.Catch;
 using Cormo.Contexts;
+using Cormo.Data.Audits;
 using Cormo.Data.EntityFramework.Api;
-using Cormo.Data.EntityFramework.Api.Audits;
 using Cormo.Data.EntityFramework.Api.Events;
 using Cormo.Events;
 using Cormo.Injects;
@@ -99,16 +99,10 @@ namespace Cormo.Data.EntityFramework.Impl
                 _entityTypes.Add(typeof (T));
             }
 
-            [Produces, RequestScoped, Default, EntityContext]
-            public IDbSet<T> GetDbSet([Unwrap, EntityContext]DbContext context)
+            [Produces, RequestScoped]
+            public IDbSet<T> GetDbSet([Unwrap]DbContext context)
             {
                 return context.Set<T>();
-            }
-
-            [Produces, Default, ConditionalOnMissingComponent]
-            public DbContext GetDefaultDbContext([EntityContext] DbContext context)
-            {
-                return context;
             }
         }
 

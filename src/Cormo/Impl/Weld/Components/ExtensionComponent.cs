@@ -1,23 +1,30 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Cormo.Contexts;
 using Cormo.Injects;
+using Cormo.Injects.Exceptions;
 
 namespace Cormo.Impl.Weld.Components
 {
-    public class ValueComponent : AbstractComponent
+    public class ExtensionComponent : AbstractComponent
     {
-        private readonly object _instance;
+        private readonly IExtension _instance;
 
-        public ValueComponent(object instance, WeldComponentManager manager)
-            : base(instance.GetType().FullName, instance.GetType(), Weld.Annotations.Empty, manager)
+        public ExtensionComponent(Type type, WeldComponentManager manager) : base(type.FullName, type, Weld.Annotations.Empty, manager)
         {
-            _instance = instance;
+            try
+            {
+                _instance = (IExtension) Activator.CreateInstance(type);
+            }
+            catch (Exception e)
+            {
+                throw new CreationException(type, e);
+            }
         }
 
         public override void Destroy(object instance, ICreationalContext creationalContext)
         {
+            // nothing
         }
 
         protected override BuildPlan GetBuildPlan()
@@ -33,11 +40,6 @@ namespace Cormo.Impl.Weld.Components
         public override IEnumerable<IChainValidatable> NextNonLinearValidatables
         {
             get { yield break; }
-        }
-
-        public override string ToString()
-        {
-            return string.Format("Instance Component [{0}] with Qualifiers [{1}]", Type, string.Join(",", Qualifiers));
         }
     }
 }

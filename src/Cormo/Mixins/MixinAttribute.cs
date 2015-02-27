@@ -4,7 +4,7 @@ using Cormo.Injects;
 namespace Cormo.Mixins
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public sealed class MixinAttribute: Attribute, IBinderAttribute
+    public sealed class MixinAttribute: Attribute, IAnnotation
     {
         public Type[] InterfaceTypes { get; private set; }
 

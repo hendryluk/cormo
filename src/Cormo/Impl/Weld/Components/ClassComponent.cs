@@ -10,22 +10,24 @@ using Cormo.Impl.Weld.Interceptions;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
 using Cormo.Interceptions;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
     public class ClassComponent : ManagedComponent
     {
-        private ClassComponent(ClassComponent parent, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
-            : base(new ComponentIdentifier(parent.Id.Key, ctor.DeclaringType), ctor, binders, scope, manager,
-                parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
-        {
-            parent.TransferInjectionPointsTo(this, typeResolution);
-        }
+        public IAnnotatedType AnnotatedType { get; set; }
+        //private ClassComponent(ClassComponent parent, ConstructorInfo ctor, IAnnotations Annotations, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
+        //    : base(new ComponentIdentifier(parent.Id.Key, ctor.DeclaringType), ctor, Annotations, scope, manager,
+        //        parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
+        //{
+        //    parent.TransferInjectionPointsTo(this, typeResolution);
+        //}
 
-        public ClassComponent(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager,
-            MethodInfo[] postConstructs)
-            : base(ctor, binders, scope, manager, postConstructs)
+        public ClassComponent(IAnnotatedType type, WeldComponentManager manager)
+            : base(type, manager)
         {
+            AnnotatedType = type;
         }
 
         public override IWeldComponent Resolve(Type requestedType)
@@ -39,13 +41,7 @@ namespace Cormo.Impl.Weld.Components
                 var resolution = GenericResolver.ImplementerResolver.ResolveType(Type, requestedType);
                 if (resolution == null || resolution.ResolvedType == null || resolution.ResolvedType.ContainsGenericParameters)
                     return null;
-                var resolvedCtor = GenericUtils.TranslateConstructorGenericArguments(InjectableConstructor.Constructor,
-                    resolution.GenericParameterTranslations);
-
-                component = new ClassComponent(this,
-                    resolvedCtor,
-                    Binders,
-                    Scope, Manager, resolution);
+                component = new ClassComponent(AnnotatedType.Resolve(resolution.ResolvedType), Manager);
             }
             if(component != null)
                 RuntimeHelpers.RunClassConstructor(component.Type.TypeHandle);

@@ -5,18 +5,19 @@ using System.Reflection;
 using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Mixins;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
     public class Mixin : ManagedComponent
     {
-        public IEnumerable<Type> MixinBinders { get; private set; }
+        public IEnumerable<Type> MixinBindings { get; private set; }
 
-        public Mixin(Type[] interfaceTypes, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs) 
-            : base(ctor, binders, scope, manager, postConstructs)
+        public Mixin(IAnnotatedType type, WeldComponentManager manager) 
+            : base(type, manager)
         {
-            MixinBinders = binders.OfType<IMixinBinder>().Select(x=> x.GetType());
-            InterfaceTypes = interfaceTypes;
+            MixinBindings = Annotations.OfType<IMixinBinding>().Select(x=> x.GetType());
+            InterfaceTypes = Annotations.OfType<MixinAttribute>().SelectMany(x=> x.InterfaceTypes).ToArray();
         }
 
         public Type[] InterfaceTypes { get; private set; }

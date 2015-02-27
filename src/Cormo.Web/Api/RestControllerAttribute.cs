@@ -4,7 +4,7 @@ using Cormo.Mixins;
 namespace Cormo.Web.Api
 {
     [Default]
-    public class RestControllerAttribute : StereotypeAttribute, IQualifier, IMixinBinder
+    public class RestControllerAttribute : StereotypeAttribute, IQualifier, IMixinBinding
     {
 
     }

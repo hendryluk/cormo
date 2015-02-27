@@ -9,5 +9,10 @@ namespace Cormo.Injects.Exceptions
             : base(string.Format("Type cannot be instantiated: [{0}]. Reason: {1}", type.FullName, reason))
         {
         }
+
+        public CreationException(Type type, Exception innerException)
+            : base(string.Format("Type cannot be instantiated: [{0}]. ", type.FullName), innerException)
+        {
+        }
     }
 }

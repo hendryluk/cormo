@@ -2,7 +2,7 @@
 
 namespace Cormo.Mixins
 {
-    public interface IMixinBinder : IBinderAttribute
+    public interface IMixinBinding : IAnnotation
     {
     }
 }

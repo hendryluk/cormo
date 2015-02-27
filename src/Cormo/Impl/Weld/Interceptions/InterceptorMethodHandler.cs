@@ -25,7 +25,7 @@ namespace Cormo.Impl.Weld.Interceptions
                 interceptors.Select(x => manager.GetReference(x, creationalContext))
                     .Cast<IAroundInvokeInterceptor>());
 
-            _bindingsLazy = new Lazy<IEnumerable<IInterceptorBinding>>(()=> method.GetBinders().OfType<IInterceptorBinding>().ToArray());
+            _bindingsLazy = new Lazy<IEnumerable<IInterceptorBinding>>(()=> method.GetAnnotations().OfType<IInterceptorBinding>().ToArray());
 
             var returnType = method.ReturnType;
             if (returnType == typeof (Task))

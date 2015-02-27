@@ -1,6 +1,6 @@
 ﻿using Cormo.Injects;
 
-namespace Cormo.Data.EntityFramework.Api.Audits
+namespace Cormo.Data.Audits
 {
     public class CurrentAuditorAttribute : QualifierAttribute
     {

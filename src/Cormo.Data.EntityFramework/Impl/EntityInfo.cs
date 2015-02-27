@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Cormo.Data.EntityFramework.Api.Audits;
+using Cormo.Data.Audits;
 using Cormo.Impl.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;

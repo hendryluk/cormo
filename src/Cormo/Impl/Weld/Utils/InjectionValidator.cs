@@ -6,38 +6,39 @@ using System.Text;
 using Cormo.Impl.Utils;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Utils
 {
     public static class InjectionValidator
     {
-        public static bool ScanPredicate(ICustomAttributeProvider provider)
+        public static bool ScanPredicate(IAnnotated provider)
         {
-            return provider.HasAttributeRecursive<InjectAttribute>();
+            return provider.Annotations.OfType<InjectAttribute>().Any();
         }
 
-        public static bool ScanPredicate(PropertyInfo property)
+        public static bool ScanPredicate(IAnnotatedProperty property)
         {
-            return ScanPredicate((ICustomAttributeProvider) property) &&
-                   (property.SetMethod == null || property.SetMethod.IsAbstract);
+            return ScanPredicate((IAnnotated)property) &&
+                   (property.Property.SetMethod == null || property.Property.SetMethod.IsAbstract);
         }
-        public static void Validate(FieldInfo field)
+        public static void Validate(IAnnotatedField field)
         {
         }
 
-        public static void Validate(MethodBase method)
+        public static void Validate(IAnnotatedMethod method)
         {
-            if (method.IsGenericMethodDefinition)
+            if (method.Method.IsGenericMethodDefinition)
             {
-                throw new InjectionPointException(method, "Cannot inject into a generic method");
+                throw new InjectionPointException(method.Method, "Cannot inject into a generic method");
             }
         }
        
-        public static void Validate(PropertyInfo property)
+        public static void Validate(IAnnotatedProperty property)
         {
-            if (property.SetMethod == null)
+            if (property.Property.SetMethod == null)
             {
-                throw new InjectionPointException(property, "Injection property must have a setter");
+                throw new InjectionPointException(property.Property, "Injection property must have a setter");
             }
         }
 
@@ -88,7 +89,7 @@ namespace Cormo.Impl.Weld.Utils
                 {
                     builder.Append(
                         string.Format("These public members must be virtual: {0}",
-                            string.Join(",/n", sealedMembers.Select(Formatters.Format))));
+                            string.Join(",/n", sealedMembers.Select(Formatters.Member))));
                 }
 
                 var publicFields = TypeUtils.GetPublicFields(type);

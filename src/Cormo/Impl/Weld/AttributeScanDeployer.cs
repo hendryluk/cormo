@@ -1,22 +1,23 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using Cormo.Catch;
-using Cormo.Contexts;
 using Cormo.Events;
 using Cormo.Impl.Solder;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
-using Cormo.Impl.Weld.Injections;
+using Cormo.Impl.Weld.Events;
 using Cormo.Impl.Weld.Introspectors;
+using Cormo.Impl.Weld.Reflects;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Injects.Events;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
 using Cormo.Mixins;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld
 {
@@ -24,8 +25,7 @@ namespace Cormo.Impl.Weld
     {
         private readonly WeldComponentManager _manager;
         private readonly WeldEnvironment _environment;
-        private const BindingFlags AllBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-
+        
         public AttributeScanDeployer(WeldComponentManager manager, WeldEnvironment environment)
         {
             _manager = manager;
@@ -70,8 +70,14 @@ namespace Cormo.Impl.Weld
                             .AsEnumerable().Union(BuiltInTypes)
                             .ToArray();
 
-            var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
+            var extensions = types.Where(typeof (IExtension).IsAssignableFrom).ToArray();
+            types = types.Except(extensions).ToArray();
 
+            Container.Instance.Initialize(_manager);
+            AddContexts();
+            RegisterExtensions(extensions);
+
+            var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
             var assemblyConfigs = (from assembly in assemblies.AsParallel()
                                   from import in assembly.GetAttributesRecursive<ImportAttribute>()
                                   from type in import.Types
@@ -79,34 +85,49 @@ namespace Cormo.Impl.Weld
             
             AddTypes(componentTypes);
             var configs = GetConfigs(_environment.Components, assemblyConfigs);
-
+            
             foreach (var c in configs)
                 _environment.AddConfiguration(c);
         }
 
+        public void RegisterExtensions(Type[] extensions)
+        {
+            var regs = from e in extensions
+                       let annotatedType = new AnnotatedType(e)
+                       let component = new ExtensionComponent(e, _manager)
+                       let observers = FindEventObservers(annotatedType, component)
+                       select new { component, observers };
+
+            _manager.AddExtensions(regs.Select(x => x.component));
+            _manager.AddObservers(regs.SelectMany(x => x.observers));
+        }
+
         public void AddTypes(params Type[] types)
         {
-            var components = types.AsParallel().Select(MakeComponent).ToArray();
-            var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
-            var exceptionHandlers = components.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
+            var annotated = types.Select(ProcessAnnotatedType).Where(x=> !x.Annotations.Any<VetoAttribute>()).ToArray();
 
-            var producerFields = (from component in components.AsParallel()
-                                  let type = component.Type
-                                  from field in ScannerUtils.GetAllField(type, AllBindingFlags)
-                                  where field.HasAttributeRecursive<ProducesAttribute>()
-                                  select MakeProducerField(component, field)).ToArray();
+            var components = annotated.AsParallel().Select(MakeComponent).ToArray();
+            var classes = components.OfType<ClassComponent>().ToArray();
+            var eventObservers = classes.AsParallel().SelectMany(x=> FindEventObservers(x.AnnotatedType, x)).ToArray();
+            var exceptionHandlers = classes.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
 
-            var producerMethods = (from component in components.AsParallel()
-                                   let type = component.Type
-                                   from method in type.GetMethods(AllBindingFlags)
-                                   where method.HasAttributeRecursive<ProducesAttribute>()
-                                   select MakeProducerMethod(component, method)).ToArray();
+            var producerFields = (from component in classes.AsParallel()
+                                  let type = component.AnnotatedType
+                                  from field in type.Fields
+                                  where field.Annotations.OfType<ProducesAttribute>().Any()
+                                  select (IWeldComponent) new ProducerField(component, field, _manager)).ToArray();
 
-            var producerProperties = (from component in components.AsParallel()
-                                      let type = component.Type
-                                      from property in type.GetProperties(AllBindingFlags)
-                                      where property.HasAttributeRecursive<ProducesAttribute>()
-                                      select MakeProducerProperty(component, property)).ToArray();
+            var producerMethods = (from component in classes.AsParallel()
+                                   let type = component.AnnotatedType
+                                   from method in type.Methods
+                                   where method.Annotations.OfType<ProducesAttribute>().Any()
+                                   select (IWeldComponent) new ProducerMethod(component, method, _manager)).ToArray();
+
+            var producerProperties = (from component in classes.AsParallel()
+                                      let type = component.AnnotatedType
+                                      from property in type.Properties
+                                      where property.Annotations.OfType<ProducesAttribute>().Any()
+                                      select (IWeldComponent) new ProducerProperty(component, property.Property, property.Annotations, _manager)).ToArray();
 
             foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
                 _environment.AddComponent(c);
@@ -117,46 +138,57 @@ namespace Cormo.Impl.Weld
                 _environment.AddExceptionHandlers(handler);
         }
 
-        private static IEnumerable<EventObserverMethod> FindEventObservers(IWeldComponent component)
+        private IAnnotatedType ProcessAnnotatedType(Type type)
         {
-            foreach (var method in component.Type.GetMethods())
+            var annotated = new AnnotatedType(type);
+            if (annotated.Annotations.Any<VetoAttribute>())
+                return annotated;
+
+            var e = new ProcessAnnotatedType(annotated);
+            _manager.FireEvent(e, Qualifiers.Empty);
+            return e.AnnotatedType;
+        }
+
+        private static IEnumerable<EventObserverMethod> FindEventObservers(IAnnotatedType type, IWeldComponent component)
+        {
+            foreach (var method in type.Methods)
             {
-                var injectParams = method.GetParameters()
-                    .Where(AttributeUtils.HasAttributeRecursive<ObservesAttribute>)
+                var injectParams = method.Parameters
+                    .Where(p => p.Annotations.Any<ObservesAttribute>())
                     .ToArray();
                 if(!injectParams.Any())
                     continue;
                 if (injectParams.Length > 1)
-                    throw new InvalidComponentException(Formatters.MultipleObservesParameter(method));
+                    throw new InvalidComponentException(Formatters.MultipleObservesParameter(method.Method));
 
                 var param = injectParams.Single();
-                yield return new EventObserverMethod(component, param, param.GetBinders());
+                yield return new EventObserverMethod(component, param.Parameter, param.Annotations);
             }
         }
 
-        private static IEnumerable<EventObserverMethod> FindExceptionHandlers(IWeldComponent component)
+        private static IEnumerable<EventObserverMethod> FindExceptionHandlers(ClassComponent component)
         {
-            foreach (var method in component.Type.GetMethods())
+            foreach (var method in component.AnnotatedType.Methods)
             {
-                var injectParams = method.GetParameters()
-                    .Where(AttributeUtils.HasAttributeRecursive<HandlesAttribute>)
+                var injectParams = method.Parameters
+                    .Where(p=> p.Annotations.OfType<HandlesAttribute>().Any())
                     .ToArray();
                 if (!injectParams.Any())
                     continue;
                 if (injectParams.Length > 1)
-                    throw new InvalidComponentException(Formatters.MultipleHandlesParameter(method));
+                    throw new InvalidComponentException(Formatters.MultipleHandlesParameter(method.Method));
 
                 var param = injectParams.Single();
-                if(GenericUtils.OpenIfGeneric(param.ParameterType) != typeof(ICaughtException<>))
-                    throw new InvalidComponentException(Formatters.WrongHandlesParamType(param));
+                if(GenericUtils.OpenIfGeneric(param.Parameter.ParameterType) != typeof(ICaughtException<>))
+                    throw new InvalidComponentException(Formatters.WrongHandlesParamType(param.Parameter));
 
-                yield return new EventObserverMethod(component, param, param.GetBinders());
+                yield return new EventObserverMethod(component, param.Parameter, param.Annotations);
             }
         }
 
-        public void AddValue(object instance, params IBinderAttribute[] binders)
+        public void AddValue(object instance, params IAnnotation[] annotations)
         {
-            _environment.AddValue(instance, binders, _manager);
+            _environment.AddValue(instance, annotations, _manager);
         }
 
         private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components, Type[] assemblyConfigs)
@@ -172,7 +204,7 @@ namespace Cormo.Impl.Weld
                 configs.AddRange(newConfigs);
 
                 var imports = from config in newConfigs
-                    from import in config.Type.GetAttributesRecursive<ImportAttribute>()
+                    from import in config.Annotations.OfType<ImportAttribute>()
                     from importType in import.Types
                     select new {config.Type, importType};
 
@@ -190,73 +222,29 @@ namespace Cormo.Impl.Weld
             return configs;
         }
 
-        public IWeldComponent MakeProducerField(IWeldComponent component, FieldInfo field)
+        public IWeldComponent MakeComponent(IAnnotatedType type)
         {
-            var binders = field.GetBinders();
-            var scope = field.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
+            if(typeof(IExtension).IsAssignableFrom(type.Type))
+                return new ExtensionComponent(type.Type, _manager);
 
-            return new ProducerField(component, field, binders, scope, _manager);
-        }
-
-        public IWeldComponent MakeProducerProperty(IWeldComponent component, PropertyInfo property)
-        {
-            var binders = property.GetBinders();
-            var scope = property.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            return new ProducerProperty(component, property, binders, scope, _manager);
-        }
-
-        public IWeldComponent MakeProducerMethod(IWeldComponent component, MethodInfo method)
-        {
-            var binders = method.GetBinders();
-            var scope = method.GetAttributesRecursive<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            return new ProducerMethod(component, method, binders, scope, _manager);
-        }
-
-        public IWeldComponent MakeComponent(Type type)
-        {
-            var binders = type.GetBinders();
-            
-            var methods = type.GetMethods(AllBindingFlags).ToArray();
-
-            var iMethods = methods.Where(InjectionValidator.ScanPredicate).ToArray();
-            var iProperties = type.GetProperties(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var iCtors = type.GetConstructors(AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var iFields = ScannerUtils.GetAllField(type, AllBindingFlags).Where(InjectionValidator.ScanPredicate).ToArray();
-            var postConstructs = methods.Where(x => x.HasAttributeRecursive<PostConstructAttribute>()).ToArray();
-            var scope = type.GetAttributesRecursive<ScopeAttribute>().Select(x=> x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-
-            if (iCtors.Length > 1)
-                throw new InvalidComponentException(type, "Multiple [Inject] constructors");
-
-            var iCtor = iCtors.FirstOrDefault()?? type.GetConstructor(new Type[0]);
-            
             ManagedComponent component;
-            if (binders.OfType<InterceptorAttribute>().Any())
+            var annotationAttribute = type.Annotations.OfType<InterceptorAttribute>().ToArray();
+            if (annotationAttribute.Any())
             {
-                component = new Interceptor(iCtor, binders, scope, _manager, postConstructs);
+                component = new Interceptor(type, _manager, annotationAttribute.Any(x=> x.AllowPartialInterception));
             }
             else
             {
-                var mixinAttr = type.GetAttributesRecursive<MixinAttribute>().FirstOrDefault();
-                component = mixinAttr==null? (ManagedComponent)
-                new ClassComponent(iCtor, binders, scope, _manager, postConstructs):
-                new Mixin(mixinAttr.InterfaceTypes, iCtor, binders, scope, _manager, postConstructs);
+                component = type.Annotations.OfType<MixinAttribute>().Any()? (ManagedComponent)
+                    new Mixin(type, _manager):
+                    new ClassComponent(type, _manager);
             }
 
-            var methodInjects = iMethods.Select(m => new InjectableMethod(component, m, null)).ToArray();
-            var fieldInjects = iFields.Select(f => new FieldInjectionPoint(component, f, f.GetBinders())).ToArray();
-            var propertyInjects = iProperties.Select(p => new PropertyInjectionPoint(component, p, p.GetBinders())).ToArray();
-            
-            component.AddMemberInjectionPoints(fieldInjects.Cast<IWeldInjetionPoint>().Union(propertyInjects).ToArray());
-            component.AddInjectableMethods(methodInjects);
             return component;
         }
 
         public void Deploy()
         {
-            AddContexts();
             AddBuiltInComponents();
             _manager.Deploy(_environment);
         }

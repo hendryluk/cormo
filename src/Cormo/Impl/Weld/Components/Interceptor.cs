@@ -8,6 +8,7 @@ using Cormo.Impl.Weld.Injections;
 using Cormo.Injects;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -15,20 +16,22 @@ namespace Cormo.Impl.Weld.Components
 
     public class Interceptor : ManagedComponent
     {
+        public bool AllowPartialInterception { get; private set; }
         private static Type[] AllInterceptorTypes = {typeof (IAroundInvokeInterceptor)};
 
         public Type[] InterceptorBindings { get; private set; }
 
-        public Interceptor(ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, MethodInfo[] postConstructs)
-            : base(ctor, binders, scope, manager, postConstructs)
+        public Interceptor(IAnnotatedType type, WeldComponentManager manager, bool allowPartialInterception)
+            : base(type, manager)
         {
-            InterceptorBindings = binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
-            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(ctor.DeclaringType)).ToArray();
+            AllowPartialInterception = allowPartialInterception;
+            InterceptorBindings = Annotations.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
+            InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type.Type)).ToArray();
             
             if(!InterceptorBindings.Any())
-                throw new InvalidComponentException(ctor.DeclaringType, "Interceptor must have at least one interceptor-binding attribute");
+                throw new InvalidComponentException(type.Type, "Interceptor must have at least one interceptor-binding attribute");
             if (!InterceptorTypes.Any())
-                throw new InvalidComponentException(ctor.DeclaringType, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x => x.ToString())));
+                throw new InvalidComponentException(type.Type, "Interceptor must implement " + string.Join(" or ", AllInterceptorTypes.Select(x => x.ToString())));
         
         }
 

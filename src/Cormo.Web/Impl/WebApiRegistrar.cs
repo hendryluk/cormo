@@ -38,7 +38,7 @@ namespace Cormo.Web.Impl
                 config.MessageHandlers.Add(handler);
             foreach (var filter in _filters)
                 config.Filters.Add(filter);
-            config.ParameterBindingRules.Add(param => new InjectParameterBinding(manager, param));
+            //config.ParameterBindingRules.Add(param => new InjectParameterBinding(manager, param));
             config.EnsureInitialized();
         }
 

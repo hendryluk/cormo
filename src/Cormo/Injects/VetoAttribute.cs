@@ -3,7 +3,7 @@
 namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Class)]
-    public class DecoratorAttribute: Attribute, IAnnotation
+    public class VetoAttribute: Attribute, IAnnotation
     {
          
     }

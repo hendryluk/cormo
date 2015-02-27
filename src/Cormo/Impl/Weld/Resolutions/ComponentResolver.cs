@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Cormo.Events;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
@@ -24,9 +23,8 @@ namespace Cormo.Impl.Weld.Resolutions
             
             if (GenericUtils.OpenIfGeneric(resolvable.Type) == typeof(IEvents<>))
                 return new IWeldComponent[]
-                {new EventComponent(resolvable.Type.GetGenericArguments()[0], new Binders(resolvable.Qualifiers), Manager)};
-                
-
+                {new EventComponent(resolvable.Type.GetGenericArguments()[0], new Annotations(resolvable.Qualifiers), Manager)};
+            
             var unwrappedType = UnwrapType(resolvable.Type);
             var isWrapped = unwrappedType != resolvable.Type;
 
@@ -48,7 +46,7 @@ namespace Cormo.Impl.Weld.Resolutions
             components = results;
             
             return isWrapped
-                ? new IWeldComponent[] {new InstanceComponent(unwrappedType, new Binders(resolvable.Qualifiers), Manager, results)}
+                ? new IWeldComponent[] {new InstanceComponent(unwrappedType, new Annotations(resolvable.Qualifiers), Manager, results)}
                 : results;
         }
     }

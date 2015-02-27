@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Cormo.Injects
 {
-    public abstract class StereotypeAttribute: Attribute, IBinderAttribute, IStereotype
+    public abstract class StereotypeAttribute: Attribute, IAnnotation, IStereotype
     {
         private readonly Attribute[] _attributes;
         IEnumerable<Attribute> IStereotype.Attributes { get { return _attributes.Union(GetType().GetCustomAttributes(true).OfType<Attribute>()); } }

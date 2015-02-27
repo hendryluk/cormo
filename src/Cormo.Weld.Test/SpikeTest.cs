@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using Cormo.Impl.Weld.Reflects;
 using Microsoft.CSharp;
 using NUnit.Framework;
 
@@ -49,6 +50,11 @@ namespace Cormo.Weld.Test
         public void Haha2()
         {
             //Assert.AreEqual("", typeof(IEnumerable<string>).Name);
+            var one = typeof(Object).GetMethod("ToString");
+            var two = typeof(AnnotatedType).GetMethod("ToString");
+
+
+            Assert.AreEqual(one.GetBaseDefinition(), two.GetBaseDefinition());
         }
 
         public void Haha1()
@@ -69,6 +75,7 @@ namespace Cormo.Weld.Test
 
             Assert.AreEqual(b, x);
         }
+
 
     }
     

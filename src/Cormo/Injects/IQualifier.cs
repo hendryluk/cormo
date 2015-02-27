@@ -3,7 +3,7 @@ using Cormo.Catch;
 
 namespace Cormo.Injects
 {
-    public interface IQualifier : IBinderAttribute
+    public interface IQualifier : IAnnotation
     {
     }
 

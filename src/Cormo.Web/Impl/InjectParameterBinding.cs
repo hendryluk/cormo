@@ -30,11 +30,11 @@ namespace Cormo.Web.Impl
                      var controllerType = param.Member.ReflectedType;
                      
                      var declaringComponent = manager.GetComponent(controllerType);
-                     var binders = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IBinderAttribute>()
+                     var annotations = descriptor.GetCustomAttributes<Attribute>().GetAttributesRecursive<IAnnotation>()
                          .Union(new []{UnwrapAttributeInstance})
                          .ToArray();
 
-                     var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, new Binders(binders));
+                     var injectionPoint = new MethodParameterInjectionPoint(declaringComponent, param, new Annotations(annotations));
                      var component = injectionPoint.Component;
                     _injectionPoint = injectionPoint;
                 }
@@ -57,6 +57,7 @@ namespace Cormo.Web.Impl
                 }
                
             }
+
             return Task.FromResult(0);
         }
     }

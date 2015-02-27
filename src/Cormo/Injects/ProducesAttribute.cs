@@ -3,7 +3,7 @@
 namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
-    public sealed class ProducesAttribute: Attribute
+    public sealed class ProducesAttribute: Attribute, IAnnotation
     {
     }
 }

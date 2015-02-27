@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Security;
+using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Utils
 {
@@ -82,7 +84,14 @@ namespace Cormo.Impl.Weld.Utils
             if (method.ContainsGenericParameters)
             {
                 var translatedMethodGenericArgs = method.GetGenericArguments().Select(x => TranslateGenericArgument(x, typeTranslations));
-                return method.GetGenericMethodDefinition().MakeGenericMethod(translatedMethodGenericArgs.ToArray());
+                try
+                {
+                    return method.GetGenericMethodDefinition().MakeGenericMethod(translatedMethodGenericArgs.ToArray());
+                }
+                catch (ArgumentException)
+                {
+                    return null;
+                }
             }
 
             return method;
