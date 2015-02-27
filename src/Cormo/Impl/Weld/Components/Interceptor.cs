@@ -16,14 +16,16 @@ namespace Cormo.Impl.Weld.Components
 
     public class Interceptor : ManagedComponent
     {
+        public bool AllowPartialInterception { get; private set; }
         private static Type[] AllInterceptorTypes = {typeof (IAroundInvokeInterceptor)};
 
         public Type[] InterceptorBindings { get; private set; }
 
-        public Interceptor(IAnnotatedType type, WeldComponentManager manager)
+        public Interceptor(IAnnotatedType type, WeldComponentManager manager, bool allowPartialInterception)
             : base(type, manager)
         {
-            InterceptorBindings = Binders.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
+            AllowPartialInterception = allowPartialInterception;
+            InterceptorBindings = Annotations.OfType<IInterceptorBinding>().Select(x => x.GetType()).ToArray();
             InterceptorTypes = AllInterceptorTypes.Where(x => x.IsAssignableFrom(type.Type)).ToArray();
             
             if(!InterceptorBindings.Any())

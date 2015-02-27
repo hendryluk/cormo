@@ -11,7 +11,7 @@ namespace Cormo.Impl.Weld.Components
         private readonly object _instance;
 
         public ValueComponent(object instance, WeldComponentManager manager)
-            : base(instance.GetType().FullName, instance.GetType(), Weld.Binders.Empty, manager)
+            : base(instance.GetType().FullName, instance.GetType(), Weld.Annotations.Empty, manager)
         {
             _instance = instance;
         }

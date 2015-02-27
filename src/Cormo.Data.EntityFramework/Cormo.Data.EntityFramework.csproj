@@ -61,7 +61,9 @@
     <Compile Include="Api\Events\RegisteringEntities.cs" />
     <Compile Include="Api\Events\TransactionCompleting.cs" />
     <Compile Include="Api\TransactionalAttribute.cs" />
+    <Compile Include="Api\AutoRegisterModelsAttribute.cs" />
     <Compile Include="Impl\CormoDbContext.cs" />
+    <Compile Include="Impl\AutoRegisterModelsInterceptor.cs" />
     <Compile Include="Impl\EntityContextProducer.cs" />
     <Compile Include="Impl\EntityInfo.cs" />
     <Compile Include="Api\IEntityRegistrar.cs" />

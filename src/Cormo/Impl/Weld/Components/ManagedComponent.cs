@@ -22,7 +22,7 @@ namespace Cormo.Impl.Weld.Components
         private readonly InjectableConstructor _injectableConstructor;
 
         protected ManagedComponent(IAnnotatedType type, WeldComponentManager manager) 
-            : base(type.Type.FullName, type.Type, type.Binders, manager)
+            : base(type.Type.FullName, type.Type, type.Annotations, manager)
         {
             _isConcrete = !Type.ContainsGenericParameters;
             
@@ -34,12 +34,12 @@ namespace Cormo.Impl.Weld.Components
                 var iProperties = type.Properties.Where(InjectionValidator.ScanPredicate).ToArray();
                 var iCtors = type.Constructors.Where(InjectionValidator.ScanPredicate).ToArray();
                 var iFields = type.Fields.Where(InjectionValidator.ScanPredicate).ToArray();
-                var postConstructs = methods.Where(x => x.Binders.OfType<PostConstructAttribute>().Any()).Select(x=> x.Method).ToArray();
+                var postConstructs = methods.Where(x => x.Annotations.OfType<PostConstructAttribute>().Any()).Select(x=> x.Method).ToArray();
 
                 if (iCtors.Length > 1)
                     throw new InvalidComponentException(type.Type, "Multiple [Inject] constructors");
 
-                var iCtor = iCtors.FirstOrDefault() ?? type.Constructors.FirstOrDefault(x=> !x.Parameters.Any());
+                var iCtor = iCtors.FirstOrDefault() ?? type.Constructors.First(x=> !x.Parameters.Any());
 
                 _injectableConstructor = new InjectableConstructor(this, iCtor.Constructor);
 

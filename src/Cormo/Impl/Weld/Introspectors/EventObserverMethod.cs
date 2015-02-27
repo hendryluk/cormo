@@ -12,15 +12,15 @@ namespace Cormo.Impl.Weld.Introspectors
     {
         public IWeldComponent Component { get; private set; }
         private readonly ParameterInfo _parameter;
-        private readonly IBinders _binders;
+        private readonly IAnnotations _annotations;
         private readonly InjectableMethod _method;
         private readonly Type _eventType;
 
-        public EventObserverMethod(IWeldComponent component, ParameterInfo parameter, IBinders binders)
+        public EventObserverMethod(IWeldComponent component, ParameterInfo parameter, IAnnotations annotations)
         {
             Component = component;
             _parameter = parameter;
-            _binders = binders;
+            _annotations = annotations;
             _eventType = parameter.ParameterType;
             IsConcrete = _eventType.ContainsGenericParameters;
             _method = new InjectableMethod(component, (MethodInfo) parameter.Member, parameter);
@@ -49,7 +49,7 @@ namespace Cormo.Impl.Weld.Introspectors
 
             var resolvedParam = resolvedMethod.GetParameters()[_parameter.Position];
             var resolvedComponent = _method.Component.Resolve(resolvedMethod.DeclaringType);
-            return new EventObserverMethod(resolvedComponent, resolvedParam, _binders);
+            return new EventObserverMethod(resolvedComponent, resolvedParam, _annotations);
         }
 
         public void Notify(object ev)
@@ -60,6 +60,6 @@ namespace Cormo.Impl.Weld.Introspectors
 
         public IEnumerable<IChainValidatable> NextLinearValidatables { get { yield break; } }
         public IEnumerable<IChainValidatable> NextNonLinearValidatables { get; private set; }
-        public IQualifiers Qualifiers { get { return _binders.Qualifiers; } }
+        public IQualifiers Qualifiers { get { return _annotations.Qualifiers; } }
     }
 }

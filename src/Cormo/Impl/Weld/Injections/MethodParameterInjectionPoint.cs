@@ -13,8 +13,8 @@ namespace Cormo.Impl.Weld.Injections
 
         public ParameterInfo ParameterInfo { get { return _param; } }
         
-        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, IBinders binders) 
-            : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, binders)
+        public MethodParameterInjectionPoint(IComponent declaringComponent, ParameterInfo paramInfo, IAnnotations annotations) 
+            : base(declaringComponent, paramInfo.Member, paramInfo.ParameterType, annotations)
         {
             _param = paramInfo;
             IsConstructor = _param.Member is ConstructorInfo;

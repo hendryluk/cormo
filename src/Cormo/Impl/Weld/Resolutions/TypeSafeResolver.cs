@@ -30,13 +30,13 @@ namespace Cormo.Impl.Weld.Resolutions
         where TResolvable: IResolvable
     {
         protected readonly WeldComponentManager Manager;
-        private readonly TComponent[] _registeredComponents;
-        private readonly ConcurrentBag<TComponent> _allComponents;
+        private readonly IEnumerable<TComponent> _registeredComponents;
+        private ConcurrentBag<TComponent> _allComponents;
 
         protected TypeSafeResolver(WeldComponentManager manager, IEnumerable<TComponent> allComponents)
         {
             Manager = manager;
-            _registeredComponents = allComponents.ToArray();
+            _registeredComponents = allComponents;
             _allComponents = new ConcurrentBag<TComponent>(_registeredComponents);
         }
 
@@ -91,6 +91,12 @@ namespace Cormo.Impl.Weld.Resolutions
 
                 return results.ToArray();
             });
+        }
+
+        public void Invalidate()
+        {
+            _allComponents = new ConcurrentBag<TComponent>(_registeredComponents);
+            _resolvedCache.Clear();
         }
 
         protected virtual void RegisterNewComponent(TComponent c)

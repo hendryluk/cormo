@@ -9,7 +9,7 @@ namespace Cormo.Impl.Weld.Utils
 {
     public static class InterceptionValidator
     {
-        public static void ValidateInterceptableClass(Type type, InterceptorResolvable resolvable, out MethodInfo[] methods)
+        public static void ValidateInterceptableClass(Type type, InterceptorResolvable resolvable, bool allowPartial, out MethodInfo[] methods)
         {
             var builder = new StringBuilder();
             if (type.IsSealed)
@@ -26,9 +26,14 @@ namespace Cormo.Impl.Weld.Utils
             var nonVirtualMethods = methods.Where(x => !TypeUtils.IsOveridable(x)).ToArray();
             if (nonVirtualMethods.Any())
             {
-                builder.Append(
-                    string.Format("These public members must be virtual: {0}",
-                        string.Join(",/n", nonVirtualMethods.Select(x => x.ToString()))));
+                if (allowPartial)
+                    methods = methods.Except(nonVirtualMethods).ToArray();
+                else
+                {
+                    builder.Append(
+                        string.Format("These public members must be virtual: {0}",
+                            string.Join(",/n", nonVirtualMethods.Select(x => x.ToString()))));    
+                }
             }
             if(builder.Length > 0)
                 ThrowNotInterceptableClassException(type, resolvable, builder.ToString());

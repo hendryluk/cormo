@@ -26,7 +26,7 @@ namespace Cormo.Impl.Weld
             return str;
         }
 
-        private static string LongType(Type type)
+        public static string LongType(Type type)
         {
             var str = type.FullName;
             if (type.IsGenericType)
@@ -45,7 +45,7 @@ namespace Cormo.Impl.Weld
             return string.Format("{0} {1} {2}", ShortType(field.FieldType), LongType(field.DeclaringType), field.Name);
         }
 
-        public static string Field(PropertyInfo property)
+        public static string Property(PropertyInfo property)
         {
             return string.Format("{0} {1} {2}", ShortType(property.PropertyType), LongType(property.DeclaringType), property.Name);
         }
@@ -102,10 +102,9 @@ namespace Cormo.Impl.Weld
                     reason);
         }
 
-        public static object Format(MemberInfo method)
+        public static string Member(MemberInfo member)
         {
-            // TODO: make it pretty
-            return method.ToString();
+            return MemberInfoVisitor.Visit(member, Formatters.Constructor, Formatters.Method, Formatters.Field, Formatters.Property);
         }
     }
 }

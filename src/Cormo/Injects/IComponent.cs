@@ -12,6 +12,6 @@ namespace Cormo.Injects
         IQualifiers Qualifiers { get; }
         Type Scope { get; }
         bool IsProxyRequired { get; }
-        IBinders Binders { get; }
+        IAnnotations Annotations { get; }
     }
 }

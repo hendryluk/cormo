@@ -6,23 +6,27 @@ using Cormo.Injects;
 
 namespace Cormo.Impl.Weld
 {
-    public class Binders : IBinders
+    public class Annotations : IAnnotations
     {
-        private readonly IBinderAttribute[] _binders;
+        private readonly IAnnotation[] _annotations;
         public IQualifiers Qualifiers { get; private set; }
         public Type[] Types { get; private set; }
-
-        public static readonly Binders Empty = new Binders(new IBinderAttribute[0]);
-        public Binders (IEnumerable<IBinderAttribute> binders)
+        public bool Any<T>()
         {
-            _binders = binders.ToArray();
-            Types = _binders.Select(x => x.GetType()).ToArray();
-            Qualifiers = new Qualifiers(_binders.OfType<IQualifier>().ToArray());
+            return this.OfType<T>().Any();
         }
 
-        public IEnumerator<IBinderAttribute> GetEnumerator()
+        public static readonly Annotations Empty = new Annotations(new IAnnotation[0]);
+        public Annotations (IEnumerable<IAnnotation> annotations)
         {
-            return _binders.AsEnumerable().GetEnumerator();
+            _annotations = annotations.ToArray();
+            Types = _annotations.Select(x => x.GetType()).ToArray();
+            Qualifiers = new Qualifiers(_annotations.OfType<IQualifier>().ToArray());
+        }
+
+        public IEnumerator<IAnnotation> GetEnumerator()
+        {
+            return _annotations.AsEnumerable().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

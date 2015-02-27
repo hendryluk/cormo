@@ -15,7 +15,6 @@ using Cormo.Impl.Weld.Serialization;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Impl.Weld.Validations;
 using Cormo.Injects;
-using Cormo.Interceptions;
 
 namespace Cormo.Impl.Weld
 {
@@ -26,8 +25,21 @@ namespace Cormo.Impl.Weld
             Id = id;
             _services.Add(typeof(ContextualStore), _contextualStore = new ContextualStore());
             _services.Add(typeof(CurrentInjectionPoint), _currentInjectionPoint = new CurrentInjectionPoint());
+
+            _componentResolver = new ComponentResolver(this, _registeredComponents);
+            _observerResolver = new ObserverResolver(this, _registeredObservers);
         }
+
+        private readonly List<IWeldComponent> _registeredComponents = new List<IWeldComponent>();
+        private readonly List<EventObserverMethod> _registeredObservers = new List<EventObserverMethod>();
+
+        private readonly ComponentResolver _componentResolver;
+        private readonly ObserverResolver _observerResolver;
+        private MixinResolver _mixinResolver;
+        private InterceptorResolver _interceptorResolver;
+        
         private readonly ConcurrentDictionary<Type, IList<IContext>> _contexts = new ConcurrentDictionary<Type, IList<IContext>>();
+
         private readonly IContextualStore _contextualStore;
         private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
         private readonly CurrentInjectionPoint _currentInjectionPoint;
@@ -40,15 +52,13 @@ namespace Cormo.Impl.Weld
 
         public Mixin[] GetMixins(IComponent component)
         {
+            if (_mixinResolver == null)
+                throw new InvalidOperationException("Weld component manager is not yet deployed");
+
             return _mixinResolver.Resolve(new MixinResolvable(component)).ToArray();
         }
 
-        private ComponentResolver _componentResolver;
-        private MixinResolver _mixinResolver;
-        private InterceptorResolver _interceptorResolver;
-        private ObserverResolver _observerResolver;
-        private ComponentResolver _extensionResolver;
-
+        
         public IEnumerable<IComponent> GetComponents(Type type, IQualifier[] qualifierArray)
         {
             return _componentResolver.Resolve(new ComponentResolvable(type, qualifierArray));
@@ -81,24 +91,21 @@ namespace Cormo.Impl.Weld
 
         public void Deploy(WeldEnvironment environment)
         {
-            Container.Instance.Initialize(this);
-
-            environment.AddValue(this, new IBinderAttribute[0], this);
-            environment.AddValue(new ContextualStore(), new IBinderAttribute[0], this);
-
-            _extensionResolver = _componentResolver = new ComponentResolver(this, environment.Extensions);
-            _observerResolver = new ObserverResolver(this, environment.Observers.Where(x=> x.Component is ExtensionComponent));
-            
+            environment.AddValue(this, new IAnnotation[0], this);
+            environment.AddValue(new ContextualStore(), new IAnnotation[0], this);
+           
             var mixins = environment.Components.OfType<Mixin>().ToArray();
             var interceptors = environment.Components.OfType<Interceptor>().ToArray();
+
+            _registeredComponents.AddRange(environment.Components.Except(mixins).Except(interceptors));
+            _componentResolver.Invalidate();
+            AddObservers(environment.Observers);
             
             _mixinResolver = new MixinResolver(this, mixins);
             _interceptorResolver = new InterceptorResolver(this, interceptors);
-            _componentResolver = new ComponentResolver(this, environment.Components.Except(mixins).Except(interceptors));
             _services.Add(typeof(IExceptionHandlerDispatcher), new ExceptionHandlerDispatcher(this, environment.ExceptionHandlers));
 
             _componentResolver.Validate();
-            _observerResolver = new ObserverResolver(this, environment.Observers);
             
             ExecuteConfigurations(environment);
         }
@@ -213,6 +220,9 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetMethodInterceptors(Type interceptorType, MethodInfo methodInfo)
         {
+            if (_interceptorResolver == null)
+                throw new InvalidOperationException("Weld component manager is not yet deployed");
+
             var resolvable = new InterceptorResolvable(interceptorType, methodInfo);
             var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
             if (interceptors.Any())
@@ -223,6 +233,9 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetPropertyInterceptors(Type interceptorType, PropertyInfo property, out MethodInfo[] methods)
         {
+            if (_interceptorResolver == null)
+                throw new InvalidOperationException("Weld component manager is not yet deployed");
+
             var resolvable = new InterceptorResolvable(interceptorType, property);
             var interceptors = _interceptorResolver.Resolve(resolvable).ToArray();
             if (interceptors.Any())
@@ -239,10 +252,14 @@ namespace Cormo.Impl.Weld
 
         public Interceptor[] GetClassInterceptors(Type interceptorType, IComponent component, out MethodInfo[] methods)
         {
+            if (_interceptorResolver == null)
+                throw new InvalidOperationException("Weld component manager is not yet deployed");
+
             var intercetorResolvable = new InterceptorResolvable(interceptorType, component);
             var interceptors = _interceptorResolver.Resolve(intercetorResolvable).ToArray();
+            var allowPartial = interceptors.All(x => x.AllowPartialInterception);
             if (interceptors.Any())
-                InterceptionValidator.ValidateInterceptableClass(component.Type, intercetorResolvable, out methods);
+                InterceptionValidator.ValidateInterceptableClass(component.Type, intercetorResolvable, allowPartial, out methods);
             else
                 methods = new MethodInfo[0];
 
@@ -258,6 +275,18 @@ namespace Cormo.Impl.Weld
         {
             foreach (var observer in ResolveObservers(typeof (T), qualifiers))
                 observer.Notify(ev);
+        }
+
+        public void AddExtensions(IEnumerable<ExtensionComponent> extensions)
+        {
+            _registeredComponents.AddRange(extensions);
+            _componentResolver.Invalidate();
+        }
+
+        public void AddObservers(IEnumerable<EventObserverMethod> observers)
+        {
+            _registeredObservers.AddRange(observers);
+            _observerResolver.Invalidate();
         }
     }
 }

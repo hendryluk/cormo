@@ -10,7 +10,7 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly IExtension _instance;
 
-        public ExtensionComponent(Type type, WeldComponentManager manager) : base(type.FullName, type, Weld.Binders.Empty, manager)
+        public ExtensionComponent(Type type, WeldComponentManager manager) : base(type.FullName, type, Weld.Annotations.Empty, manager)
         {
             try
             {

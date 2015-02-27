@@ -68,6 +68,7 @@
     <Compile Include="Impl\Weld\Catch\ExceptionHandlerDispatcher.cs" />
     <Compile Include="Impl\Weld\Components\Events.cs" />
     <Compile Include="Impl\Weld\Components\ExtensionComponent.cs" />
+    <Compile Include="Impl\Weld\Events\ProcessAnnotatedType.cs" />
     <Compile Include="Impl\Weld\Introspectors\EventObserverMethod.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableConstructor.cs" />
     <Compile Include="Impl\Weld\Introspectors\InjectableMethod.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="Impl\Weld\Interceptions\TaskCaster.cs" />
     <Compile Include="Impl\Weld\Interceptions\InvocationContext.cs" />
     <Compile Include="Impl\Weld\Interceptions\InterceptorMethodHandler.cs" />
+    <Compile Include="Impl\Weld\Reflects\AnnotatedType.cs" />
     <Compile Include="Impl\Weld\Resolutions\ComponentResolver.cs" />
     <Compile Include="Impl\Weld\Components\ComponentIdentifier.cs" />
     <Compile Include="Impl\Weld\Components\Interceptor.cs" />
@@ -93,10 +95,11 @@
     <Compile Include="Impl\Weld\Resolutions\TypeSafeResolver.cs" />
     <Compile Include="Impl\Weld\Utils\GenericResolver.cs" />
     <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
+    <Compile Include="Injects\Events\IProcessAnnotatedType.cs" />
     <Compile Include="Reflects\IAnnotatedType.cs" />
-    <Compile Include="Injects\IBinders.cs" />
+    <Compile Include="Injects\IAnnotations.cs" />
     <Compile Include="Impl\Weld\Qualifiers.cs" />
-    <Compile Include="Injects\IBinderAttribute.cs" />
+    <Compile Include="Injects\IAnnotation.cs" />
     <Compile Include="Injects\IExtension.cs" />
     <Compile Include="Injects\IQualifiers.cs" />
     <Compile Include="Injects\IValueProvider.cs" />
@@ -108,7 +111,7 @@
     <Compile Include="Interceptions\InterceptorAttribute.cs" />
     <Compile Include="Interceptions\InterceptorBindingAttribute.cs" />
     <Compile Include="Interceptions\NotInterceptableException.cs" />
-    <Compile Include="Mixins\IMixinBinder.cs" />
+    <Compile Include="Mixins\IMixinBinding.cs" />
     <Compile Include="Injects\StereotypeAttribute.cs" />
     <Compile Include="Injects\IServiceRegistry.cs" />
     <Compile Include="Injects\IMethodParameterInjectionPoint.cs" />

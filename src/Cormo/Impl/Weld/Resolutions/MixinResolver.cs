@@ -12,7 +12,7 @@ namespace Cormo.Impl.Weld.Resolutions
 
         protected override IEnumerable<Mixin> Resolve(MixinResolvable resolvable, ref IEnumerable<Mixin> mixins)
         {
-            return mixins.Where(x => x.MixinBinders.Any(resolvable.MixinBinders.Contains));
+            return mixins.Where(x => x.MixinBindings.Any(resolvable.MixinBindings.Contains));
         }
     }
 }

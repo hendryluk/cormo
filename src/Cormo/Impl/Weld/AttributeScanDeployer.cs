@@ -8,9 +8,12 @@ using Cormo.Impl.Solder;
 using Cormo.Impl.Utils;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Contexts;
+using Cormo.Impl.Weld.Events;
 using Cormo.Impl.Weld.Introspectors;
+using Cormo.Impl.Weld.Reflects;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
+using Cormo.Injects.Events;
 using Cormo.Injects.Exceptions;
 using Cormo.Interceptions;
 using Cormo.Mixins;
@@ -67,8 +70,14 @@ namespace Cormo.Impl.Weld
                             .AsEnumerable().Union(BuiltInTypes)
                             .ToArray();
 
-            var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
+            var extensions = types.Where(typeof (IExtension).IsAssignableFrom).ToArray();
+            types = types.Except(extensions).ToArray();
 
+            Container.Instance.Initialize(_manager);
+            AddContexts();
+            RegisterExtensions(extensions);
+
+            var componentTypes = types.AsParallel().Where(TypeUtils.IsComponent).ToArray();
             var assemblyConfigs = (from assembly in assemblies.AsParallel()
                                   from import in assembly.GetAttributesRecursive<ImportAttribute>()
                                   from type in import.Types
@@ -81,34 +90,46 @@ namespace Cormo.Impl.Weld
                 _environment.AddConfiguration(c);
         }
 
+        public void RegisterExtensions(Type[] extensions)
+        {
+            var regs = from e in extensions
+                       let annotatedType = new AnnotatedType(e)
+                       let component = new ExtensionComponent(e, _manager)
+                       let observers = FindEventObservers(annotatedType, component)
+                       select new { component, observers };
+
+            _manager.AddExtensions(regs.Select(x => x.component));
+            _manager.AddObservers(regs.SelectMany(x => x.observers));
+        }
+
         public void AddTypes(params Type[] types)
         {
-            var annotated = types.Select(x => new AnnotatedType(x))
+            var annotated = types.Select(ProcessAnnotatedType)
                 .Cast<IAnnotatedType>()
                 .ToArray();
 
             var components = annotated.AsParallel().Select(MakeComponent).ToArray();
-            var eventObservers = components.AsParallel().SelectMany(FindEventObservers).ToArray();
             var classes = components.OfType<ClassComponent>().ToArray();
+            var eventObservers = classes.AsParallel().SelectMany(x=> FindEventObservers(x.AnnotatedType, x)).ToArray();
             var exceptionHandlers = classes.AsParallel().SelectMany(FindExceptionHandlers).ToArray();
 
             var producerFields = (from component in classes.AsParallel()
                                   let type = component.AnnotatedType
                                   from field in type.Fields
-                                  where field.Binders.OfType<ProducesAttribute>().Any()
+                                  where field.Annotations.OfType<ProducesAttribute>().Any()
                                   select (IWeldComponent) new ProducerField(component, field, _manager)).ToArray();
 
             var producerMethods = (from component in classes.AsParallel()
                                    let type = component.AnnotatedType
                                    from method in type.Methods
-                                   where method.Binders.OfType<ProducesAttribute>().Any()
+                                   where method.Annotations.OfType<ProducesAttribute>().Any()
                                    select (IWeldComponent) new ProducerMethod(component, method, _manager)).ToArray();
 
             var producerProperties = (from component in classes.AsParallel()
                                       let type = component.AnnotatedType
                                       from property in type.Properties
-                                      where property.Binders.OfType<ProducesAttribute>().Any()
-                                      select (IWeldComponent) new ProducerProperty(component, property.Property, property.Binders, _manager)).ToArray();
+                                      where property.Annotations.OfType<ProducesAttribute>().Any()
+                                      select (IWeldComponent) new ProducerProperty(component, property.Property, property.Annotations, _manager)).ToArray();
 
             foreach (var c in components.Union(producerFields).Union(producerMethods).Union(producerProperties))
                 _environment.AddComponent(c);
@@ -119,20 +140,28 @@ namespace Cormo.Impl.Weld
                 _environment.AddExceptionHandlers(handler);
         }
 
-        private static IEnumerable<EventObserverMethod> FindEventObservers(IWeldComponent component)
+        private IAnnotatedType ProcessAnnotatedType(Type type)
         {
-            foreach (var method in component.Type.GetMethods())
+            var annotated = new AnnotatedType(type);
+            var e = new ProcessAnnotatedType(annotated);
+            _manager.FireEvent(e, Qualifiers.Empty);
+            return e.AnnotatedType;
+        }
+
+        private static IEnumerable<EventObserverMethod> FindEventObservers(IAnnotatedType type, IWeldComponent component)
+        {
+            foreach (var method in type.Methods)
             {
-                var injectParams = method.GetParameters()
-                    .Where(AttributeUtils.HasAttributeRecursive<ObservesAttribute>)
+                var injectParams = method.Parameters
+                    .Where(p => p.Annotations.Any<ObservesAttribute>())
                     .ToArray();
                 if(!injectParams.Any())
                     continue;
                 if (injectParams.Length > 1)
-                    throw new InvalidComponentException(Formatters.MultipleObservesParameter(method));
+                    throw new InvalidComponentException(Formatters.MultipleObservesParameter(method.Method));
 
                 var param = injectParams.Single();
-                yield return new EventObserverMethod(component, param, param.GetBinders());
+                yield return new EventObserverMethod(component, param.Parameter, param.Annotations);
             }
         }
 
@@ -141,7 +170,7 @@ namespace Cormo.Impl.Weld
             foreach (var method in component.AnnotatedType.Methods)
             {
                 var injectParams = method.Parameters
-                    .Where(p=> p.Binders.OfType<HandlesAttribute>().Any())
+                    .Where(p=> p.Annotations.OfType<HandlesAttribute>().Any())
                     .ToArray();
                 if (!injectParams.Any())
                     continue;
@@ -152,13 +181,13 @@ namespace Cormo.Impl.Weld
                 if(GenericUtils.OpenIfGeneric(param.Parameter.ParameterType) != typeof(ICaughtException<>))
                     throw new InvalidComponentException(Formatters.WrongHandlesParamType(param.Parameter));
 
-                yield return new EventObserverMethod(component, param.Parameter, param.Binders);
+                yield return new EventObserverMethod(component, param.Parameter, param.Annotations);
             }
         }
 
-        public void AddValue(object instance, params IBinderAttribute[] binders)
+        public void AddValue(object instance, params IAnnotation[] annotations)
         {
-            _environment.AddValue(instance, binders, _manager);
+            _environment.AddValue(instance, annotations, _manager);
         }
 
         private static IEnumerable<IWeldComponent> GetConfigs(IEnumerable<IWeldComponent> components, Type[] assemblyConfigs)
@@ -174,7 +203,7 @@ namespace Cormo.Impl.Weld
                 configs.AddRange(newConfigs);
 
                 var imports = from config in newConfigs
-                    from import in config.Binders.OfType<ImportAttribute>()
+                    from import in config.Annotations.OfType<ImportAttribute>()
                     from importType in import.Types
                     select new {config.Type, importType};
 
@@ -198,13 +227,14 @@ namespace Cormo.Impl.Weld
                 return new ExtensionComponent(type.Type, _manager);
 
             ManagedComponent component;
-            if (type.Binders.OfType<InterceptorAttribute>().Any())
+            var annotationAttribute = type.Annotations.OfType<InterceptorAttribute>().ToArray();
+            if (annotationAttribute.Any())
             {
-                component = new Interceptor(type, _manager);
+                component = new Interceptor(type, _manager, annotationAttribute.Any(x=> x.AllowPartialInterception));
             }
             else
             {
-                component = type.Binders.OfType<MixinAttribute>().Any()? (ManagedComponent)
+                component = type.Annotations.OfType<MixinAttribute>().Any()? (ManagedComponent)
                     new Mixin(type, _manager):
                     new ClassComponent(type, _manager);
             }
@@ -214,7 +244,6 @@ namespace Cormo.Impl.Weld
 
         public void Deploy()
         {
-            AddContexts();
             AddBuiltInComponents();
             _manager.Deploy(_environment);
         }

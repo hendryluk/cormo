@@ -39,7 +39,7 @@ namespace Cormo.Impl.Weld.Resolutions
         public InterceptorResolvable(Type interceptorType, IComponent component)
         {
             InterceptorType = interceptorType;
-            Bindings = component.Binders.Select(x => x.GetType()).ToArray();
+            Bindings = component.Annotations.Select(x => x.GetType()).ToArray();
         }
 
         public InterceptorResolvable(Type interceptorType, PropertyInfo property)

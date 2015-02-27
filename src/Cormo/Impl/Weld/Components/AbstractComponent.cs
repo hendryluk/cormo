@@ -12,36 +12,36 @@ namespace Cormo.Impl.Weld.Components
 {
     public abstract class AbstractComponent : IWeldComponent
     {
-        private AbstractComponent(Type type, IBinders binders, WeldComponentManager manager)
+        private AbstractComponent(Type type, IAnnotations annotations, WeldComponentManager manager)
         {
-            Binders = binders;
-            var qualifierSet = new HashSet<IQualifier>(Binders.OfType<IQualifier>());
+            Annotations = annotations;
+            var qualifierSet = new HashSet<IQualifier>(Annotations.OfType<IQualifier>());
             if (qualifierSet.All(x => (x is AnyAttribute)))
                 qualifierSet.Add(DefaultAttribute.Instance);
 
             Type = type;
             Manager = manager;
-            Scope = binders.OfType<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
-            IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(Scope) && !Binders.OfType<UnwrapAttribute>().Any();
+            Scope = annotations.OfType<ScopeAttribute>().Select(x => x.GetType()).FirstOrDefault() ?? typeof(DependentAttribute);
+            IsProxyRequired = typeof(NormalScopeAttribute).IsAssignableFrom(Scope) && !Annotations.OfType<UnwrapAttribute>().Any();
             _lazyBuildPlan = new Lazy<BuildPlan>(GetBuildPlan);
-            IsConditionalOnMissing = Binders.OfType<ConditionalOnMissingComponentAttribute>().Any();
+            IsConditionalOnMissing = Annotations.OfType<ConditionalOnMissingComponentAttribute>().Any();
         }
 
-        public IBinders Binders { get; private set; }
+        public IAnnotations Annotations { get; private set; }
 
-        protected AbstractComponent(ComponentIdentifier id, Type type, IBinders binders, WeldComponentManager manager)
-            : this(type, binders, manager)
+        protected AbstractComponent(ComponentIdentifier id, Type type, IAnnotations annotations, WeldComponentManager manager)
+            : this(type, annotations, manager)
         {
             _id = id;
         }
 
-        protected AbstractComponent(string idSuffix, Type type, IBinders binders, WeldComponentManager manager)
-            : this(type, binders, manager)
+        protected AbstractComponent(string idSuffix, Type type, IAnnotations annotations, WeldComponentManager manager)
+            : this(type, annotations, manager)
         {
             _id = new ComponentIdentifier(string.Format("{0}-{1}-{2}", manager.Id, GetType().Name, idSuffix));
         }
 
-        public IQualifiers Qualifiers { get { return Binders.Qualifiers; }}
+        public IQualifiers Qualifiers { get { return Annotations.Qualifiers; }}
 
         public Type Scope { get; private set; }
         public Type Type { get; set; }

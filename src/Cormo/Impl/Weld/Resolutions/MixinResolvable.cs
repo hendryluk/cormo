@@ -9,7 +9,7 @@ namespace Cormo.Impl.Weld.Resolutions
     {
         protected bool Equals(MixinResolvable other)
         {
-            return Equals(MixinBinders, other.MixinBinders);
+            return Equals(MixinBindings, other.MixinBindings);
         }
 
         public override bool Equals(object obj)
@@ -22,14 +22,14 @@ namespace Cormo.Impl.Weld.Resolutions
 
         public override int GetHashCode()
         {
-            return (MixinBinders != null ? MixinBinders.GetHashCode() : 0);
+            return (MixinBindings != null ? MixinBindings.GetHashCode() : 0);
         }
 
         public MixinResolvable(IComponent component)
         {
-            MixinBinders = component.Qualifiers.OfType<IMixinBinder>().Select(x=> x.GetType()).ToArray();
+            MixinBindings = component.Qualifiers.OfType<IMixinBinding>().Select(x=> x.GetType()).ToArray();
         }
 
-        public Type[] MixinBinders { get; private set; }
+        public Type[] MixinBindings { get; private set; }
     }
 }

@@ -15,12 +15,12 @@ namespace Cormo.Impl.Weld.Components
         private readonly InjectableMethod _method;
 
         public ProducerMethod(IWeldComponent declaringComponent, IAnnotatedMethod method, WeldComponentManager manager)
-            : this(declaringComponent, method.Method, method.Binders, manager)
+            : this(declaringComponent, method.Method, method.Annotations, manager)
         {
         }
 
-        public ProducerMethod(IWeldComponent declaringComponent, MethodInfo method, IBinders binders, WeldComponentManager manager)
-            : base(declaringComponent, method, method.ReturnType, binders, manager)
+        public ProducerMethod(IWeldComponent declaringComponent, MethodInfo method, IAnnotations annotations, WeldComponentManager manager)
+            : base(declaringComponent, method, method.ReturnType, annotations, manager)
         {
             _method = new InjectableMethod(declaringComponent, method, null);
         }
@@ -31,7 +31,7 @@ namespace Cormo.Impl.Weld.Components
             if (resolvedMethod == null || GenericUtils.MemberContainsGenericArguments(resolvedMethod))
                 return null;
 
-            return new ProducerMethod(DeclaringComponent.Resolve(resolvedMethod.DeclaringType), resolvedMethod, Binders, Manager);
+            return new ProducerMethod(DeclaringComponent.Resolve(resolvedMethod.DeclaringType), resolvedMethod, Annotations, Manager);
         }
 
         protected override BuildPlan GetBuildPlan()

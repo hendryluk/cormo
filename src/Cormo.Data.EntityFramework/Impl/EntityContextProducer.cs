@@ -99,16 +99,10 @@ namespace Cormo.Data.EntityFramework.Impl
                 _entityTypes.Add(typeof (T));
             }
 
-            [Produces, RequestScoped, Default, EntityContext]
-            public IDbSet<T> GetDbSet([Unwrap, EntityContext]DbContext context)
+            [Produces, RequestScoped]
+            public IDbSet<T> GetDbSet([Unwrap]DbContext context)
             {
                 return context.Set<T>();
-            }
-
-            [Produces, Default, ConditionalOnMissingComponent]
-            public DbContext GetDefaultDbContext([EntityContext] DbContext context)
-            {
-                return context;
             }
         }
 

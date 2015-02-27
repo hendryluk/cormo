@@ -14,7 +14,7 @@ namespace Cormo.Impl.Weld.Utils
     {
         public static bool ScanPredicate(IAnnotated provider)
         {
-            return provider.Binders.OfType<InjectAttribute>().Any();
+            return provider.Annotations.OfType<InjectAttribute>().Any();
         }
 
         public static bool ScanPredicate(IAnnotatedProperty property)
@@ -89,7 +89,7 @@ namespace Cormo.Impl.Weld.Utils
                 {
                     builder.Append(
                         string.Format("These public members must be virtual: {0}",
-                            string.Join(",/n", sealedMembers.Select(Formatters.Format))));
+                            string.Join(",/n", sealedMembers.Select(Formatters.Member))));
                 }
 
                 var publicFields = TypeUtils.GetPublicFields(type);

@@ -13,13 +13,13 @@ namespace Cormo.Impl.Weld.Injections
         private readonly PropertyInfo _property;
 
         public PropertyInjectionPoint(IComponent declaringComponent, IAnnotatedProperty property):
-            this(declaringComponent, property.Property, property.Binders)
+            this(declaringComponent, property.Property, property.Annotations)
         {
             InjectionValidator.Validate(property);
         }
 
-        private PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IBinders binders) :
-            base(declaringComponent, property, property.PropertyType, binders)
+        private PropertyInjectionPoint(IComponent declaringComponent, PropertyInfo property, IAnnotations annotations) :
+            base(declaringComponent, property, property.PropertyType, annotations)
         {
             _property = property;
         }
@@ -30,7 +30,7 @@ namespace Cormo.Impl.Weld.Injections
                 return this;
 
             var property = GenericUtils.TranslatePropertyType(_property, translations);
-            return new PropertyInjectionPoint(component, property, Binders);
+            return new PropertyInjectionPoint(component, property, Annotations);
         }
 
         protected override InjectPlan BuildInjectPlan(IComponent component)

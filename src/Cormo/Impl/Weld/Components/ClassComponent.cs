@@ -17,8 +17,8 @@ namespace Cormo.Impl.Weld.Components
     public class ClassComponent : ManagedComponent
     {
         public IAnnotatedType AnnotatedType { get; set; }
-        //private ClassComponent(ClassComponent parent, ConstructorInfo ctor, IBinders binders, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
-        //    : base(new ComponentIdentifier(parent.Id.Key, ctor.DeclaringType), ctor, binders, scope, manager,
+        //private ClassComponent(ClassComponent parent, ConstructorInfo ctor, IAnnotations Annotations, Type scope, WeldComponentManager manager, GenericResolver.Resolution typeResolution)
+        //    : base(new ComponentIdentifier(parent.Id.Key, ctor.DeclaringType), ctor, Annotations, scope, manager,
         //        parent.PostConstructs.Select(x => GenericUtils.TranslateMethodGenericArguments(x, typeResolution.GenericParameterTranslations)).ToArray())
         //{
         //    parent.TransferInjectionPointsTo(this, typeResolution);

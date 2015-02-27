@@ -3,7 +3,7 @@
 namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Method | AttributeTargets.Constructor| AttributeTargets.Property)]
-    public class InjectAttribute: Attribute
+    public class InjectAttribute: Attribute, IAnnotation
     {
          
     }

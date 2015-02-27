@@ -13,8 +13,8 @@ namespace Cormo.Impl.Weld.Components
     {
         private readonly bool _containsGenericParameters;
         
-        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IBinders binders, WeldComponentManager manager)
-            : base(member.ToString(), returnType, binders, manager)
+        protected AbstractProducer(IWeldComponent declaringComponent, MemberInfo member, Type returnType, IAnnotations annotations, WeldComponentManager manager)
+            : base(Formatters.Member(member), returnType, annotations, manager)
         {
             _containsGenericParameters = GenericUtils.MemberContainsGenericArguments(member);
             DeclaringComponent = declaringComponent;

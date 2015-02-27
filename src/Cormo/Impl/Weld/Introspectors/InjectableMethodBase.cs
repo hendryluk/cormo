@@ -24,7 +24,7 @@ namespace Cormo.Impl.Weld.Introspectors
             SpecialParameter = specialParameter;
             IsConstructor = _method is ConstructorInfo;
             _injectionPoints = method.GetParameters()
-                .Select(p => p==specialParameter? null: new MethodParameterInjectionPoint(component, p, AttributeUtils.GetBinders(p)))
+                .Select(p => p==specialParameter? null: new MethodParameterInjectionPoint(component, p, AttributeUtils.GetAnnotations(p)))
                 .ToArray();
         }
 

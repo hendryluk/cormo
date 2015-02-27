@@ -2,7 +2,7 @@
 
 namespace Cormo.Interceptions
 {
-    public interface IInterceptorBinding: IBinderAttribute
+    public interface IInterceptorBinding: IAnnotation
     {
         
     }

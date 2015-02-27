@@ -12,17 +12,11 @@ using Cormo.Injects;
 
 namespace Cormo.Data.EntityFramework.Impl
 {
-    [EntityContext, ConditionalOnMissingComponent]
+    [ConditionalOnMissingComponent]
     public class CormoDbContext : DbContext
     {
-        private readonly IEntityRegistrar _entityRegistrar;
+        [Inject] IEntityRegistrar _entityRegistrar;
         
-        [Inject]
-        public CormoDbContext(IEntityRegistrar entityRegistrar)
-        {
-            _entityRegistrar = entityRegistrar;
-        }
-
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             _entityRegistrar.RegisterEntities(modelBuilder);

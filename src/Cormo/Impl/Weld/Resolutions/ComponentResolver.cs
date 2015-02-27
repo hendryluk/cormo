@@ -23,7 +23,7 @@ namespace Cormo.Impl.Weld.Resolutions
             
             if (GenericUtils.OpenIfGeneric(resolvable.Type) == typeof(IEvents<>))
                 return new IWeldComponent[]
-                {new EventComponent(resolvable.Type.GetGenericArguments()[0], new Binders(resolvable.Qualifiers), Manager)};
+                {new EventComponent(resolvable.Type.GetGenericArguments()[0], new Annotations(resolvable.Qualifiers), Manager)};
             
             var unwrappedType = UnwrapType(resolvable.Type);
             var isWrapped = unwrappedType != resolvable.Type;
@@ -46,7 +46,7 @@ namespace Cormo.Impl.Weld.Resolutions
             components = results;
             
             return isWrapped
-                ? new IWeldComponent[] {new InstanceComponent(unwrappedType, new Binders(resolvable.Qualifiers), Manager, results)}
+                ? new IWeldComponent[] {new InstanceComponent(unwrappedType, new Annotations(resolvable.Qualifiers), Manager, results)}
                 : results;
         }
     }
