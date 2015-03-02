@@ -21,5 +21,5 @@
 // [assembly: AssemblyVersion("1.0.*")]
 internal static class AssemblyConstants
 {
-    public const string VERSION = "0.0.1.27";
+    public const string VERSION = "0.0.1.28";
 }

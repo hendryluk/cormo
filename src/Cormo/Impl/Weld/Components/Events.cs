@@ -16,9 +16,8 @@ namespace Cormo.Impl.Weld.Components
 
         public void Fire(T @event)
         {
-            Task.Run(() =>
-                Task.WhenAll(_methods.Select(m => m.Notify(@event)).ToArray()))
-                .Wait();
+            var tasks = Task.WhenAll(_methods.Select(m => m.Notify(@event)).ToArray());
+            Task.Run(() => tasks).Wait();
         }
         public Task FireAsync(T @event)
         {

@@ -27,6 +27,7 @@ namespace SampleWebApp
     // This promotes DI principle and lightweight components.
     {
         [Inject] UpperCaseGreeter _stringService;                // -> Resolves to UpperCaseGreeter
+        [Inject] IInstance<CountGreeter> _countServiceInstance;                // -> Resolves to UpperCaseGreeter
         [Inject] IGreeter<IEnumerable<int>> _integersService;     // -> Resolves to EnumerableGreeter<int>
         [Inject] private IEvents<string> _someEvents;
             
@@ -42,8 +43,15 @@ namespace SampleWebApp
             _someEvents.Fire("Hello");
 
             //throw new Exception("xxx");
-            return _stringService.Greet("World");
+
+            var x = "";
+            for (var i = 0; i < 10; i++)
+            {
+                x += _countServiceInstance.Value.Greet("World");
+            }
+            //return _stringService.Greet("World");
             //return _stringService.Greet("World") + "/" + GetHashCode();
+            return x;
         }
 
         
@@ -112,6 +120,21 @@ namespace SampleWebApp
     }
 
     //[RequestScoped]
+    public class CountGreeter : IGreeter<string>
+    {
+        private static int i=0;
+        private int _index;
+        public CountGreeter()
+        {
+            _index = i++;
+        }
+
+        public string Greet(string val)
+        {
+            return val + " " + i;
+        }
+    }
+
     public class UpperCaseGreeter : IGreeter<string>, IDisposable
     {
         [Inject] private Haha _haha;
@@ -123,7 +146,7 @@ namespace SampleWebApp
         private int id;
 
         [Inject, Limit] private int xxxx;
-
+        
         //[ExceptionsHandled]
         public virtual string Greet(string val)
         {
