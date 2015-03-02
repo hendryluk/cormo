@@ -1,7 +1,7 @@
 ﻿using System.Linq;
+using Cormo.Events;
 using Cormo.Impl.Weld.Reflects;
 using Cormo.Injects;
-using Cormo.Injects.Events;
 using Cormo.Reflects;
 
 namespace Cormo.Impl.Weld.Events

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
 using Cormo.Injects;
@@ -52,10 +53,10 @@ namespace Cormo.Impl.Weld.Introspectors
             return new EventObserverMethod(resolvedComponent, resolvedParam, _annotations);
         }
 
-        public void Notify(object ev)
+        public Task Notify(object ev)
         {
             var creationalContext = _method.Component.Manager.CreateCreationalContext(_method.Component);
-            _method.InvokeWithSpecialValue(creationalContext, ev);
+            return _method.InvokeAsyncWithSpecialValue(creationalContext, ev);
         }
 
         public IEnumerable<IChainValidatable> NextLinearValidatables { get { yield break; } }

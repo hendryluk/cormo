@@ -13,12 +13,31 @@ namespace Cormo.Impl.Weld.Interceptions
     public class TaskCasters
     {
         static readonly ConcurrentDictionary<Type, ITaskCaster> _casters = new ConcurrentDictionary<Type, ITaskCaster>();
-        
+
+        public static ITaskCaster ForVoid()
+        {
+            return TaskCaster.Instance;
+        }
         public static ITaskCaster ForType(Type type)
         {
             if (type == typeof(object))
                 return null;
             return _casters.GetOrAdd(type, _ => (ITaskCaster)Activator.CreateInstance(typeof(TaskCaster<>).MakeGenericType(type)));
+        }
+
+        private class TaskCaster : ITaskCaster
+        {
+            public static TaskCaster Instance = new TaskCaster();
+            public async Task Cast(Task<object> task)
+            {
+                await task;
+            }
+
+            public async Task<object> ToObject(Task task)
+            {
+                await task;
+                return null;
+            }
         }
 
         private class TaskCaster<T> : ITaskCaster

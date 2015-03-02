@@ -12,7 +12,6 @@ using System.Web.Http;
 using Cormo.Catch;
 using Cormo.Contexts;
 using Cormo.Data.EntityFramework.Api.Events;
-using Cormo.Events;
 using Cormo.Injects;
 using Cormo.Interceptions;
 using Cormo.Web.Api;

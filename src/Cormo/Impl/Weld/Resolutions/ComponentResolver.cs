@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Cormo.Events;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
+using Cormo.Injects;
 
 namespace Cormo.Impl.Weld.Resolutions
 {

@@ -106,5 +106,10 @@ namespace Cormo.Impl.Weld
         {
             return MemberInfoVisitor.Visit(member, Formatters.Constructor, Formatters.Method, Formatters.Field, Formatters.Property);
         }
+
+        public static string InvalidEventHandlingMethodReturnType(MethodInfo method)
+        {
+            return string.Format("Method must return void or Task [{0}]", Method(method));
+        }
     }
 }

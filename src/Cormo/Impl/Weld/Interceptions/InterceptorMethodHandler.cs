@@ -31,7 +31,7 @@ namespace Cormo.Impl.Weld.Interceptions
             if (returnType == typeof (Task))
             {
                 _isAsync = true;
-                _taskCaster = null;
+                _taskCaster = TaskCasters.ForVoid();
             }
             else if (returnType.IsGenericType)
             {

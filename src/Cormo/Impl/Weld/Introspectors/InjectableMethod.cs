@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Cormo.Contexts;
 using Cormo.Impl.Weld.Components;
 using Cormo.Impl.Weld.Utils;
@@ -15,7 +16,10 @@ namespace Cormo.Impl.Weld.Introspectors
             base(component, method, specialParameter)
         {
             Method = method;
+            IsAsync = typeof (Task).IsAssignableFrom(method.ReturnType);
         }
+
+        public bool IsAsync { get; private set; }
 
         public MethodInfo Method { get; private set; }
 
@@ -29,6 +33,15 @@ namespace Cormo.Impl.Weld.Introspectors
         {
             var parameters = GetParameterValues(creationalContext);
             return Method.Invoke(Method.IsStatic?null: instance, parameters);
+        }
+
+        public Task InvokeAsyncWithSpecialValue(ICreationalContext creationalContext, object specialParameterValue)
+        {
+            var result = InvokeWithSpecialValue(creationalContext, specialParameterValue);
+            if (IsAsync)
+                return (Task) result;
+
+            return Task.FromResult(result);
         }
 
         public override InjectableMethodBase TranslateGenericArguments(IWeldComponent component, IDictionary<Type, Type> translations)

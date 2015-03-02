@@ -1,4 +1,4 @@
-﻿namespace Cormo.Data.EntityFramework.Api.Events
+﻿namespace Cormo.Events
 {
     public class TransactionCompleting
     {

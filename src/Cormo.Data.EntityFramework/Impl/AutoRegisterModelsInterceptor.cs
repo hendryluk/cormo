@@ -4,10 +4,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Cormo.Data.EntityFramework.Api;
-using Cormo.Events;
 using Cormo.Impl.Weld;
 using Cormo.Injects;
-using Cormo.Injects.Events;
 using Cormo.Interceptions;
 
 namespace Cormo.Data.EntityFramework.Impl

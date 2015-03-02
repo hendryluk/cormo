@@ -1,7 +1,6 @@
 ﻿using System;
-using Cormo.Injects;
 
-namespace Cormo.Events
+namespace Cormo.Injects
 {
     [AttributeUsage(AttributeTargets.Parameter)]
     public class ObservesAttribute: Attribute, IAnnotation

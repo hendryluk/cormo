@@ -67,8 +67,11 @@
     <Compile Include="Data\Audits\LastModifiedByAttribute.cs" />
     <Compile Include="Data\Audits\LastModifiedDateAttribute.cs" />
     <Compile Include="Data\TransactionalAttribute.cs" />
-    <Compile Include="Events\IEvents.cs" />
-    <Compile Include="Events\ObservesAttribute.cs" />
+    <Compile Include="Events\TransactionComitted.cs" />
+    <Compile Include="Impl\Weld\Utils\EventHandlerValidator.cs" />
+    <Compile Include="Injects\IEvents.cs" />
+    <Compile Include="Injects\ObservesAttribute.cs" />
+    <Compile Include="Events\TransactionCompleting.cs" />
     <Compile Include="Impl\Solder\ExceptionsHandledInterceptor.cs" />
     <Compile Include="Impl\Solder\ValueProvider.cs" />
     <Compile Include="Impl\Weld\Catch\ExceptionHandlerDispatcher.cs" />
@@ -101,7 +104,7 @@
     <Compile Include="Impl\Weld\Resolutions\TypeSafeResolver.cs" />
     <Compile Include="Impl\Weld\Utils\GenericResolver.cs" />
     <Compile Include="Impl\Weld\Utils\InterceptionValidator.cs" />
-    <Compile Include="Injects\Events\IProcessAnnotatedType.cs" />
+    <Compile Include="Events\IProcessAnnotatedType.cs" />
     <Compile Include="Injects\VetoAttribute.cs" />
     <Compile Include="Reflects\IAnnotatedType.cs" />
     <Compile Include="Injects\IAnnotations.cs" />

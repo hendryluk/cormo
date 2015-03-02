@@ -14,6 +14,7 @@ namespace Cormo.Data.EntityFramework.Impl
     {
         [Inject] IInstance<DbContext> _dbContext;
         [Inject] IEvents<TransactionCompleting> _completingEvents; 
+        [Inject] IEvents<TransactionComitted> _successfulEvents; 
 
         public async Task<object> AroundInvoke(IInvocationContext invocationContext)
         {
@@ -24,7 +25,7 @@ namespace Cormo.Data.EntityFramework.Impl
             if (dbContext.Database.CurrentTransaction != null)
             {
                 var result = await invocationContext.Proceed();
-                _completingEvents.Fire(new TransactionCompleting());
+                await _completingEvents.FireAsync(new TransactionCompleting());
                 dbContext.SaveChanges();
                 return result;
             }
@@ -34,9 +35,10 @@ namespace Cormo.Data.EntityFramework.Impl
                 try
                 {
                     var result = await invocationContext.Proceed();
-                    _completingEvents.Fire(new TransactionCompleting());
+                    await _completingEvents.FireAsync(new TransactionCompleting());
                     dbContext.SaveChanges();
                     transaction.Commit();
+                    await _successfulEvents.FireAsync(new TransactionComitted());
                     return result;
                 }
                 catch (Exception)

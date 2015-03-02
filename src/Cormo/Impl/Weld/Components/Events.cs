@@ -1,5 +1,7 @@
-﻿using Cormo.Events;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Cormo.Impl.Weld.Introspectors;
+using Cormo.Injects;
 
 namespace Cormo.Impl.Weld.Components
 {
@@ -14,8 +16,13 @@ namespace Cormo.Impl.Weld.Components
 
         public void Fire(T @event)
         {
-            foreach(var m in _methods)
-                m.Notify(@event);
+            Task.Run(() =>
+                Task.WhenAll(_methods.Select(m => m.Notify(@event)).ToArray()))
+                .Wait();
+        }
+        public Task FireAsync(T @event)
+        {
+            return Task.WhenAll(_methods.Select(m => m.Notify(@event)).ToArray());
         }
     }
 }

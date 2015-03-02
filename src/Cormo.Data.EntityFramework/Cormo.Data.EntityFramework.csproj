@@ -54,7 +54,6 @@
     </Compile>
     <Compile Include="Api\EntityContextAttribute.cs" />
     <Compile Include="Api\Events\RegisteringEntities.cs" />
-    <Compile Include="Api\Events\TransactionCompleting.cs" />
     <Compile Include="Api\AutoRegisterModelsAttribute.cs" />
     <Compile Include="Impl\CormoDbContext.cs" />
     <Compile Include="Impl\AutoRegisterModelsInterceptor.cs" />

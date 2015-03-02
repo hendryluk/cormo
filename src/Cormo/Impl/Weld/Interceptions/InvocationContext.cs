@@ -42,7 +42,7 @@ namespace Cormo.Impl.Weld.Interceptions
             if (_isAsync)
             {
                 if (_taskCaster == null || returnValue == null)
-                    return Task.FromResult((object)null);
+                    return (Task<object>) returnValue;
                 return _taskCaster.ToObject((Task)returnValue);
             }
 

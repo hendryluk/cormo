@@ -1,6 +1,7 @@
-﻿using Cormo.Reflects;
+﻿using Cormo.Injects;
+using Cormo.Reflects;
 
-namespace Cormo.Injects.Events
+namespace Cormo.Events
 {
     public interface IProcessAnnotatedType
     {
